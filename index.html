@@ -857,26 +857,33 @@ function renderFull(f) {
     <p>Website: ${p.website ? `<a href="${esc(p.website)}" target="_blank" rel="noopener nofollow">${esc(p.website)}</a>` : na} · Socials: ${socials}</p>
     <p>Origin: ${v(p.countryOrigin)} · Launched: ${v(p.genesisDate)}</p>
     ${p.description ? `<p class="note">${esc(p.description)}…</p>` : ''}
-    <p class="note">Team: ${esc(p.teamNote)}</p>`, p.sources);
+    <p class="note">${esc(p.teamNote)}</p>${p.xAccountAgeNote ? `<p class="note">${esc(p.xAccountAgeNote)}</p>` : ''}`, p.sources);
   const linked = `<p>Funding-linked top wallets: ${o.linkedWallets && o.linkedWallets.length ? o.linkedWallets.map(c => `${c.members.length} wallets share funder ${addr(c.funder, o.explorer)} (${esc(String(c.combinedPct))}%)`).join('; ') : 'none found among the traced top wallets'}</p>`;
   const s2 = sec('2. Deployer, owner & linked wallets', (isSol ? `
     <p>Creator: ${addr(o.creator, o.explorer)} · Mint authority: ${auth(o.mintAuthority, o.explorer, o.renounced !== null)} · Freeze authority: ${auth(o.freezeAuthority, o.explorer, o.renounced !== null)}</p>
-    <p>Metadata changeable: ${yn(o.metadataMutable, true)}</p>` : `
+    <p>Metadata changeable: ${yn(o.metadataMutable, true)}</p>
+    ${o.deployer ? (o.deployer.address ? `<p>Creator wallet: ${addr(o.deployer.address, o.explorer)} · SOL balance: ${o.deployer.solBalance === null ? na : esc(String(o.deployer.solBalance)) + ' SOL'} · Wallet age: ${o.deployer.ageDays === null ? na : (o.deployer.ageIsMinimum ? 'over ' : '') + esc(String(o.deployer.ageDays)) + ' days'} · Holds now: ${pct(o.deployer.currentPct)}</p>
+      <p class="note">${esc(o.deployer.soldNote || '')} ${esc(o.deployer.otherLaunchesNote || '')} (source: ${esc(o.deployer.source || 'Solana RPC')})</p>` : `<p class="note">${esc(o.deployer.note || 'Creator wallet: data not available.')}</p>`) : ''}` : `
     <p>Owner: ${o.owner ? addr(o.owner, o.explorer) : na} · Renounced: ${yn(o.renounced)} · Creator: ${addr(o.creator, o.explorer)} (holds ${pct(o.creatorPercent)})</p>
     <p>Hidden owner: ${yn(o.hiddenOwner, true)} · Can take back ownership: ${yn(o.canTakeBackOwnership, true)} · Same creator made honeypots before: ${yn(o.sameCreatorHoneypots, true)}</p>`) + linked, o.sources);
-  const pools = (l.pools || []).map(x => `<tr><td>${esc(x.dex || '')}</td><td>${esc(x.pair || '')}</td><td>${usd(x.liquidityUsd)}</td><td>${usd(x.volume24hUsd)}</td><td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">view</a>` : ''}</td></tr>`).join('');
+  const hasLp = (l.pools || []).some(x => x.lpStatus);
+  const pools = (l.pools || []).map(x => `<tr><td>${esc(x.dex || '')}</td><td>${esc(x.pair || '')}</td><td>${usd(x.liquidityUsd)}</td><td>${usd(x.volume24hUsd)}</td>${hasLp ? `<td title="${esc(x.lpDetail || '')}">${esc(x.lpStatus || 'unknown')}</td>` : ''}<td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">view</a>` : ''}</td></tr>`).join('');
+  const lpDetails = (l.pools || []).filter(x => x.lpDetail && x.lpStatus && x.lpStatus !== 'unknown').slice(0, 6).map(x => `<li>${esc(x.dex || '')} ${esc(x.pair || '')}: <strong>${esc(x.lpStatus)}</strong> — ${esc(x.lpDetail)}</li>`).join('');
   const solBurn = (l.solanaPoolBurn || []).filter(x => x.burnPercent !== null).slice(0, 6).map(x => `<li>${esc(x.dex)} pool ${addr(x.pool, 'https://solscan.io/account/')}: ${esc(String(x.burnPercent))}% of LP burned</li>`).join('');
   const s3 = sec('3. Liquidity', `
     <p>Total DEX liquidity: <strong>${usd(l.totalUsd)}</strong> across ${esc(String(l.poolCount || 0))} pool(s)</p>
-    ${pools ? `<table class="exit-table"><tr><th>DEX</th><th>Pair</th><th>Liquidity</th><th>24h vol</th><th></th></tr>${pools}</table>` : ''}
+    ${pools ? `<table class="exit-table"><tr><th>DEX</th><th>Pair</th><th>Liquidity</th><th>24h vol</th>${hasLp ? '<th>LP status</th>' : ''}<th></th></tr>${pools}</table>` : ''}
+    ${lpDetails ? `<ul>${lpDetails}</ul>` : ''}
     ${l.lpLockedPct !== null ? `<p>Main pool LP — locked: ${pct(l.lpLockedPct)} · burned: ${pct(l.lpBurnedPct)} · not locked: ${pct(l.lpUnlockedPct)}</p>` : ''}
     ${solBurn ? `<ul>${solBurn}</ul>` : ''}
     ${l.lpNote ? `<p class="note">${esc(l.lpNote)}</p>` : ''}`, l.sources);
-  const holders = (t.topHolders || []).map((h, i) => `<li>#${i + 1} ${addr(h.address, o.explorer)} — ${esc(String(h.pct))}%${h.tag ? ' · ' + esc(h.tag) : ''}${h.locked ? ' 🔒' : ''}${h.isContract ? ' (contract)' : ''}</li>`).join('');
+  const holders = (t.topHolders || []).map((h, i) => `<li>#${i + 1} ${addr(h.address, o.explorer)} — ${esc(String(h.pct))}%${h.tag ? ' · ' + esc(h.tag) : ''}${h.locked ? ' 🔒' : ''}${h.isContract && !h.category ? ' (contract)' : ''}</li>`).join('');
   const s4 = sec('4. Tokenomics & distribution', `
     <p>Total supply: ${sup(t.totalSupply)} · Circulating: ${sup(t.circulatingSupply)} · Max: ${sup(t.maxSupply)} · Holders: ${sup(t.holderCount)}</p>
     <p>Top ${esc(String(t.topHoldersCovered || 0))} holders own ${pct(t.top10Pct)}: exchanges ${pct(t.onExchangesPct)} · locked/vesting ${pct(t.lockedPct)} · burned ${pct(t.burnedPct)} · pools ${pct(t.inPoolsPct)} · other contracts ${pct(t.otherContractsPct)} · <strong>unlabelled wallets ${pct(t.privateWalletsPct)}</strong></p>
     ${t.exchangeNote ? `<p class="note">${esc(t.exchangeNote)}</p>` : ''}${t.labelNote ? `<p class="note">${esc(t.labelNote)}</p>` : ''}
+    ${t.top10RealPct !== null && t.top10RealPct !== undefined ? `<p>Top 10 real holders (pools, burn and locks excluded): <strong>${pct(t.top10RealPct)}</strong></p>` : ''}
+    ${t.distributionNote ? `<p class="note">${esc(t.distributionNote)}</p>` : ''}${t.holderNote ? `<p class="note">${esc(t.holderNote)}</p>` : ''}
     ${holders ? `<ul class="exit-holders">${holders}</ul>` : ''}`, t.sources);
   const s5 = sec('5. Contract risk', isSol ? `
     <p>Mintable: ${yn(r.mintable, true)} · Freezable: ${yn(r.freezable, true)} · Transfer fee: ${yn(r.transferFee, true)} · Transfer hook: ${yn(r.transferHook, true)} · Balances changeable: ${yn(r.balanceMutable, true)} · Closable: ${yn(r.closable, true)}</p>` : `
@@ -890,6 +897,7 @@ function renderFull(f) {
     <p class="note">${esc(a.roadmapNote)}</p>`, a.sources);
   const s7 = `<div class="full-sec verdict-box"><h4>7. Overall verdict: ${esc(vd.level)}</h4>
     ${vd.red.length ? `<ul class="flags">${vd.red.map(x => `<li class="flag-bad">${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${vd.warn && vd.warn.length ? `<ul class="flags">${vd.warn.map(x => `<li class="flag-bad">⚠️ ${esc(x)}</li>`).join('')}</ul>` : ''}
     ${vd.green.length ? `<ul class="flags">${vd.green.map(x => `<li class="flag-good">${esc(x)}</li>`).join('')}</ul>` : ''}
     <p class="note">Built only from the sections above (${esc(vd.coverage)}). Not financial advice.</p></div>`;
   return `<div class="full-report"><h3>📋 Full project report</h3>${s1}${s2}${s3}${s4}${s5}${s6}${s7}</div>`;
@@ -1086,7 +1094,7 @@ async function runDeepReport(autoDetect) {
     if (data.success) {
       const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
       const dnaHtml = (data.wallets || []).map((w, i) => {
-        const age = w.ageDays === null ? 'unknown age' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';
+        const age = w.ageDays === null ? 'unknown age' : w.ageIsMinimum ? 'over ' + w.ageDays + ' days old' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';
         const flags = (w.flags || []).map(f => `<li>${esc(f)}</li>`).join('');
         return `<div class="dna-card">
           <div class="dna-head"><span class="w-rank">#${i + 1}</span><span class="w-addr">${esc(String(w.address).slice(0, 10))}…${esc(String(w.address).slice(-6))}</span><span class="w-pct">${esc(String(w.pct))}%</span></div>
@@ -1131,7 +1139,7 @@ function rcNoPayMsg(m) {
 function deepCardHtml(data) {
   const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
   const dnaHtml = (data.wallets || []).map((w, i) => {
-    const age = w.ageDays === null ? 'unknown age' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';
+    const age = w.ageDays === null ? 'unknown age' : w.ageIsMinimum ? 'over ' + w.ageDays + ' days old' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';
     const flags = (w.flags || []).map(f => `<li>${esc(f)}</li>`).join('');
     return `<div class="dna-card"><div class="dna-head"><span class="w-rank">#${i + 1}</span><span class="w-addr">${esc(String(w.address).slice(0, 10))}…${esc(String(w.address).slice(-6))}</span><span class="w-pct">${esc(String(w.pct))}%</span></div>
       <div class="dna-facts"><span>🎂 ${esc(age)}</span><span>📊 ${esc(String(w.txCount))} txs</span><span>💼 ${esc(String(w.tokenCount))} tokens held</span></div>
@@ -1357,7 +1365,7 @@ function renderExitDoor(d) {
   const r = d.report;
   const sells = (r.exitLiquidity.sells || []).map(s => s.available
     ? `<tr><td>$${s.usd.toLocaleString()}</td><td>$${s.receiveUsd.toLocaleString()}</td><td class="${s.lossPct > 10 ? 'neg' : s.lossPct > 3 ? '' : 'pos'}">${s.lossPct}%</td><td>${esc(s.route || '—')}</td></tr>`
-    : `<tr><td>$${s.usd.toLocaleString()}</td><td colspan="3">data unavailable (no route / no price)</td></tr>`).join('');
+    : `<tr><td>$${s.usd.toLocaleString()}</td><td colspan="3">${esc(s.reason || 'Not available right now')}</td></tr>`).join('');
   const clusters = r.clusters.length ? r.clusters.map(c => `<div class="cluster-card"><h5>🚨 Shared funder ${exitShort(c.funder)}</h5><p>${c.members.length} top wallets, combined <strong>${c.combinedPct}%</strong> of supply.</p></div>`).join('')
     : `<p>${r.holdersAvailable ? 'No shared funders found among traced holders.' : 'Holder data unavailable.'} <span class="note">(${esc(r.clusterCoverage)})</span></p>`;
   const holders = r.holders.map((h, i) => `<li>#${i + 1} ${exitShort(h.owner)} — ${h.pct ?? '?'}%${h.lockedBy ? ' 🔒 ' + esc(h.lockedBy) : h.isProgramOwned ? ' (program / pool)' : ''}${h.funder ? ' · funded by ' + exitShort(h.funder) : ''}</li>`).join('');
