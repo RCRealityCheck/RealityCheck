@@ -1,10 +1,11 @@
 import { buildFull } from './_deep-full.js';
+import { claimTx, isTxUsed, manualMaxAge, MSG } from './_manual-pay.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
 // Flow: user pays 1 USDC on their chosen chain, pastes the tx hash/signature.
 // Server verifies the payment on-chain, then runs forensic wallet intel.
-// All logic server-side. No DB — replay protection via 30-min payment recency.
+// All logic server-side. Payments accepted up to 24h old when one-time use is enforced (KV), otherwise 30 min; one-time use of each tx is enforced when KV_REST_API_URL/TOKEN are set (see _manual-pay.js).
 // Solana RPC: SOLANA_RPC_URL first (Helius), public fallbacks; retries 'overloaded' responses.
 const SOL_RPC_LIST = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
 async function solCall(method, params, tries = 3) {
@@ -67,6 +68,7 @@ export default async function handler(req, res) {
                 rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
   };
   const sig = String(txSignature).trim();
+  if (await isTxUsed(sig)) return res.status(200).json({ success: false, message: MSG.used });
   const nowSec = Math.floor(Date.now() / 1000);
   let paidAmount = 0;
   let paidChainLabel = '';
@@ -92,8 +94,8 @@ export default async function handler(req, res) {
     }
     if (!txj) return { status: 'not-found' };
     if (txj.meta && txj.meta.err) return { status: 'invalid', reason: 'That transaction failed on-chain — no payment was made.' };
-    if (!txj.blockTime || nowSec - txj.blockTime > 1800) {
-      return { status: 'invalid', reason: 'That payment is older than 30 minutes. Please send a fresh 1 USDC payment.' };
+    if (!txj.blockTime || nowSec - txj.blockTime > manualMaxAge()) {
+      return { status: 'invalid', reason: MSG.tooOld(manualMaxAge()) };
     }
     const sumUsdc = (list) => (list || []).reduce((s, b) =>
       (b.mint === USDC_SOL_MINT && b.owner === RC_SOL) ? s + Number(b.uiTokenAmount?.uiAmount || 0) : s, 0);
@@ -125,8 +127,8 @@ export default async function handler(req, res) {
     if (receipt.status !== '0x1') return { status: 'invalid', reason: 'That transaction failed on-chain — no payment was made.' };
     const block = await evmRpc(cfg, 'eth_getBlockByNumber', [receipt.blockNumber, false]);
     const blockTime = block?.timestamp ? parseInt(block.timestamp, 16) : 0;
-    if (!blockTime || nowSec - blockTime > 1800) {
-      return { status: 'invalid', reason: 'That payment is older than 30 minutes. Please send a fresh 1 USDC payment.' };
+    if (!blockTime || nowSec - blockTime > manualMaxAge()) {
+      return { status: 'invalid', reason: MSG.tooOld(manualMaxAge()) };
     }
     let decimals = 6;
     try {
@@ -177,6 +179,7 @@ export default async function handler(req, res) {
   }
   paidAmount = v.amount;
   paidChainLabel = v.chain;
+  { const claim = await claimTx(sig); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
 
   // ---------- 2. Payment OK — deep wallet forensics ----------
   let clean = String(contract).trim();

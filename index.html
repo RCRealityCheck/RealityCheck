@@ -188,10 +188,10 @@
         <code id="rcWalletEvm">0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code>
         <button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button>
       </div>
-      <label for="txSig">Transaction hash / signature</label>
+      <label for="txSig">Paid by copying the address? Paste your transaction ID</label>
       <input type="text" id="txSig" placeholder="Paste the FULL hash from your wallet" autocomplete="off">
       <button type="button" class="btn btn-ghost btn-full" id="verifyPay">Verify manually & reveal DNA</button>
-      <p class="note">Payments are verified on-chain and must be less than 30 minutes old.</p>
+      <p class="note">Payments are verified on-chain, must be recent, and each payment unlocks one report.</p>
     </div>
   </div>
   <div id="deepResult"></div>
@@ -230,7 +230,10 @@
       <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Ethereum / Base / BNB Chain / Polygon / Arbitrum (same address):</strong></p>
       <div class="exit-qr rc-addr-qr" data-qr="0xa214852e96a6d263a14DdA188Fd90395a733b5eA"></div>
       <div class="wallet-copy"><code>0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code><button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button></div>
-      <p class="note">Heads up: Exit Door unlocks automatically only when you pay with the Phantom / Solana Pay buttons or the Solana Pay QR above. A plain transfer to these addresses can't be matched to your request automatically.</p>
+      <label for="exitTxSig">Paid by copying the address? Paste your transaction ID</label>
+      <input type="text" id="exitTxSig" placeholder="Paste the FULL transaction ID from your wallet or exchange" autocomplete="off">
+      <button type="button" class="btn btn-ghost btn-full" id="exitVerifyManual">Verify my payment and open Exit Door</button>
+      <p class="note">Send at least 1 USDC. Payments from any wallet or exchange are checked on-chain. Each payment unlocks one report.</p>
       <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
       <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each request has its own reference and only unlocks this token. Requests expire after 30 minutes.</p>
     </div>
@@ -1217,6 +1220,21 @@ document.getElementById('exitPhantom').addEventListener('click', async function 
     await provider.signAndSendTransaction(tx);
     status.textContent = 'Payment sent — confirming on Solana…';
   } catch (err) { status.textContent = (err && err.message) ? err.message : 'Payment cancelled.'; }
+});
+document.getElementById('exitVerifyManual').addEventListener('click', async function () {
+  const status = document.getElementById('exitStatus');
+  const tx = document.getElementById('exitTxSig').value.trim();
+  const mint = (exitReq && exitReq.mint) || document.getElementById('exitMint').value.trim();
+  if (!tx) { status.textContent = 'Paste your transaction ID first.'; return; }
+  const btn = this; btn.disabled = true; status.textContent = 'Checking your payment on-chain…';
+  let d;
+  try { d = await exitApi({ action: 'manual', contract: mint, txSignature: tx }); }
+  catch { d = { success: false, message: 'Could not reach the server. Please try again in a minute.' }; }
+  btn.disabled = false;
+  if (!d || !d.success) { status.textContent = (d && d.message) || 'Could not verify that payment. Please try again in a minute.'; return; }
+  if (exitTimer) clearInterval(exitTimer);
+  document.getElementById('exitPay').style.display = 'none';
+  renderExitDoor(d);
 });
 async function checkExitPayment() {
   if (!exitReq) return;

@@ -7,6 +7,7 @@
 // Env: RC_PAYMENT_WALLET (Solana wallet), SOLANA_RPC_URL, RC_REF_SECRET (required),
 // optional KV_REST_API_URL + KV_REST_API_TOKEN (Upstash / Vercel KV) for one-time-use references.
 import crypto from 'crypto';
+import { verifyManualTx, claimTx, isTxUsed, manualMaxAge, MSG } from './_manual-pay.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
@@ -221,7 +222,7 @@ async function buildReport(mint) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   if (!process.env.RC_REF_SECRET) return res.status(200).json({ success: false, message: 'Exit Door is not configured yet. Free reports are unaffected.' });
-  const { action, contract, reference, exp, sig } = req.body || {};
+  const { action, contract, reference, exp, sig, txSignature } = req.body || {};
   const mint = String(contract || '').trim();
   if (!isSolAddr(mint)) return res.status(200).json({ success: false, message: 'Enter a Solana token mint address.' });
 
@@ -232,6 +233,22 @@ export default async function handler(req, res) {
     const expiry = Math.floor(Date.now() / 1000) + REF_TTL_SEC;
     const params = new URLSearchParams({ amount: String(PRICE_USDC), 'spl-token': USDC_MINT, reference: ref, label: 'Reality Check', message: `Exit Door report ${mint.slice(0, 6)}…`, memo: `RC-EXIT-${mint.slice(0, 8)}` });
     return res.status(200).json({ success: true, reference: ref, exp: expiry, sig: sign(ref, mint, expiry), recipient: WALLET, amount: PRICE_USDC, usdcMint: USDC_MINT, url: `solana:${WALLET}?${params.toString()}` });
+  }
+
+  if (action === 'manual') {
+    // Paid by copying the published address (any wallet / exchange): verify the pasted tx ID.
+    if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your transaction ID to unlock the report.' });
+    if (await isTxUsed(txSignature)) return res.status(200).json({ success: false, message: MSG.used });
+    const v = await verifyManualTx(txSignature, { price: PRICE_USDC, maxAgeSec: manualMaxAge() });
+    if (v.status !== 'ok') return res.status(200).json({ success: false, pending: !!v.pending, message: v.reason || MSG.busy });
+    let report;
+    try { report = await buildReport(mint); } catch {
+      return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Try again in a minute. Your payment still counts.' });
+    }
+    const claim = await claimTx(txSignature);
+    if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used });
+    return res.status(200).json({ success: true, paid: { signature: String(txSignature).trim(), amount: v.amount, chain: v.chain }, report,
+      riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
   }
 
   if (action === 'report') {
