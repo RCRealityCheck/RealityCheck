@@ -1,3 +1,4 @@
+import { buildFull } from './_deep-full.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -8,21 +9,29 @@
 const SOL_RPC_LIST = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
 async function solCall(method, params, tries = 3) {
   for (let attempt = 0; attempt < tries; attempt++) {
-    for (const [i, rpc] of SOL_RPC_LIST.entries()) {
+    for (const rpc of SOL_RPC_LIST) {
       try {
         const r = await fetch(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(15000) });
         const j = await r.json();
         if (!j.error && j.result !== undefined && j.result !== null) return j.result;
-        console.error('solana rpc', i, method, r.status, j.error ? String(j.error.message || j.error.code).slice(0, 120) : 'empty');
-      } catch (e) { console.error('solana rpc', i, method, 'fetch failed', String(e && e.message).slice(0, 120)); }
+      } catch {}
     }
     await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
   }
   return null;
 }
-console.log('solana rpc endpoints configured:', SOL_RPC_LIST.length, process.env.SOLANA_RPC_URL ? 'custom set' : 'custom missing');
 const solLargest = (mint, tries = 3) => solCall('getTokenLargestAccounts', [mint], tries);
+async function fullOnly(res, address, chain, paidChainLabel, paidAmount, why) {
+  const full = await buildFull(address, chain, {}).catch(() => null);
+  return res.status(200).json({
+    success: true, paid: true, payChain: paidChainLabel, amountUsdc: +Number(paidAmount).toFixed(2),
+    name: full?.project?.name || 'Token', symbol: full?.project?.symbol || '', wallets: [], clusters: [],
+    deepVerdict: why, full,
+    methodNote: 'Wallet DNA needs holder data, which was not available; every other section is built from the public sources named in it.',
+    riskNote: 'Public data only. Not financial advice. Never invest more than you can afford to lose.'
+  });
+}
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   const { contract, chain, payChain, txSignature, precheck } = req.body || {};
@@ -198,7 +207,7 @@ export default async function handler(req, res) {
       const totalUi = Number(supply?.value?.uiAmountString || supply?.value?.uiAmount || 0);
       const largest = await solLargest(mint, 6);
       const accts = (largest?.value || []).slice(0, 15);
-      if (!accts.length) return res.status(200).json({ success: false, message: 'Payment verified, but Solana RPC returned no holder data for this token right now. Your payment stays valid for 30 minutes — paste the same signature again in a minute or try another token.' });
+      if (!accts.length) return fullOnly(res, mint, chain, paidChainLabel, paidAmount, 'Wallet DNA not available: Solana RPC returned no holder list right now. All other sections are below.');
       const ownersRes = await solRpc('getMultipleAccounts', [accts.map(a => a.address), { encoding: 'jsonParsed' }]);
       const ownerOf = (accts || []).map((a, i) => ownersRes?.value?.[i]?.data?.parsed?.info?.owner || null);
       const uniqOwners = [...new Set(ownerOf.filter(Boolean))];
@@ -291,12 +300,12 @@ export default async function handler(req, res) {
       if (!parts.length) parts.push(`✅ The top wallets look like real, established holders — aged wallets with diverse portfolios and no shared funding. Nothing hidden in the DNA.`);
       return res.status(200).json({
         success: true, paid: true, payChain: paidChainLabel, amountUsdc: +Number(paidAmount).toFixed(2),
-        name, symbol, wallets: dna, clusters, deepVerdict: parts.join(' '),
+        name, symbol, wallets: dna, clusters, deepVerdict: parts.join(' '), full: await buildFull(mint, chain, { clusters }).catch(() => null),
         methodNote: 'Solana wallet age and funder come from each wallet\'s earliest on-chain transaction via public RPC; clustering matches shared funding sources. Heuristics, not proof — but the chain does not lie about timing.',
         riskNote: 'Deep forensic heuristics on public on-chain data. Not financial advice. Never invest more than you can afford to lose.'
       });
     } catch (e) {
-      return res.status(200).json({ success: false, message: 'Payment verified, but the deep analysis failed to load. Try again in a minute.' });
+      return fullOnly(res, mint, chain, paidChainLabel, paidAmount, 'Wallet DNA failed to load (data provider error). All other sections are below.');
     }
   }
   const COVALENT_KEY = process.env.COVALENT_KEY || '';
@@ -321,7 +330,7 @@ export default async function handler(req, res) {
 
   try {
     const h = await covGet(`https://api.covalenthq.com/v1/${cChain}/tokens/${clean}/token_holders_v2/`);
-    if (!h.data?.items?.length) return res.status(200).json({ success: false, message: 'Payment verified, but there is no holder data for this contract on this chain, so the deep report cannot run. Your payment stays valid for 30 minutes — paste the same hash with another EVM token, or contact Reality Check.' });
+    if (!h.data?.items?.length) return fullOnly(res, clean, chain, paidChainLabel, paidAmount, 'Wallet DNA not available: our holder data provider has no holder list for this contract. All other sections are below.');
     const items = h.data.items;
     const total = BigInt(items[0].total_supply || '0');
     const name = items[0].contract_name || 'Token';
@@ -451,10 +460,11 @@ export default async function handler(req, res) {
       wallets: dna,
       clusters,
       deepVerdict,
+      full: await buildFull(clean, chain, { clusters }).catch(() => null),
       methodNote: 'Wallet age and funder come from each wallet\'s earliest on-chain transaction; clustering matches shared funding sources. Heuristics, not proof — but the chain does not lie about timing.',
       riskNote: 'Deep forensic heuristics on public on-chain data. Not financial advice. Never invest more than you can afford to lose.'
     });
   } catch (e) {
-    res.status(200).json({ success: false, message: 'Payment verified, but the deep analysis failed to load. Try again in a minute.' });
+    return fullOnly(res, clean, chain, paidChainLabel, paidAmount, 'Wallet DNA failed to load (data provider error). All other sections are below.');
   }
 }

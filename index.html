@@ -794,6 +794,64 @@ function partialHtml(data) {
     ${m.url ? `<p><a href="${esc(m.url)}" target="_blank" rel="noopener">View pairs on ${esc(m.source)}</a></p>` : ''}` : '';
   return `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${marketHtml}${data.explorer ? `<p><a href="${esc(data.explorer)}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
 }
+// ---------- Deep Report: full-truth sections ----------
+function renderFull(f) {
+  if (!f) return '<div class="full-sec"><h4>Full project report</h4><p class="note">Not available right now — the public data sources did not respond.</p></div>';
+  const na = '<em class="na">not available</em>';
+  const v = x => (x === null || x === undefined || x === '') ? na : esc(String(x));
+  const yn = (x, bad) => x === null || x === undefined ? na : (x ? (bad ? '⚠️ yes' : '✅ yes') : (bad ? '✅ no' : '⚠️ no'));
+  const pct = x => (x === null || x === undefined) ? na : esc(String(x)) + '%';
+  const usd = x => (x === null || x === undefined) ? na : '$' + Number(x).toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const sup = x => (x === null || x === undefined) ? na : Number(x).toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const addr = (a, base) => a ? `<a href="${esc((base || '') + a)}" target="_blank" rel="noopener"><code>${esc(String(a).slice(0, 8))}…${esc(String(a).slice(-4))}</code></a>` : na;
+  const auth = (a, base, known) => a === 'active' ? '⚠️ active' : a ? addr(a, base) + ' ⚠️ active' : (known ? '✅ revoked' : na);
+  const src = list => `<p class="src">Source: ${list && list.length ? list.map(esc).join(', ') : 'no source answered'}</p>`;
+  const sec = (title, body, sources) => `<div class="full-sec"><h4>${title}</h4>${body}${src(sources)}</div>`;
+  const p = f.project, o = f.owner, l = f.liquidity, t = f.tokenomics, r = f.risk, a = f.activity, vd = f.verdict;
+  const isSol = 'mintAuthority' in o;
+  const socials = (p.socials || []).map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.type)}</a>`).join(' · ') || na;
+  const s1 = sec('1. Project &amp; team', `
+    <p><strong>${v(p.name)}</strong>${p.symbol ? ' (' + esc(p.symbol) + ')' : ''}${p.categories && p.categories.length ? ' · ' + p.categories.map(esc).join(', ') : ''}</p>
+    <p>Website: ${p.website ? `<a href="${esc(p.website)}" target="_blank" rel="noopener nofollow">${esc(p.website)}</a>` : na} · Socials: ${socials}</p>
+    <p>Origin: ${v(p.countryOrigin)} · Launched: ${v(p.genesisDate)}</p>
+    ${p.description ? `<p class="note">${esc(p.description)}…</p>` : ''}
+    <p class="note">Team: ${esc(p.teamNote)}</p>`, p.sources);
+  const linked = `<p>Funding-linked top wallets: ${o.linkedWallets && o.linkedWallets.length ? o.linkedWallets.map(c => `${c.members.length} wallets share funder ${addr(c.funder, o.explorer)} (${esc(String(c.combinedPct))}%)`).join('; ') : 'none found among the traced top wallets'}</p>`;
+  const s2 = sec('2. Deployer, owner &amp; linked wallets', (isSol ? `
+    <p>Creator: ${addr(o.creator, o.explorer)} · Mint authority: ${auth(o.mintAuthority, o.explorer, o.renounced !== null)} · Freeze authority: ${auth(o.freezeAuthority, o.explorer, o.renounced !== null)}</p>
+    <p>Metadata changeable: ${yn(o.metadataMutable, true)}</p>` : `
+    <p>Owner: ${o.owner ? addr(o.owner, o.explorer) : na} · Renounced: ${yn(o.renounced)} · Creator: ${addr(o.creator, o.explorer)} (holds ${pct(o.creatorPercent)})</p>
+    <p>Hidden owner: ${yn(o.hiddenOwner, true)} · Can take back ownership: ${yn(o.canTakeBackOwnership, true)} · Same creator made honeypots before: ${yn(o.sameCreatorHoneypots, true)}</p>`) + linked, o.sources);
+  const pools = (l.pools || []).map(x => `<tr><td>${esc(x.dex || '')}</td><td>${esc(x.pair || '')}</td><td>${usd(x.liquidityUsd)}</td><td>${usd(x.volume24hUsd)}</td><td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">view</a>` : ''}</td></tr>`).join('');
+  const solBurn = (l.solanaPoolBurn || []).filter(x => x.burnPercent !== null).slice(0, 6).map(x => `<li>${esc(x.dex)} pool ${addr(x.pool, 'https://solscan.io/account/')}: ${esc(String(x.burnPercent))}% of LP burned</li>`).join('');
+  const s3 = sec('3. Liquidity', `
+    <p>Total DEX liquidity: <strong>${usd(l.totalUsd)}</strong> across ${esc(String(l.poolCount || 0))} pool(s)</p>
+    ${pools ? `<table class="exit-table"><tr><th>DEX</th><th>Pair</th><th>Liquidity</th><th>24h vol</th><th></th></tr>${pools}</table>` : ''}
+    ${l.lpLockedPct !== null ? `<p>Main pool LP — locked: ${pct(l.lpLockedPct)} · burned: ${pct(l.lpBurnedPct)} · not locked: ${pct(l.lpUnlockedPct)}</p>` : ''}
+    ${solBurn ? `<ul>${solBurn}</ul>` : ''}
+    ${l.lpNote ? `<p class="note">${esc(l.lpNote)}</p>` : ''}`, l.sources);
+  const holders = (t.topHolders || []).map((h, i) => `<li>#${i + 1} ${addr(h.address, o.explorer)} — ${esc(String(h.pct))}%${h.tag ? ' · ' + esc(h.tag) : ''}${h.locked ? ' 🔒' : ''}${h.isContract ? ' (contract)' : ''}</li>`).join('');
+  const s4 = sec('4. Tokenomics &amp; distribution', `
+    <p>Total supply: ${sup(t.totalSupply)} · Circulating: ${sup(t.circulatingSupply)} · Max: ${sup(t.maxSupply)} · Holders: ${sup(t.holderCount)}</p>
+    <p>Top ${esc(String(t.topHoldersCovered || 0))} holders own ${pct(t.top10Pct)}: exchanges ${pct(t.onExchangesPct)} · locked/vesting ${pct(t.lockedPct)} · burned ${pct(t.burnedPct)} · pools ${pct(t.inPoolsPct)} · other contracts ${pct(t.otherContractsPct)} · <strong>unlabelled wallets ${pct(t.privateWalletsPct)}</strong></p>
+    ${t.exchangeNote ? `<p class="note">${esc(t.exchangeNote)}</p>` : ''}${t.labelNote ? `<p class="note">${esc(t.labelNote)}</p>` : ''}
+    ${holders ? `<ul class="exit-holders">${holders}</ul>` : ''}`, t.sources);
+  const s5 = sec('5. Contract risk', isSol ? `
+    <p>Mintable: ${yn(r.mintable, true)} · Freezable: ${yn(r.freezable, true)} · Transfer fee: ${yn(r.transferFee, true)} · Transfer hook: ${yn(r.transferHook, true)} · Balances changeable: ${yn(r.balanceMutable, true)} · Closable: ${yn(r.closable, true)}</p>` : `
+    <p>Honeypot: ${yn(r.honeypot, true)} · Can't sell all: ${yn(r.cannotSellAll, true)} · Buy tax: ${pct(r.buyTaxPct)} · Sell tax: ${pct(r.sellTaxPct)} · Tax changeable: ${yn(r.taxModifiable, true)}</p>
+    <p>Mintable: ${yn(r.mintable, true)} · Blacklist: ${yn(r.blacklist, true)} · Proxy (upgradeable): ${yn(r.proxy, true)} · Pausable: ${yn(r.transferPausable, true)} · Self-destruct: ${yn(r.selfDestruct, true)} · Source verified: ${yn(r.openSource)}</p>`, r.sources);
+  const gh = a.github;
+  const s6 = sec('6. Promises vs delivery (activity signals)', `
+    <p>GitHub: ${gh ? `<a href="${esc(gh.url)}" target="_blank" rel="noopener">${esc(gh.repo)}</a> — last push ${esc(String(gh.lastPushDaysAgo))} days ago${gh.archived ? ' (archived)' : ''}` : esc(a.githubNote || 'not available')}${a.coingeckoDev ? ` · ${esc(String(a.coingeckoDev.commits4w))} commits in the last 4 weeks (CoinGecko)` : ''}</p>
+    <p>Website: ${a.website ? (a.website.up ? '✅ online' : '⚠️ not reachable') + (a.website.status ? ' (HTTP ' + esc(String(a.website.status)) + ')' : '') + (a.website.note ? ' — ' + esc(a.website.note) : '') : na} · Traded in last 24h: ${yn(a.tradingActive24h)}</p>
+    <p>Overall activity: <strong>${esc(a.status)}</strong></p>
+    <p class="note">${esc(a.roadmapNote)}</p>`, a.sources);
+  const s7 = `<div class="full-sec verdict-box"><h4>7. Overall verdict: ${esc(vd.level)}</h4>
+    ${vd.red.length ? `<ul class="flags">${vd.red.map(x => `<li class="flag-bad">${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${vd.green.length ? `<ul class="flags">${vd.green.map(x => `<li class="flag-good">${esc(x)}</li>`).join('')}</ul>` : ''}
+    <p class="note">Built only from the sections above (${esc(vd.coverage)}). Not financial advice.</p></div>`;
+  return `<div class="full-report"><h3>📋 Full project report</h3>${s1}${s2}${s3}${s4}${s5}${s6}${s7}</div>`;
+}
 // ---------- Premium Deep Report ----------
 document.getElementById('deepForm').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -991,6 +1049,7 @@ async function runDeepReport(autoDetect) {
           ${clusterHtml || ''}
           <div class="dna-grid">${dnaHtml}</div>
           <div class="verdict-box"><strong>Deep verdict:</strong> ${esc(data.deepVerdict || '')}</div>
+          ${renderFull(data.full)}
           <p class="method">${esc(data.methodNote || '')}</p>
           <p class="note">${esc(data.riskNote || '')}</p>
         </div>`;
