@@ -8,11 +8,11 @@ export const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
 const USDC_SOL_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL_RPCS = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
 const EVM_CHAINS = {
-  ethereum: { label: 'Ethereum', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', rpcs: ['https://eth.llamarpc.com', 'https://ethereum.publicnode.com', 'https://rpc.ankr.com/eth'] },
-  base:     { label: 'Base', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', rpcs: ['https://base.llamarpc.com', 'https://base.publicnode.com', 'https://rpc.ankr.com/base'] },
-  bnb:      { label: 'BNB Chain', usdc: '0x8AC76a085641D1D8F3b5C83d63d9865a6f07D', rpcs: ['https://binance.llamarpc.com', 'https://bsc.publicnode.com', 'https://rpc.ankr.com/bsc'] },
-  polygon:  { label: 'Polygon', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', rpcs: ['https://polygon.llamarpc.com', 'https://polygon-bor.publicnode.com', 'https://rpc.ankr.com/polygon'] },
-  arbitrum: { label: 'Arbitrum', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
+  ethereum: { label: 'Ethereum', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals: 6, rpcs: ['https://eth.llamarpc.com', 'https://ethereum.publicnode.com', 'https://rpc.ankr.com/eth'] },
+  base:     { label: 'Base', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', decimals: 6, rpcs: ['https://base.llamarpc.com', 'https://base.publicnode.com', 'https://rpc.ankr.com/base'] },
+  bnb:      { label: 'BNB Chain', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', decimals: 18, rpcs: ['https://binance.llamarpc.com', 'https://bsc.publicnode.com', 'https://rpc.ankr.com/bsc'] },
+  polygon:  { label: 'Polygon', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', decimals: 6, rpcs: ['https://polygon.llamarpc.com', 'https://polygon-bor.publicnode.com', 'https://rpc.ankr.com/polygon'] },
+  arbitrum: { label: 'Arbitrum', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', decimals: 6, rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
 };
 
 export const MSG = {
@@ -21,7 +21,7 @@ export const MSG = {
   wrongAddress: "That transaction didn't send USDC to the Reality Check wallet. Double-check you sent to the address shown here.",
   wrongAmount: (p) => `That transaction sent less than ${p} USDC to Reality Check. The report costs ${p} USDC.`,
   tooOld: (sec) => `That payment is older than ${sec >= 3600 ? Math.round(sec / 3600) + ' hours' : Math.round(sec / 60) + ' minutes'}, so it can no longer unlock a report. Please send a fresh payment.`,
-  used: 'That transaction was already used to unlock a report. Each payment unlocks one report.',
+  used: 'That transaction was already used to unlock a report for a different coin. $1 = one report for one coin, so each coin needs its own payment.',
   badFormat: "That doesn't look like a complete transaction ID. Copy the FULL ID from your wallet or exchange (Solana IDs are long letters and numbers; EVM IDs start with 0x).",
   busy: 'The blockchain is busy right now. Please try again in a minute. Nothing was charged twice.'
 };
@@ -34,7 +34,7 @@ async function post(url, method, params) {
 async function verifySol(sig, price, maxAge) {
   let tx = null, reached = false;
   for (const u of SOL_RPCS) {
-    try { const j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 1, commitment: 'confirmed' }]); if (!j.error) { reached = true; if (j.result) { tx = j.result; break; } } } catch {}
+    try { const j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]); if (!j.error) { reached = true; if (j.result) { tx = j.result; break; } } } catch {}
   }
   if (!tx) return { status: reached ? 'invalid' : 'busy', reason: reached ? MSG.notFound : MSG.busy, pending: reached };
   if (tx.meta && tx.meta.err) return { status: 'invalid', reason: MSG.failed };
@@ -63,7 +63,7 @@ async function verifyEvm(cfg, sig, price, maxAge) {
   const bt = block?.timestamp ? parseInt(block.timestamp, 16) : 0;
   if (!bt) return { status: 'invalid', reason: MSG.busy };
   if (Math.floor(Date.now() / 1000) - bt > maxAge) return { status: 'invalid', reason: MSG.tooOld(maxAge) };
-  let decimals = 6;
+  let decimals = cfg.decimals ?? 6;
   try { const d = await evmRpc(cfg, 'eth_call', [{ to: cfg.usdc, data: '0x313ce567' }, 'latest']); if (d && d !== '0x') decimals = parseInt(d, 16); } catch {}
   const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
   const to = '0x000000000000000000000000' + RC_EVM.slice(2).toLowerCase();
@@ -99,22 +99,28 @@ export async function verifyManualTx(raw, { price = 1, maxAgeSec = manualMaxAge(
 export const manualMaxAge = () => (oneTimeEnforced() ? 86400 : 1800);
 export function oneTimeEnforced() { return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN); }
 
-// Atomically mark a tx as used. Returns { enforced, ok }.
-export async function claimTx(raw) {
+// $1 = one report for ONE coin. Each tx is stored with the coin it unlocked (e.g. "solana:<mint>").
+// Same tx + same coin -> may re-show that coin's report; same tx + any other coin -> blocked forever.
+const txKey = (raw) => { const id = String(raw).trim(); return /^0x/i.test(id) ? id.toLowerCase() : id; };
+export const coinKey = (chain, contract) => { const c = String(contract || '').trim(); return `${String(chain || '').toLowerCase()}:${/^0x/i.test(c) ? c.toLowerCase() : c}`; };
+const kv = async (path) => { const r = await fetch(`${process.env.KV_REST_API_URL}/${path}`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) }); return r.json(); };
+
+// Atomically bind a tx to a coin. Returns { enforced, ok, reshow }.
+export async function claimTx(raw, coin) {
   if (!oneTimeEnforced()) return { enforced: false, ok: true };
-  const id = String(raw).trim(); const key = /^0x/i.test(id) ? id.toLowerCase() : id;
+  const k = `rc:paidtx:${encodeURIComponent(txKey(raw))}`;
   try {
-    const r = await fetch(`${process.env.KV_REST_API_URL}/set/rc:paidtx:${encodeURIComponent(key)}/used/NX`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) });
-    const j = await r.json();
-    return { enforced: true, ok: j.result === 'OK' };
+    const j = await kv(`set/${k}/${encodeURIComponent(coin)}/NX`);
+    if (j.result === 'OK') return { enforced: true, ok: true };
+    const g = await kv(`get/${k}`);
+    return g.result === coin ? { enforced: true, ok: true, reshow: true } : { enforced: true, ok: false };
   } catch { return { enforced: true, ok: false, error: true }; }
 }
 
-export async function isTxUsed(raw) {
-  if (!oneTimeEnforced()) return false;
-  const id = String(raw).trim(); const key = /^0x/i.test(id) ? id.toLowerCase() : id;
-  try {
-    const r = await fetch(`${process.env.KV_REST_API_URL}/get/rc:paidtx:${encodeURIComponent(key)}`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) });
-    const j = await r.json(); return j.result != null;
-  } catch { return false; }
+// Returns the coin this tx already unlocked (or null). Legacy entries ("used") count as bound to no coin.
+export async function txBoundCoin(raw) {
+  if (!oneTimeEnforced()) return null;
+  try { const j = await kv(`get/rc:paidtx:${encodeURIComponent(txKey(raw))}`); return j.result ?? null; } catch { return null; }
 }
+// Blocked if the tx already unlocked a DIFFERENT coin.
+export async function isTxUsed(raw, coin) { const b = await txBoundCoin(raw); return b != null && b !== coin; }

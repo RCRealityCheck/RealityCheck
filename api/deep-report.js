@@ -1,5 +1,5 @@
 import { buildFull } from './_deep-full.js';
-import { claimTx, isTxUsed, manualMaxAge, MSG } from './_manual-pay.js';
+import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -56,19 +56,19 @@ export default async function handler(req, res) {
   const PAY_CHAINS = {
     solana:   { label: 'Solana', type: 'solana', usdc: USDC_SOL_MINT, wallet: RC_SOL,
                 rpcs: ['https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'] },
-    ethereum: { label: 'Ethereum', type: 'evm', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', wallet: RC_EVM,
+    ethereum: { label: 'Ethereum', type: 'evm', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals: 6, wallet: RC_EVM,
                 rpcs: ['https://eth.llamarpc.com', 'https://ethereum.publicnode.com', 'https://rpc.ankr.com/eth'] },
-    bnb:      { label: 'BNB Chain', type: 'evm', usdc: '0x8AC76a085641D1D8F3b5C83d63d9865a6f07D', wallet: RC_EVM,
+    bnb:      { label: 'BNB Chain', type: 'evm', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', decimals: 18, wallet: RC_EVM,
                 rpcs: ['https://binance.llamarpc.com', 'https://bsc.publicnode.com', 'https://rpc.ankr.com/bsc'] },
-    base:     { label: 'Base', type: 'evm', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', wallet: RC_EVM,
+    base:     { label: 'Base', type: 'evm', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', decimals: 6, wallet: RC_EVM,
                 rpcs: ['https://base.llamarpc.com', 'https://base.publicnode.com', 'https://rpc.ankr.com/base'] },
-    polygon:  { label: 'Polygon', type: 'evm', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', wallet: RC_EVM,
+    polygon:  { label: 'Polygon', type: 'evm', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', decimals: 6, wallet: RC_EVM,
                 rpcs: ['https://polygon.llamarpc.com', 'https://polygon-bor.publicnode.com', 'https://rpc.ankr.com/polygon'] },
-    arbitrum: { label: 'Arbitrum', type: 'evm', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', wallet: RC_EVM,
+    arbitrum: { label: 'Arbitrum', type: 'evm', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', decimals: 6, wallet: RC_EVM,
                 rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
   };
   const sig = String(txSignature).trim();
-  if (await isTxUsed(sig)) return res.status(200).json({ success: false, message: MSG.used });
+  if (await isTxUsed(sig, coinKey(chain, contract))) return res.status(200).json({ success: false, message: MSG.used });
   const nowSec = Math.floor(Date.now() / 1000);
   let paidAmount = 0;
   let paidChainLabel = '';
@@ -130,7 +130,7 @@ export default async function handler(req, res) {
     if (!blockTime || nowSec - blockTime > manualMaxAge()) {
       return { status: 'invalid', reason: MSG.tooOld(manualMaxAge()) };
     }
-    let decimals = 6;
+    let decimals = cfg.decimals ?? 6;
     try {
       const decHex = await evmRpc(cfg, 'eth_call', [{ to: cfg.usdc, data: '0x313ce567' }, 'latest']);
       if (decHex && decHex !== '0x') decimals = parseInt(decHex, 16);
@@ -179,7 +179,7 @@ export default async function handler(req, res) {
   }
   paidAmount = v.amount;
   paidChainLabel = v.chain;
-  { const claim = await claimTx(sig); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
+  { const claim = await claimTx(sig, coinKey(chain, contract)); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
 
   // ---------- 2. Payment OK — deep wallet forensics ----------
   let clean = String(contract).trim();

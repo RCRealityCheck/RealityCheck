@@ -7,7 +7,7 @@
 // Env: RC_PAYMENT_WALLET (Solana wallet), SOLANA_RPC_URL, RC_REF_SECRET (required),
 // optional KV_REST_API_URL + KV_REST_API_TOKEN (Upstash / Vercel KV) for one-time-use references.
 import crypto from 'crypto';
-import { verifyManualTx, claimTx, isTxUsed, manualMaxAge, MSG } from './_manual-pay.js';
+import { verifyManualTx, claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
@@ -60,12 +60,15 @@ async function getJson(url) {
 }
 
 // One-time use of a reference (only when a KV store is configured)
-async function claimReference(ref) {
+async function claimReference(ref, mint) {
   const url = process.env.KV_REST_API_URL, token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return { enforced: false, ok: true };
-  const r = await fetch(`${url}/set/exitdoor:${ref}/used/NX/EX/${REF_TTL_SEC * 2}`, { headers: { Authorization: `Bearer ${token}` } });
-  const j = await r.json();
-  return { enforced: true, ok: j.result === 'OK' };
+  // Reference is bound to one mint (also covered by the HMAC). Same mint may re-show; any other mint is refused.
+  const h = { headers: { Authorization: `Bearer ${token}` } };
+  const j = await (await fetch(`${url}/set/exitdoor:${ref}/${encodeURIComponent(mint)}/NX/EX/${REF_TTL_SEC * 2}`, h)).json();
+  if (j.result === 'OK') return { enforced: true, ok: true };
+  const g = await (await fetch(`${url}/get/exitdoor:${ref}`, h)).json();
+  return { enforced: true, ok: g.result === mint };
 }
 
 // ---- Payment verification (same checks as @solana/pay validateTransfer) ----
@@ -238,14 +241,14 @@ export default async function handler(req, res) {
   if (action === 'manual') {
     // Paid by copying the published address (any wallet / exchange): verify the pasted tx ID.
     if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your transaction ID to unlock the report.' });
-    if (await isTxUsed(txSignature)) return res.status(200).json({ success: false, message: MSG.used });
+    if (await isTxUsed(txSignature, coinKey('solana', mint))) return res.status(200).json({ success: false, message: MSG.used });
     const v = await verifyManualTx(txSignature, { price: PRICE_USDC, maxAgeSec: manualMaxAge() });
     if (v.status !== 'ok') return res.status(200).json({ success: false, pending: !!v.pending, message: v.reason || MSG.busy });
     let report;
     try { report = await buildReport(mint); } catch {
       return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Try again in a minute. Your payment still counts.' });
     }
-    const claim = await claimTx(txSignature);
+    const claim = await claimTx(txSignature, coinKey('solana', mint));
     if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used });
     return res.status(200).json({ success: true, paid: { signature: String(txSignature).trim(), amount: v.amount, chain: v.chain }, report,
       riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
@@ -264,7 +267,7 @@ export default async function handler(req, res) {
     if (pay.status !== 'ok') return res.status(200).json({ success: false, message: pay.reason });
     try {
       const report = await buildReport(mint);
-      const claim = await claimReference(reference).catch(() => ({ enforced: false, ok: true }));
+      const claim = await claimReference(reference, mint).catch(() => ({ enforced: false, ok: true }));
       if (!claim.ok) return res.status(200).json({ success: false, message: 'This payment was already used to open a report.' });
       return res.status(200).json({ success: true, paid: { signature: pay.signature, amount: pay.amount }, report,
         riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
