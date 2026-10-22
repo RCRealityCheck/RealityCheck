@@ -176,12 +176,14 @@
       <p class="note" id="payHint">Your wallet opens right here — approve, and the report unlocks automatically.</p>
       <div class="pay-divider"><span>or pay manually</span></div>
       <p class="pay-note">Send <strong>exactly 1 USDC</strong> on any supported chain to the Reality Check wallet, then paste the transaction hash — <strong>we detect the chain automatically</strong>.</p>
-      <p class="pay-note" style="margin-bottom:6px"><strong>Solana:</strong></p>
+      <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Solana:</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk"></div>
       <div class="wallet-copy">
         <code id="rcWalletSol">DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk</code>
         <button type="button" class="btn btn-ghost copy-any" data-t="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk">Copy</button>
       </div>
-      <p class="pay-note" style="margin-bottom:6px"><strong>Ethereum / Base / BNB / Polygon / Arbitrum:</strong></p>
+      <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Ethereum / Base / BNB Chain / Polygon / Arbitrum (same address):</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="0xa214852e96a6d263a14DdA188Fd90395a733b5eA"></div>
       <div class="wallet-copy">
         <code id="rcWalletEvm">0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code>
         <button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button>
@@ -215,10 +217,19 @@
   <div id="exitPay" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC with Solana Pay</h3>
-      <button type="button" class="btn btn-primary btn-full" id="exitPhantom">Pay with Phantom (this browser)</button>
+      <button type="button" class="btn btn-primary btn-full" id="exitPhantom" style="display:none">Pay with Phantom (this browser)</button>
+      <a id="exitPhantomApp" class="btn btn-primary btn-full" href="#" style="display:none">Open in Phantom app</a>
       <div class="pay-divider"><span>or scan with your phone</span></div>
       <div id="exitQr" class="exit-qr"></div>
-      <a id="exitDeepLink" class="btn btn-ghost btn-full" href="#">Open in Phantom on this phone</a>
+      <a id="exitDeepLink" class="btn btn-ghost btn-full" href="#">Open in another Solana wallet</a>
+      <div class="pay-divider"><span>or send to the wallet address</span></div>
+      <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Solana:</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk"></div>
+      <div class="wallet-copy"><code>DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk</code><button type="button" class="btn btn-ghost copy-any" data-t="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk">Copy</button></div>
+      <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Ethereum / Base / BNB Chain / Polygon / Arbitrum (same address):</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="0xa214852e96a6d263a14DdA188Fd90395a733b5eA"></div>
+      <div class="wallet-copy"><code>0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code><button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button></div>
+      <p class="note">Heads up: Exit Door unlocks automatically only when you pay with the Phantom / Solana Pay buttons or the Solana Pay QR above. A plain transfer to these addresses can't be matched to your request automatically.</p>
       <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
       <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each request has its own reference and only unlocks this token. Requests expire after 30 minutes.</p>
     </div>
@@ -273,7 +284,7 @@
 
 <section id="community" class="accent-rose">
   <div class="section-head">
-    <h2>Community &amp; Awareness</h2>
+    <h2>Community & Awareness</h2>
     <p>Crypto is full of risk. Here are the realities most people miss before they invest.</p>
   </div>
   <div class="risk-grid">
@@ -286,7 +297,7 @@
       <p>Locked tokens are different from free tokens. Always check whether large wallets can sell <em>right now</em>.</p>
     </div>
     <div class="risk-card rc-blue">
-      <h3>Exchange &amp; pool wallets</h3>
+      <h3>Exchange & pool wallets</h3>
       <p>Ignore known liquidity pools and exchange wallets when judging real concentration &mdash; they don't tell the true story.</p>
     </div>
     <div class="risk-card rc-violet">
@@ -368,7 +379,7 @@ function formatSupply(n) {
   return Number(n).toLocaleString();
 }
 function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
 }
 function verdictClass(v) {
   v = (v || '').toLowerCase();
@@ -814,14 +825,14 @@ function renderFull(f) {
   const p = f.project, o = f.owner, l = f.liquidity, t = f.tokenomics, r = f.risk, a = f.activity, vd = f.verdict;
   const isSol = 'mintAuthority' in o;
   const socials = (p.socials || []).map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.type)}</a>`).join(' · ') || na;
-  const s1 = sec('1. Project &amp; team', `
+  const s1 = sec('1. Project & team', `
     <p><strong>${v(p.name)}</strong>${p.symbol ? ' (' + esc(p.symbol) + ')' : ''}${p.categories && p.categories.length ? ' · ' + p.categories.map(esc).join(', ') : ''}</p>
     <p>Website: ${p.website ? `<a href="${esc(p.website)}" target="_blank" rel="noopener nofollow">${esc(p.website)}</a>` : na} · Socials: ${socials}</p>
     <p>Origin: ${v(p.countryOrigin)} · Launched: ${v(p.genesisDate)}</p>
     ${p.description ? `<p class="note">${esc(p.description)}…</p>` : ''}
     <p class="note">Team: ${esc(p.teamNote)}</p>`, p.sources);
   const linked = `<p>Funding-linked top wallets: ${o.linkedWallets && o.linkedWallets.length ? o.linkedWallets.map(c => `${c.members.length} wallets share funder ${addr(c.funder, o.explorer)} (${esc(String(c.combinedPct))}%)`).join('; ') : 'none found among the traced top wallets'}</p>`;
-  const s2 = sec('2. Deployer, owner &amp; linked wallets', (isSol ? `
+  const s2 = sec('2. Deployer, owner & linked wallets', (isSol ? `
     <p>Creator: ${addr(o.creator, o.explorer)} · Mint authority: ${auth(o.mintAuthority, o.explorer, o.renounced !== null)} · Freeze authority: ${auth(o.freezeAuthority, o.explorer, o.renounced !== null)}</p>
     <p>Metadata changeable: ${yn(o.metadataMutable, true)}</p>` : `
     <p>Owner: ${o.owner ? addr(o.owner, o.explorer) : na} · Renounced: ${yn(o.renounced)} · Creator: ${addr(o.creator, o.explorer)} (holds ${pct(o.creatorPercent)})</p>
@@ -835,7 +846,7 @@ function renderFull(f) {
     ${solBurn ? `<ul>${solBurn}</ul>` : ''}
     ${l.lpNote ? `<p class="note">${esc(l.lpNote)}</p>` : ''}`, l.sources);
   const holders = (t.topHolders || []).map((h, i) => `<li>#${i + 1} ${addr(h.address, o.explorer)} — ${esc(String(h.pct))}%${h.tag ? ' · ' + esc(h.tag) : ''}${h.locked ? ' 🔒' : ''}${h.isContract ? ' (contract)' : ''}</li>`).join('');
-  const s4 = sec('4. Tokenomics &amp; distribution', `
+  const s4 = sec('4. Tokenomics & distribution', `
     <p>Total supply: ${sup(t.totalSupply)} · Circulating: ${sup(t.circulatingSupply)} · Max: ${sup(t.maxSupply)} · Holders: ${sup(t.holderCount)}</p>
     <p>Top ${esc(String(t.topHoldersCovered || 0))} holders own ${pct(t.top10Pct)}: exchanges ${pct(t.onExchangesPct)} · locked/vesting ${pct(t.lockedPct)} · burned ${pct(t.burnedPct)} · pools ${pct(t.inPoolsPct)} · other contracts ${pct(t.otherContractsPct)} · <strong>unlabelled wallets ${pct(t.privateWalletsPct)}</strong></p>
     ${t.exchangeNote ? `<p class="note">${esc(t.exchangeNote)}</p>` : ''}${t.labelNote ? `<p class="note">${esc(t.labelNote)}</p>` : ''}
@@ -879,18 +890,38 @@ document.getElementById('deepForm').addEventListener('submit', async function (e
     return;
   }
   document.getElementById('payPanel').style.display = 'block';
+  rcRenderAddrQrs();
   document.getElementById('deepResult').innerHTML = '';
   document.getElementById('payPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   document.getElementById('verifyPay').onclick = function () { runDeepReport(true); };
 });
-document.querySelectorAll('.copy-any').forEach(btn => {
-  btn.addEventListener('click', function () {
-    const t = this.getAttribute('data-t');
-    if (navigator.clipboard) navigator.clipboard.writeText(t);
-    this.textContent = 'Copied ✓';
-    setTimeout(() => { this.textContent = 'Copy'; }, 2000);
+function rcCopyText(t) {
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.left = '0'; ta.style.opacity = '0'; ta.style.fontSize = '16px';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, t.length);
+    let ok = false; try { ok = document.execCommand('copy'); } catch {}
+    document.body.removeChild(ta); return ok;
+  };
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(() => true, () => fallback());
+  return Promise.resolve(fallback());
+}
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest && e.target.closest('.copy-any');
+  if (!btn) return;
+  rcCopyText(btn.getAttribute('data-t')).then(ok => {
+    btn.textContent = ok ? 'Copied ✓' : 'Press and hold the address to copy';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
   });
 });
+function rcRenderAddrQrs() {
+  loadQrLib().then(lib => {
+    document.querySelectorAll('.rc-addr-qr[data-qr]').forEach(el => {
+      if (el.firstChild) return;
+      try { const q = lib(0, 'M'); q.addData(el.getAttribute('data-qr')); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 4 }); } catch {}
+    });
+  }).catch(() => {});
+}
 // ---------- One-click wallet pay (no copy-paste) ----------
 document.getElementById('payChain').addEventListener('change', function () {
   document.getElementById('oneClickPay').textContent = this.value === 'solana' ? 'Pay 1 USDC with Phantom' : 'Pay 1 USDC with wallet';
@@ -1092,26 +1123,72 @@ document.getElementById('exitForm').addEventListener('submit', async function (e
   try {
     const d = await exitApi({ action: 'request', contract: mint });
     if (!d.success) { out.innerHTML = `<div class="report-card"><p>${esc(d.message)}</p></div>`; return; }
-    exitReq = { ...d, mint };
     out.innerHTML = '';
-    document.getElementById('exitPay').style.display = 'block';
-    document.getElementById('exitDeepLink').href = d.url;
-    try {
-      const qr = (await loadQrLib())(0, 'M'); qr.addData(d.url); qr.make();
-      document.getElementById('exitQr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4 });
-    } catch { document.getElementById('exitQr').textContent = 'QR unavailable — use the Phantom button.'; }
-    document.getElementById('exitStatus').textContent = 'Waiting for payment… this page unlocks the report automatically.';
-    exitTimer = setInterval(checkExitPayment, 4000);
-    document.getElementById('exitPay').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    await showExitPay({ ...d, mint });
   } catch { out.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>'; }
 });
+function exitHasPhantom() {
+  return !!((window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) || (window.solana && window.solana.isPhantom));
+}
+function exitProvider() {
+  return (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) ? window.phantom.solana : window.solana;
+}
+function exitIsMobile() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''); }
+function exitResumeUrl(r) {
+  const u = new URL(location.origin + location.pathname);
+  u.searchParams.set('xd_mint', r.mint); u.searchParams.set('xd_ref', r.reference);
+  u.searchParams.set('xd_exp', String(r.exp)); u.searchParams.set('xd_sig', r.sig);
+  u.hash = 'exitdoor';
+  return u.toString();
+}
+function exitUpdateButtons() {
+  const has = exitHasPhantom();
+  const btn = document.getElementById('exitPhantom'), app = document.getElementById('exitPhantomApp');
+  btn.style.display = has ? '' : 'none';
+  if (!has && exitIsMobile() && exitReq) {
+    app.href = 'https://phantom.app/ul/browse/' + encodeURIComponent(exitResumeUrl(exitReq)) + '?ref=' + encodeURIComponent('https://www.realitycheckglobal.trade');
+    app.style.display = '';
+  } else app.style.display = 'none';
+}
+async function showExitPay(r) {
+  exitReq = r;
+  if (exitTimer) clearInterval(exitTimer);
+  document.getElementById('exitMint').value = r.mint;
+  document.getElementById('exitPay').style.display = 'block';
+  document.getElementById('exitDeepLink').href = r.url;
+  rcRenderAddrQrs();
+  exitUpdateButtons();
+  // Phantom injects its provider shortly after load in its in-app browser; re-check briefly
+  [300, 1000, 2500].forEach(t => setTimeout(exitUpdateButtons, t));
+  try {
+    const qr = (await loadQrLib())(0, 'M'); qr.addData(r.url); qr.make();
+    document.getElementById('exitQr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4 });
+  } catch { document.getElementById('exitQr').textContent = 'QR unavailable — use the wallet buttons.'; }
+  document.getElementById('exitStatus').textContent = 'Waiting for payment… this page unlocks the report automatically.';
+  exitTimer = setInterval(checkExitPayment, 4000);
+  document.getElementById('exitPay').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+// Resume a pending Exit Door payment from the URL (e.g. after opening this page inside Phantom)
+(function exitResume() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const mint = p.get('xd_mint'), reference = p.get('xd_ref'), exp = Number(p.get('xd_exp')), sig = p.get('xd_sig');
+    const b58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+    if (!mint || !reference || !sig || !b58.test(mint) || !b58.test(reference) || !/^[0-9a-f]{64}$/.test(sig) || !exp) return;
+    const out = document.getElementById('exitResult');
+    if (Date.now() / 1000 > exp) { out.innerHTML = '<div class="report-card"><p>This payment request expired. Start a new one (no charge if you did not pay).</p></div>'; document.getElementById('exitMint').value = mint; return; }
+    const recipient = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk', usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', amount = 1;
+    const q = new URLSearchParams({ amount: String(amount), 'spl-token': usdcMint, reference, label: 'Reality Check', message: `Exit Door report ${mint.slice(0, 6)}…`, memo: `RC-EXIT-${mint.slice(0, 8)}` });
+    showExitPay({ success: true, mint, reference, exp, sig, recipient, amount, usdcMint, url: `solana:${recipient}?${q.toString()}` });
+  } catch {}
+})();
 document.getElementById('exitPhantom').addEventListener('click', async function () {
   if (!exitReq) return;
   const status = document.getElementById('exitStatus');
   try {
     const sw = await loadSolanaWeb3();
-    if (!window.solana || !window.solana.isPhantom) throw new Error('Phantom not found in this browser — scan the QR code instead.');
-    const provider = window.solana;
+    if (!exitHasPhantom()) throw new Error('Phantom not found in this browser — use "Open in Phantom app" or scan the QR code.');
+    const provider = exitProvider();
     await provider.connect();
     const user = provider.publicKey;
     const connection = new sw.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
