@@ -8,18 +8,20 @@
 const SOL_RPC_LIST = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
 async function solCall(method, params, tries = 3) {
   for (let attempt = 0; attempt < tries; attempt++) {
-    for (const rpc of SOL_RPC_LIST) {
+    for (const [i, rpc] of SOL_RPC_LIST.entries()) {
       try {
         const r = await fetch(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(15000) });
         const j = await r.json();
         if (!j.error && j.result !== undefined && j.result !== null) return j.result;
-      } catch {}
+        console.error('solana rpc', i, method, r.status, j.error ? String(j.error.message || j.error.code).slice(0, 120) : 'empty');
+      } catch (e) { console.error('solana rpc', i, method, 'fetch failed', String(e && e.message).slice(0, 120)); }
     }
     await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
   }
   return null;
 }
+console.log('solana rpc endpoints configured:', SOL_RPC_LIST.length, process.env.SOLANA_RPC_URL ? 'custom set' : 'custom missing');
 const solLargest = (mint, tries = 3) => solCall('getTokenLargestAccounts', [mint], tries);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
