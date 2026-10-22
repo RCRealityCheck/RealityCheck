@@ -152,6 +152,7 @@
       <option value="base-mainnet">Base</option>
       <option value="polygon-mainnet">Polygon</option>
       <option value="arbitrum-mainnet">Arbitrum</option>
+      <option value="solana-mainnet">Solana</option>
     </select>
     <button type="submit" class="btn btn-primary btn-full">Unlock deep report — 1 USDC</button>
   </form>
@@ -804,7 +805,9 @@ document.getElementById('deepForm').addEventListener('submit', async function (e
   document.getElementById('payPanel').style.display = 'none';
   dr.innerHTML = '<div class="loader"><span class="spin"></span> Checking we have holder data for this token before you pay...</div>';
   try {
-    const pre = await (await fetch(location.origin + '/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch }) })).json();
+    const pre = ch === 'solana-mainnet'
+      ? await (await fetch(location.origin + '/api/deep-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch, precheck: true }) })).json()
+      : await (await fetch(location.origin + '/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch }) })).json();
     if (!pre.success) {
       dr.innerHTML = partialHtml({ ...pre, message: 'No payment needed — we cannot run a deep report for this token right now. ' + (pre.message || '') });
       return;

@@ -4,11 +4,38 @@
 // Flow: user pays 1 USDC on their chosen chain, pastes the tx hash/signature.
 // Server verifies the payment on-chain, then runs forensic wallet intel.
 // All logic server-side. No DB — replay protection via 30-min payment recency.
+// Solana RPC: SOLANA_RPC_URL first (Helius), public fallbacks; retries 'overloaded' responses.
+const SOL_RPC_LIST = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
+async function solCall(method, params, tries = 3) {
+  for (let attempt = 0; attempt < tries; attempt++) {
+    for (const rpc of SOL_RPC_LIST) {
+      try {
+        const r = await fetch(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(15000) });
+        const j = await r.json();
+        if (!j.error && j.result !== undefined && j.result !== null) return j.result;
+      } catch {}
+    }
+    await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
+  }
+  return null;
+}
+const solLargest = (mint, tries = 3) => solCall('getTokenLargestAccounts', [mint], tries);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
-  const { contract, chain, payChain, txSignature } = req.body || {};
+  const { contract, chain, payChain, txSignature, precheck } = req.body || {};
   if (!contract || !chain) return res.status(400).json({ success: false, message: 'Contract and chain required' });
+  if (precheck && chain === 'solana-mainnet') {
+    const m = String(contract).trim();
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(m)) return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address — no payment needed.' });
+    const l = await solLargest(m);
+    const n = (l?.value || []).length;
+    return res.status(200).json(n ? { success: true, holders: n } : { success: false, message: 'Solana RPC returned no holder data for this token right now, so a deep report cannot run. No payment needed — try again in a minute or try another token.' });
+  }
   if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your USDC payment transaction hash to unlock the deep report.' });
+  if (chain === 'solana-mainnet' && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(contract).trim())) {
+    return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address. Double-check it before paying — no payment was taken.' });
+  }
 
   const RC_SOL = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
   const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
@@ -148,9 +175,128 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: false, message: 'Invalid contract address.' });
   }
   if (chain === 'solana-mainnet') {
-    return res.status(200).json({ success: false, message: 'Deep wallet forensics for Solana tokens is coming soon — your payment was verified, please try an EVM token (Ethereum, BNB, Base, Polygon, Arbitrum, Avalanche).' });
+    // ---------- Solana deep forensics (public RPC, no key needed) ----------
+    const mint = clean;
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(mint)) {
+      return res.status(200).json({ success: false, message: 'Invalid Solana mint address.' });
+    }
+    const solRpc = async (method, params) => {
+      for (const rpc of SOL_RPC_LIST) {
+        try {
+          const r = await fetch(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(15000) });
+          const j = await r.json();
+          if (!j.error && j.result !== undefined && j.result !== null) return j.result;
+        } catch {}
+      }
+      return null;
+    };
+    try {
+      const supply = await solRpc('getTokenSupply', [mint]);
+      const totalUi = Number(supply?.value?.uiAmountString || supply?.value?.uiAmount || 0);
+      const largest = await solLargest(mint, 6);
+      const accts = (largest?.value || []).slice(0, 15);
+      if (!accts.length) return res.status(200).json({ success: false, message: 'Payment verified, but Solana RPC returned no holder data for this token right now. Your payment stays valid for 30 minutes — paste the same signature again in a minute or try another token.' });
+      const ownersRes = await solRpc('getMultipleAccounts', [accts.map(a => a.address), { encoding: 'jsonParsed' }]);
+      const ownerOf = (accts || []).map((a, i) => ownersRes?.value?.[i]?.data?.parsed?.info?.owner || null);
+      const uniqOwners = [...new Set(ownerOf.filter(Boolean))];
+      const ownerInfo = await solRpc('getMultipleAccounts', [uniqOwners, { encoding: 'json' }]);
+      const execByOwner = {};
+      (ownerInfo?.value || []).forEach((acc, i) => { execByOwner[uniqOwners[i]] = !!acc?.executable; });
+      let name = 'Token', symbol = '';
+      try {
+        const ds = await (await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: AbortSignal.timeout(10000) })).json();
+        const p0 = (ds.pairs || [])[0];
+        if (p0?.baseToken) { name = p0.baseToken.name || name; symbol = p0.baseToken.symbol || symbol; }
+      } catch {}
+      const SYSTEM = '11111111111111111111111111111111';
+      const pctOf = (ui) => totalUi > 0 ? +(ui / totalUi * 100).toFixed(2) : 0;
+      const seen = new Set();
+      const personal = [];
+      accts.forEach((a, i) => {
+        const owner = ownerOf[i];
+        const ui = Number(a.uiAmountString ?? a.uiAmount ?? 0);
+        let kind = 'personal';
+        if (!owner) kind = 'unknown';
+        else if (owner === SYSTEM) kind = 'burned';
+        else if (execByOwner[owner]) kind = 'liquidity';
+        if ((kind === 'personal' || kind === 'unknown') && !seen.has(owner || a.address)) {
+          seen.add(owner || a.address);
+          personal.push({ address: owner || a.address, pct: pctOf(ui), kind });
+        }
+      });
+      const top5 = personal.slice(0, 5);
+      const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+      const dna = await Promise.all(top5.map(async (w) => {
+        const addr = w.address;
+        let ageDays = null, txCount = 0, funder = null, tokenCount = 0;
+        const topHoldings = [];
+        try {
+          let sigs = await solRpc('getSignaturesForAddress', [addr, { limit: 1000 }]);
+          sigs = sigs || [];
+          let capped = false;
+          if (sigs.length === 1000) {
+            const more = await solRpc('getSignaturesForAddress', [addr, { limit: 1000, before: sigs[999].signature }]);
+            if (more?.length) sigs = sigs.concat(more);
+            capped = sigs.length >= 2000;
+          }
+          txCount = sigs.length;
+          if (sigs.length && !capped) {
+            const oldest = sigs[sigs.length - 1];
+            const tx = await solRpc('getTransaction', [oldest.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]);
+            if (tx?.blockTime) ageDays = Math.max(0, Math.floor((Date.now() - tx.blockTime * 1000) / 86400000));
+            const keys = tx?.transaction?.message?.accountKeys || [];
+            const pre = tx?.meta?.preBalances || [], post = tx?.meta?.postBalances || [];
+            for (let k = 0; k < keys.length; k++) {
+              const pk = keys[k].pubkey || keys[k];
+              if (pk === addr) continue;
+              if (pre[k] !== undefined && post[k] !== undefined && (pre[k] - post[k]) > 5000) { funder = pk; break; }
+            }
+          }
+        } catch {}
+        try {
+          const ta = await solRpc('getTokenAccountsByOwner', [addr, { programId: TOKEN_PROGRAM }, { encoding: 'jsonParsed' }]);
+          const list = ta?.value || [];
+          tokenCount = list.length;
+          for (const t of list.slice(0, 3)) {
+            const m = t?.account?.data?.parsed?.info?.mint;
+            if (m) topHoldings.push(m.slice(0, 6) + '…');
+          }
+        } catch {}
+        const flags = [];
+        if (ageDays !== null && ageDays < 30) flags.push(`🍼 Only ${ageDays} days old — created right around this token's life`);
+        if (tokenCount <= 1) flags.push(`🎯 Holds nothing else — this wallet exists only for this token`);
+        if (txCount > 0 && txCount < 10) flags.push(`👻 Barely active — ${txCount} transactions total`);
+        return { address: addr, pct: w.pct, ageDays, txCount, funder, tokenCount, topHoldings, flags };
+      }));
+      const clusters = [];
+      const byFunder = {};
+      dna.forEach((w, i) => { if (w.funder) (byFunder[w.funder] = byFunder[w.funder] || []).push(i); });
+      for (const [funder, idxs] of Object.entries(byFunder)) {
+        if (idxs.length > 1) {
+          const combined = idxs.reduce((s, i) => s + dna[i].pct, 0);
+          clusters.push({ funder, members: idxs.map(i => ({ rank: i + 1, address: dna[i].address, pct: dna[i].pct })), combinedPct: +combined.toFixed(2) });
+        }
+      }
+      const young = dna.filter(w => w.ageDays !== null && w.ageDays < 30).length;
+      const singleToken = dna.filter(w => w.tokenCount <= 1).length;
+      const parts = [];
+      if (clusters.length) { const c = clusters[0]; parts.push(`🚨 CLUSTER FOUND: ${c.members.length} of the top wallets were all funded by the same address (${c.funder.slice(0, 10)}…) — they look independent but hold a combined ${c.combinedPct}% as one entity.`); }
+      if (young >= 2) parts.push(`🍼 ${young} of the top 5 wallets are less than 30 days old — fresh wallets holding big positions is a classic insider pattern.`);
+      else if (young === 1) parts.push(`🍼 One top wallet is less than 30 days old — worth watching.`);
+      if (singleToken >= 2) parts.push(`🎯 ${singleToken} of the top 5 wallets hold NOTHING but this token — wallets created for a single purpose.`);
+      else if (singleToken === 1) parts.push(`🎯 One top wallet holds nothing but this token.`);
+      if (!parts.length) parts.push(`✅ The top wallets look like real, established holders — aged wallets with diverse portfolios and no shared funding. Nothing hidden in the DNA.`);
+      return res.status(200).json({
+        success: true, paid: true, payChain: paidChainLabel, amountUsdc: +Number(paidAmount).toFixed(2),
+        name, symbol, wallets: dna, clusters, deepVerdict: parts.join(' '),
+        methodNote: 'Solana wallet age and funder come from each wallet\'s earliest on-chain transaction via public RPC; clustering matches shared funding sources. Heuristics, not proof — but the chain does not lie about timing.',
+        riskNote: 'Deep forensic heuristics on public on-chain data. Not financial advice. Never invest more than you can afford to lose.'
+      });
+    } catch (e) {
+      return res.status(200).json({ success: false, message: 'Payment verified, but the deep analysis failed to load. Try again in a minute.' });
+    }
   }
-
   const COVALENT_KEY = process.env.COVALENT_KEY || '';
   const chainMap = {
     'eth-mainnet': 'eth-mainnet', 'bsc-mainnet': 'bsc-mainnet',

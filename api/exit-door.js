@@ -34,6 +34,8 @@ const sign = (ref, contract, exp) =>
 
 async function rpc(method, params) {
   let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+  if (attempt) await new Promise(r => setTimeout(r, 700 * attempt));
   for (const url of RPCS) {
     try {
       const r = await fetch(url, {
@@ -45,6 +47,7 @@ async function rpc(method, params) {
       if (!j.error) return j.result;
       lastErr = j.error;
     } catch (e) { lastErr = e; }
+  }
   }
   throw new Error('RPC failed: ' + (lastErr?.message || method));
 }
