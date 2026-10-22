@@ -85,7 +85,8 @@ export async function buildFull(address, chain, ctx = {}) {
     genesisDate: cg?.genesis_date || null,
     categories: (cg?.categories || []).filter(Boolean).slice(0, 5),
     team: null,
-    teamNote: 'No public data source verifies team identities. Check the official website and socials yourself.',
+    teamNote: 'Team: anonymous / not disclosed. No public data source verifies team identities — check the official website and socials yourself.',
+    xAccountAge: null, xAccountAgeNote: 'X account age: data not available (X offers no free public lookup).',
     sources: [cg ? 'CoinGecko' : null, pairs.length ? 'DexScreener' : null].filter(Boolean)
   };
 
@@ -95,12 +96,13 @@ export async function buildFull(address, chain, ctx = {}) {
     const mintAuth = gp?.mintable ? (gp.mintable.authority?.[0]?.address || (gp.mintable.status === '1' ? 'active' : null)) : undefined;
     const freezeAuth = gp?.freezable ? (gp.freezable.authority?.[0]?.address || (gp.freezable.status === '1' ? 'active' : null)) : undefined;
     owner = {
-      owner: null, creator: gp?.creators?.[0]?.address || null,
+      owner: null, creator: ctx.deployer?.address || gp?.creators?.[0]?.address || null,
+      deployer: ctx.deployer || null,
       mintAuthority: mintAuth === undefined ? null : mintAuth, freezeAuthority: freezeAuth === undefined ? null : freezeAuth,
       renounced: (mintAuth === undefined || freezeAuth === undefined) ? null : (!mintAuth && !freezeAuth),
       metadataMutable: gp?.metadata_mutable ? gp.metadata_mutable.status === '1' : null,
       linkedWallets: ctx.clusters || [], explorer: EXPLORER[chain],
-      sources: gp ? ['GoPlus'] : []
+      sources: [gp ? 'GoPlus' : null, ctx.deployer?.address ? 'Solana RPC' : null].filter(Boolean)
     };
   } else {
     const ownerAddr = gp?.owner_address || null;
@@ -126,25 +128,28 @@ export async function buildFull(address, chain, ctx = {}) {
   const solBurn = isSol && gp?.dex?.length ? gp.dex.map(d => ({ dex: d.dex_name, pool: d.id, burnPercent: num(d.burn_percent) })) : null;
   const liquidity = {
     totalUsd: pairs.length ? +pairs.reduce((s, p) => s + (p.liquidity?.usd || 0), 0).toFixed(0) : null,
-    pools: pairs.slice(0, 12).map(p => ({ dex: p.dexId, pair: `${p.baseToken?.symbol}/${p.quoteToken?.symbol}`, address: p.pairAddress, liquidityUsd: p.liquidity?.usd ?? null, volume24hUsd: p.volume?.h24 ?? null, url: p.url })),
+    pools: pairs.slice(0, 12).map(p => { const s = (ctx.sol?.lp || []).find(x => x.address === p.pairAddress); return { dex: p.dexId, pair: `${(p.baseToken?.symbol || '').toUpperCase()}/${(p.quoteToken?.symbol || '').toUpperCase()}`, address: p.pairAddress, liquidityUsd: p.liquidity?.usd ?? null, volume24hUsd: p.volume?.h24 ?? null, url: p.url, lpStatus: s ? s.status : (isSol ? 'unknown' : null), lpDetail: s ? s.detail : (isSol ? 'Not checked (only the 6 largest pools are checked).' : null) }; }),
     poolCount: pairs.length,
     lpLockedPct: lp.length ? +(lockedLp * 100).toFixed(2) : null,
     lpBurnedPct: lp.length ? +(burnedLp * 100).toFixed(2) : null,
     lpUnlockedPct: lp.length ? +Math.max(0, (knownLp - lockedLp - burnedLp) * 100).toFixed(2) : null,
     lpHolders: lp.slice(0, 5).map(h => ({ address: h.address, pct: +((num(h.percent) || 0) * 100).toFixed(2), tag: h.tag || null, locked: h.is_locked === 1 || h.is_locked === '1' })),
     solanaPoolBurn: solBurn,
-    lpNote: lp.length || solBurn ? null : (isSol ? 'LP burn/lock data not available for this token.' : 'LP lock data not available (concentrated-liquidity pools such as Uniswap v3/v4 have no LP token to lock).'),
+    lpNote: lp.length || solBurn || ctx.sol?.lp?.length ? null : (isSol ? 'LP burn/lock data not available for this token.' : 'LP lock data not available (concentrated-liquidity pools such as Uniswap v3/v4 have no LP token to lock).'),
     sources: [pairs.length ? 'DexScreener' : null, gp ? 'GoPlus' : null].filter(Boolean)
   };
 
   // 4. Tokenomics & distribution
-  const holders = (gp?.holders || []).map(h => ({ address: h.address || h.account || null, pct: +((num(h.percent) || 0) * 100).toFixed(2), tag: h.tag || null, isContract: h.is_contract === 1, locked: h.is_locked === 1 || h.is_locked === '1' }));
+  const solH = isSol && ctx.sol?.holders?.length ? ctx.sol.holders : null;
+  const holders = solH
+    ? solH.map(h => ({ address: h.address, pct: h.pct, tag: h.label, isContract: h.category !== 'private', locked: h.category === 'lock', category: h.category }))
+    : (gp?.holders || []).map(h => ({ address: h.address || h.account || null, pct: +((num(h.percent) || 0) * 100).toFixed(2), tag: h.tag || null, isContract: h.is_contract === 1, locked: h.is_locked === 1 || h.is_locked === '1' }));
   const sumPct = arr => +arr.reduce((s, h) => s + h.pct, 0).toFixed(2);
   const poolSet = new Set(pairs.map(p => String(p.pairAddress).toLowerCase()));
-  const burnedH = holders.filter(h => BURN.has(String(h.address).toLowerCase()));
+  const burnedH = holders.filter(h => h.category === 'burn' || BURN.has(String(h.address).toLowerCase()));
   const cex = holders.filter(h => h.tag && CEX_WORDS.test(h.tag));
   const lockedH = holders.filter(h => !burnedH.includes(h) && (h.locked || (h.tag && LOCKER_WORDS.test(h.tag))));
-  const poolH = holders.filter(h => poolSet.has(String(h.address).toLowerCase()));
+  const poolH = holders.filter(h => h.category === 'pool' || poolSet.has(String(h.address).toLowerCase()));
   const labelled = new Set([...burnedH, ...cex, ...lockedH, ...poolH]);
   const otherContracts = holders.filter(h => h.isContract && !labelled.has(h));
   const privateH = holders.filter(h => !h.isContract && !labelled.has(h));
@@ -154,6 +159,8 @@ export async function buildFull(address, chain, ctx = {}) {
     circulatingSupply: num(md.circulating_supply) || null,
     maxSupply: num(md.max_supply),
     holderCount: num(gp?.holder_count),
+    holderNote: holders.length ? null : (ctx.sol?.holderNote || 'Holder concentration unknown: no holder list was available from our data sources.'),
+    distributionNote: ctx.sol?.distribution?.note || null,
     topHoldersCovered: holders.length,
     top10Pct: holders.length ? sumPct(holders.slice(0, 10)) : null,
     onExchangesPct: holders.length ? sumPct(cex) : null,
@@ -165,7 +172,7 @@ export async function buildFull(address, chain, ctx = {}) {
     exchangeNote: holders.length && !cex.length ? 'No top holder is labelled as an exchange wallet in the data — the exchange share may be higher than shown.' : null,
     labelNote: isSol ? 'Wallet labels on Solana are limited: some unlabelled wallets may be exchanges or pools.' : null,
     topHolders: holders.slice(0, 10),
-    sources: [md.total_supply ? 'CoinGecko' : null, gp ? 'GoPlus' : null].filter(Boolean)
+    sources: [md.total_supply ? 'CoinGecko' : null, solH ? 'Solana RPC' : (gp ? 'GoPlus' : null)].filter(Boolean)
   };
 
   // 5. Contract risk
@@ -224,7 +231,16 @@ export async function buildFull(address, chain, ctx = {}) {
   if (owner.sameCreatorHoneypots) red.push('The same creator has deployed honeypot tokens before (GoPlus).');
   if (liquidity.totalUsd !== null && liquidity.totalUsd < 50000) red.push(`Thin liquidity: only $${liquidity.totalUsd.toLocaleString()} across all pools.`);
   if (liquidity.lpUnlockedPct !== null && liquidity.lpUnlockedPct > 50) red.push(`${liquidity.lpUnlockedPct}% of the main pool's LP tokens are not in a known locker or burn address (GoPlus) — that liquidity could be withdrawn.`);
-  if ((tokenomics.privateWalletsPct || 0) > 30) red.push(`${tokenomics.privateWalletsPct}% of supply sits in top wallets not labelled as exchange, pool, lock or burn — they may be able to sell anytime.`);
+  // Holder concentration — always overrides "no major red flags". Pools, burn and locks excluded.
+  const warn = [];
+  const realH = holders.filter(h => !burnedH.includes(h) && !lockedH.includes(h) && !poolH.includes(h) && !(h.category === 'program') && !(!solH && h.isContract));
+  const top10Real = +realH.slice(0, 10).reduce((s, h) => s + h.pct, 0).toFixed(2);
+  let concentration = holders.length ? 'known' : 'unknown';
+  realH.filter(h => h.pct >= 20).forEach(h => red.push(`One wallet (${String(h.address).slice(0, 6)}…${String(h.address).slice(-4)}) holds ${h.pct}% and could sell at any time.`));
+  realH.filter(h => h.pct >= 10 && h.pct < 20).forEach(h => warn.push(`One wallet (${String(h.address).slice(0, 6)}…${String(h.address).slice(-4)}) holds ${h.pct}% of supply.`));
+  if (top10Real >= 50) red.push(`The top 10 holders (excluding pools, burn and locks) own ${top10Real}% of supply.`);
+  if (!holders.length) red.push('Holder concentration unknown — no holder list was available, so we cannot rule out a whale.');
+  tokenomics.top10RealPct = holders.length ? top10Real : null;
   if (ctx.clusters?.length) red.push(`${ctx.clusters.length} group(s) of top wallets share a funder — possibly one entity.`);
   if (activity.status === 'looks inactive') red.push('Activity signals look inactive (GitHub / website / trading).');
   if (owner.renounced === true) green.push(isSol ? 'Mint and freeze authority are revoked.' : 'Ownership is renounced.');
@@ -234,8 +250,11 @@ export async function buildFull(address, chain, ctx = {}) {
   if (liquidity.lpLockedPct !== null && liquidity.lpLockedPct + liquidity.lpBurnedPct >= 90) green.push(`${(liquidity.lpLockedPct + liquidity.lpBurnedPct).toFixed(1)}% of the main pool's LP is locked or burned.`);
   if (activity.status === 'active') green.push('Project shows recent activity (GitHub, website or trading).');
   const covered = [gp, cg, pairs.length].filter(Boolean).length;
-  const level = red.some(r => /HONEYPOT|cannot sell/i.test(r)) ? 'DANGER' : red.length >= 4 ? 'HIGH RISK' : red.length >= 2 ? 'CAUTION' : covered >= 2 ? 'NO MAJOR RED FLAGS' : 'NOT ENOUGH DATA';
-  const verdict = { level, red, green, coverage: `${covered}/3 core data sources answered (GoPlus, CoinGecko, DexScreener)` };
+  let level = red.some(r => /HONEYPOT|cannot sell/i.test(r)) ? 'DANGER' : red.length >= 4 ? 'HIGH RISK' : red.length >= 2 ? 'CAUTION' : covered >= 2 ? 'NO MAJOR RED FLAGS' : 'NOT ENOUGH DATA';
+  if (realH.some(h => h.pct >= 20) && (level === 'CAUTION' || level === 'NO MAJOR RED FLAGS' || level === 'NOT ENOUGH DATA')) level = 'HIGH RISK';
+  if (concentration === 'unknown' && level === 'NO MAJOR RED FLAGS') level = 'CAUTION — HOLDER CONCENTRATION UNKNOWN';
+  if (level === 'NO MAJOR RED FLAGS' && (warn.length || red.length)) level = 'CAUTION';
+  const verdict = { level, red, warn, green, coverage: `${covered}/3 core data sources answered (GoPlus, CoinGecko, DexScreener)` };
 
   return { project, owner, liquidity, tokenomics, risk, activity, verdict, generatedAt: new Date().toISOString() };
 }

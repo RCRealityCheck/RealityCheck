@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
+import { solDeep, deployerFacts } from './_sol-deep.js';
 import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
@@ -212,44 +213,21 @@ async function single(req, res, opts = {}) {
       return null;
     };
     try {
-      const supply = await solRpc('getTokenSupply', [mint]);
-      const totalUi = Number(supply?.value?.uiAmountString || supply?.value?.uiAmount || 0);
-      const largest = await solLargest(mint, 6);
-      const accts = (largest?.value || []).slice(0, 15);
-      if (!accts.length) return fullOnly(res, mint, chain, paidChainLabel, paidAmount, 'Wallet DNA not available: Solana RPC returned no holder list right now. All other sections are below.');
-      const ownersRes = await solRpc('getMultipleAccounts', [accts.map(a => a.address), { encoding: 'jsonParsed' }]);
-      const ownerOf = (accts || []).map((a, i) => ownersRes?.value?.[i]?.data?.parsed?.info?.owner || null);
-      const uniqOwners = [...new Set(ownerOf.filter(Boolean))];
-      const ownerInfo = await solRpc('getMultipleAccounts', [uniqOwners, { encoding: 'json' }]);
-      const execByOwner = {};
-      (ownerInfo?.value || []).forEach((acc, i) => { execByOwner[uniqOwners[i]] = !!acc?.executable; });
-      let name = 'Token', symbol = '';
+      let pairs = [], name = 'Token', symbol = '';
       try {
         const ds = await (await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: AbortSignal.timeout(10000) })).json();
-        const p0 = (ds.pairs || [])[0];
-        if (p0?.baseToken) { name = p0.baseToken.name || name; symbol = p0.baseToken.symbol || symbol; }
+        pairs = (ds.pairs || []).filter(p => p.chainId === 'solana');
+        const p0 = pairs[0];
+        if (p0?.baseToken) { name = p0.baseToken.name || name; symbol = (p0.baseToken.symbol || symbol).toUpperCase(); }
       } catch {}
-      const SYSTEM = '11111111111111111111111111111111';
-      const pctOf = (ui) => totalUi > 0 ? +(ui / totalUi * 100).toFixed(2) : 0;
-      const seen = new Set();
-      const personal = [];
-      accts.forEach((a, i) => {
-        const owner = ownerOf[i];
-        const ui = Number(a.uiAmountString ?? a.uiAmount ?? 0);
-        let kind = 'personal';
-        if (!owner) kind = 'unknown';
-        else if (owner === SYSTEM) kind = 'burned';
-        else if (execByOwner[owner]) kind = 'liquidity';
-        if ((kind === 'personal' || kind === 'unknown') && !seen.has(owner || a.address)) {
-          seen.add(owner || a.address);
-          personal.push({ address: owner || a.address, pct: pctOf(ui), kind });
-        }
-      });
-      const top5 = personal.slice(0, 5);
+      const sd = await solDeep(mint, solRpc, pairs);
+      if (!sd.holders.length) return fullOnly(res, mint, chain, paidChainLabel, paidAmount, 'Holder concentration unknown: ' + (sd.holderNote || 'no holder list right now.') + ' All other sections are below.');
+      const personal = sd.holders.filter(h => h.category === 'private');
+      const top5 = personal.slice(0, 10);
       const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
       const dna = await Promise.all(top5.map(async (w) => {
         const addr = w.address;
-        let ageDays = null, txCount = 0, funder = null, tokenCount = 0;
+        let ageDays = null, ageMin = false, txCount = 0, funder = null, tokenCount = 0;
         const topHoldings = [];
         try {
           let sigs = await solRpc('getSignaturesForAddress', [addr, { limit: 1000 }]);
@@ -261,6 +239,7 @@ async function single(req, res, opts = {}) {
             capped = sigs.length >= 2000;
           }
           txCount = sigs.length;
+          if (capped && sigs.length) { const bt = sigs[sigs.length - 1].blockTime; if (bt) { const ad = Math.max(0, Math.floor((Date.now() - bt * 1000) / 86400000)); if (ad >= 1) { ageDays = ad; ageMin = true; } } }
           if (sigs.length && !capped) {
             const oldest = sigs[sigs.length - 1];
             const tx = await solRpc('getTransaction', [oldest.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]);
@@ -284,32 +263,41 @@ async function single(req, res, opts = {}) {
           }
         } catch {}
         const flags = [];
-        if (ageDays !== null && ageDays < 30) flags.push(`🍼 Only ${ageDays} days old — created right around this token's life`);
+        if (ageDays !== null && !ageMin && ageDays < 30) flags.push(`🍼 Only ${ageDays} days old — created right around this token's life`);
         if (tokenCount <= 1) flags.push(`🎯 Holds nothing else — this wallet exists only for this token`);
         if (txCount > 0 && txCount < 10) flags.push(`👻 Barely active — ${txCount} transactions total`);
-        return { address: addr, pct: w.pct, ageDays, txCount, funder, tokenCount, topHoldings, flags };
+        if (w.pct >= 20) flags.unshift(`🚩 Holds ${w.pct}% of supply and could sell at any time`);
+        else if (w.pct >= 10) flags.unshift(`⚠️ Holds ${w.pct}% of supply`);
+        return { address: addr, pct: w.pct, ageDays, ageIsMinimum: ageMin, txCount, txCountCapped: txCount >= 2000, funder, funderNote: funder ? null : (txCount >= 2000 ? 'Not traceable: wallet has more than 2,000 transactions.' : 'Not traceable from its first transaction.'), tokenCount, topHoldings, flags, label: w.label };
       }));
       const clusters = [];
       const byFunder = {};
-      dna.forEach((w, i) => { if (w.funder) (byFunder[w.funder] = byFunder[w.funder] || []).push(i); });
+      const creatorAddr = sd.coinCreator || null;
+      dna.forEach((w, i) => { if (w.funder) (byFunder[w.funder] = byFunder[w.funder] || []).push(i); if (creatorAddr && (w.address === creatorAddr || w.funder === creatorAddr) && w.funder !== creatorAddr) (byFunder[creatorAddr] = byFunder[creatorAddr] || []).push(i); });
       for (const [funder, idxs] of Object.entries(byFunder)) {
-        if (idxs.length > 1) {
+        if (idxs.length > 1 || (funder === creatorAddr && idxs.length)) {
           const combined = idxs.reduce((s, i) => s + dna[i].pct, 0);
           clusters.push({ funder, members: idxs.map(i => ({ rank: i + 1, address: dna[i].address, pct: dna[i].pct })), combinedPct: +combined.toFixed(2) });
         }
       }
-      const young = dna.filter(w => w.ageDays !== null && w.ageDays < 30).length;
+      const young = dna.filter(w => w.ageDays !== null && !w.ageIsMinimum && w.ageDays < 30).length;
       const singleToken = dna.filter(w => w.tokenCount <= 1).length;
       const parts = [];
+      const big = dna.filter(w => w.pct >= 20), mid = dna.filter(w => w.pct >= 10 && w.pct < 20);
+      const top10p = +personal.slice(0, 10).reduce((s, w) => s + w.pct, 0).toFixed(2);
+      big.forEach(w => parts.push(`🚩 RED FLAG: one wallet (${w.address.slice(0, 6)}…${w.address.slice(-4)}) holds ${w.pct}% and could sell at any time.`));
+      mid.forEach(w => parts.push(`⚠️ One wallet (${w.address.slice(0, 6)}…${w.address.slice(-4)}) holds ${w.pct}% of supply.`));
+      if (top10p >= 50) parts.push(`🚩 RED FLAG: the top 10 private wallets hold ${top10p}% of supply (pools, burn and locks excluded).`);
       if (clusters.length) { const c = clusters[0]; parts.push(`🚨 CLUSTER FOUND: ${c.members.length} of the top wallets were all funded by the same address (${c.funder.slice(0, 10)}…) — they look independent but hold a combined ${c.combinedPct}% as one entity.`); }
-      if (young >= 2) parts.push(`🍼 ${young} of the top 5 wallets are less than 30 days old — fresh wallets holding big positions is a classic insider pattern.`);
+      if (young >= 2) parts.push(`🍼 ${young} of the top ${dna.length} private wallets are less than 30 days old — fresh wallets holding big positions is a classic insider pattern.`);
       else if (young === 1) parts.push(`🍼 One top wallet is less than 30 days old — worth watching.`);
-      if (singleToken >= 2) parts.push(`🎯 ${singleToken} of the top 5 wallets hold NOTHING but this token — wallets created for a single purpose.`);
+      if (singleToken >= 2) parts.push(`🎯 ${singleToken} of the top ${dna.length} private wallets hold NOTHING but this token — wallets created for a single purpose.`);
       else if (singleToken === 1) parts.push(`🎯 One top wallet holds nothing but this token.`);
-      if (!parts.length) parts.push(`✅ The top wallets look like real, established holders — aged wallets with diverse portfolios and no shared funding. Nothing hidden in the DNA.`);
+      if (!parts.length) parts.push(`✅ The top private wallets look like real, established holders — aged wallets with diverse portfolios and no shared funding. Nothing hidden in the DNA.`);
       return res.status(200).json({
         success: true, paid: true, payChain: paidChainLabel, amountUsdc: +Number(paidAmount).toFixed(2),
-        name, symbol, wallets: dna, clusters, deepVerdict: parts.join(' '), full: await buildFull(mint, chain, { clusters }).catch(() => null),
+        name, symbol, wallets: dna, clusters, deepVerdict: parts.join(' '),
+        full: await buildFull(mint, chain, { clusters, sol: sd, deployer: await deployerFacts(solRpc, mint, creatorAddr, sd.holders, 'PumpSwap pool record (coin creator)').catch(() => null) }).catch(() => null),
         methodNote: 'Solana wallet age and funder come from each wallet\'s earliest on-chain transaction via public RPC; clustering matches shared funding sources. Heuristics, not proof — but the chain does not lie about timing.',
         riskNote: 'Deep forensic heuristics on public on-chain data. Not financial advice. Never invest more than you can afford to lose.'
       });

@@ -98,13 +98,16 @@ async function slippage(mint, decimals) {
     out.price = Number(p?.[mint]?.usdPrice) || null;
   } catch {}
   for (const usd of [100, 1000, 10000]) {
-    if (!out.price || decimals === null) { out.sells.push({ usd, available: false }); continue; }
+    if (!out.price || decimals === null) { out.sells.push({ usd, available: false, reason: 'No live price for this token right now, so sell sizes cannot be quoted.' }); continue; }
     try {
       const amount = BigInt(Math.floor((usd / out.price) * 10 ** decimals));
       const q = await getJson(`https://lite-api.jup.ag/swap/v1/quote?inputMint=${mint}&outputMint=${USDC_MINT}&amount=${amount}&slippageBps=5000`);
       const got = Number(q.outAmount) / 1e6;
       out.sells.push({ usd, available: true, receiveUsd: +got.toFixed(2), lossPct: +(Math.max(0, 1 - got / usd) * 100).toFixed(2), priceImpactPct: +(Number(q.priceImpactPct || 0) * 100).toFixed(2), route: (q.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean).join(' → ') });
-    } catch { out.sells.push({ usd, available: false }); }
+    } catch (err) {
+      const busy = /HTTP (429|5\d\d)/.test(String(err && err.message));
+      out.sells.push({ usd, available: false, reason: busy ? 'The quote service was busy — try again in a minute.' : `Not enough liquidity to sell $${usd.toLocaleString('en-US')} in one trade (no swap route found).` });
+    }
   }
   return out;
 }
