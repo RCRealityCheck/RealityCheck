@@ -236,7 +236,8 @@ export default async function handler(req, res) {
     const acct = await rpc('getAccountInfo', [mint, { encoding: 'jsonParsed' }]).catch(() => null);
     if (acct?.value?.data?.parsed?.type !== 'mint') return res.status(200).json({ success: false, message: 'That address is not a Solana token mint. Nothing was charged.' });
     // Free data pre-check before any payment option is shown.
-    const lg = await rpc('getTokenLargestAccounts', [mint]).catch(() => null);
+    let lg = null;
+    for (let t = 0; t < 3 && !(lg?.value || []).length; t++) { if (t) await new Promise(r => setTimeout(r, 1200 * t)); lg = await rpc('getTokenLargestAccounts', [mint]).catch(() => null); }
     if (!(lg?.value || []).length) return res.status(200).json({ success: false, noData: true, message: "We can't build a full report for this coin yet: the Solana network returned no holder list for it right now. No payment needed — try another coin." });
     const ref = b58(crypto.randomBytes(32));
     const expiry = Math.floor(Date.now() / 1000) + REF_TTL_SEC;
