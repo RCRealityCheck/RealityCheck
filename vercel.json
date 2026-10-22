@@ -1,0 +1,40 @@
+{
+  "rewrites": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/api/icon?f=favicon.ico"
+    },
+    {
+      "source": "/rc-logo.png",
+      "destination": "/api/icon?f=rc-logo.png"
+    },
+    {
+      "source": "/icon-16.png",
+      "destination": "/api/icon?f=icon-16.png"
+    },
+    {
+      "source": "/icon-32.png",
+      "destination": "/api/icon?f=icon-32.png"
+    },
+    {
+      "source": "/icon-48.png",
+      "destination": "/api/icon?f=icon-48.png"
+    },
+    {
+      "source": "/icon-180.png",
+      "destination": "/api/icon?f=icon-180.png"
+    },
+    {
+      "source": "/icon-192.png",
+      "destination": "/api/icon?f=icon-192.png"
+    },
+    {
+      "source": "/icon-512.png",
+      "destination": "/api/icon?f=icon-512.png"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/api/icon?f=apple-touch-icon.png"
+    }
+  ]
+}
