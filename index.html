@@ -163,6 +163,22 @@
     </select>
     <button type="submit" class="btn btn-primary btn-full">Unlock deep report — 1 USDC</button>
   </form>
+  <div class="report-card" id="bundleBox" style="margin-top:14px">
+    <p><strong>Checking several coins? Add up to 5 and pay once — still $1 per coin.</strong></p>
+    <button type="button" class="btn btn-ghost btn-full" id="bundleAdd">Add this coin to my list</button>
+    <div id="bundleList"></div>
+    <div id="bundlePay" style="display:none">
+      <p class="pay-note">Total: <strong id="bundleTotal">0</strong> USDC ($1 × <span id="bundleCount">0</span> coins), paid once.</p>
+      <a id="bundleLink" class="btn btn-primary btn-full" href="#">Open in your wallet (Solana USDC)</a>
+      <div class="exit-qr" id="bundleQr"></div>
+      <p class="note" id="bundleStatus"></p>
+      <p class="pay-note">Or send the total in USDC on any supported chain to the addresses shown in the payment panel (Solana: <code>DYkd…qAvk</code>, EVM: <code>0xa214…b5eA</code>), then paste the transaction ID:</p>
+      <input type="text" id="bundleTx" placeholder="Paste the FULL transaction ID" autocomplete="off">
+      <button type="button" class="btn btn-ghost btn-full" id="bundleVerify">Verify payment & show all reports</button>
+      <p class="note">One payment unlocks this exact list only. Payments are verified on-chain.</p>
+    </div>
+    <div id="bundleResult"></div>
+  </div>
   <div id="payPanel" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC — your chain, your choice</h3>
@@ -176,7 +192,7 @@
         <option value="arbitrum">Arbitrum</option>
       </select>
       <button type="button" class="btn btn-primary btn-full" id="oneClickPay">Pay 1 USDC with Phantom</button>
-      <p class="note"><strong>$1 = one report for one coin.</strong> Checking 5 coins? That's 5 separate payments.</p>
+      <p class="note"><strong>$1 = one report for one coin.</strong> Checking several coins? Use the list above to pay once — still $1 per coin.</p>
       <p class="note" id="payHint">Your wallet opens right here — approve, and the report unlocks automatically.</p>
       <div class="pay-divider"><span>or pay manually</span></div>
       <p class="pay-note">Send <strong>exactly 1 USDC</strong> on any supported chain to the Reality Check wallet, then paste the transaction hash — <strong>we detect the chain automatically</strong>.</p>
@@ -893,7 +909,8 @@ document.getElementById('deepForm').addEventListener('submit', async function (e
       ? await (await fetch(location.origin + '/api/deep-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch, precheck: true }) })).json()
       : await (await fetch(location.origin + '/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch }) })).json();
     if (!pre.success) {
-      dr.innerHTML = partialHtml({ ...pre, message: 'No payment needed — we cannot run a deep report for this token right now. ' + (pre.message || '') });
+      dr.innerHTML = partialHtml({ ...pre, message: rcNoPayMsg(pre.message) });
+      const inp = document.getElementById('deepContract'); inp.focus(); inp.select();
       return;
     }
   } catch {
@@ -950,7 +967,7 @@ function loadSolanaWeb3() {
 }
 const EVM_PAY = {
   ethereum: { chainId: '0x1', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' },
-  bnb:      { chainId: '0x38', usdc: '0x8AC76a085641D1D8F3b5C83d63d9865a6f07D' },
+  bnb:      { chainId: '0x38', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d' },
   base:     { chainId: '0x2105', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' },
   polygon:  { chainId: '0x89', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' },
   arbitrum: { chainId: '0xa4b1', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831' }
@@ -1107,6 +1124,87 @@ async function runDeepReport(autoDetect) {
     resultDiv.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>';
   }
 }
+function rcNoPayMsg(m) {
+  m = String(m || '');
+  return m.indexOf("We can't build") === 0 ? m : "We can't build a full report for this coin yet: " + (m || 'we could not read its holder data.') + ' No payment needed — try another coin.';
+}
+function deepCardHtml(data) {
+  const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
+  const dnaHtml = (data.wallets || []).map((w, i) => {
+    const age = w.ageDays === null ? 'unknown age' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';
+    const flags = (w.flags || []).map(f => `<li>${esc(f)}</li>`).join('');
+    return `<div class="dna-card"><div class="dna-head"><span class="w-rank">#${i + 1}</span><span class="w-addr">${esc(String(w.address).slice(0, 10))}…${esc(String(w.address).slice(-6))}</span><span class="w-pct">${esc(String(w.pct))}%</span></div>
+      <div class="dna-facts"><span>🎂 ${esc(age)}</span><span>📊 ${esc(String(w.txCount))} txs</span><span>💼 ${esc(String(w.tokenCount))} tokens held</span></div>
+      ${w.funder ? `<p class="dna-funder">First funded by <code>${esc(String(w.funder).slice(0, 12))}…</code></p>` : '<p class="dna-funder">Funder: not traceable</p>'}
+      ${flags ? `<ul class="dna-flags">${flags}</ul>` : ''}</div>`;
+  }).join('');
+  const clusterHtml = (data.clusters || []).map(c => `<div class="cluster-card"><h5>🚨 Shared funder: <code>${esc(String(c.funder).slice(0, 14))}…</code></h5>
+    <p>${c.members.length} wallets, combined <strong>${esc(String(c.combinedPct))}%</strong> — one entity wearing ${c.members.length} masks:</p>
+    <ul>${c.members.map(m => `<li>Wallet #${m.rank} — ${esc(String(m.address).slice(0, 10))}… (${esc(String(m.pct))}%)</li>`).join('')}</ul></div>`).join('');
+  return `<div class="report-card risk-card"><h3>🧬 Wallet DNA — ${fullName}</h3>${clusterHtml}<div class="dna-grid">${dnaHtml}</div>
+    <div class="verdict-box"><strong>Deep verdict:</strong> ${esc(data.deepVerdict || '')}</div>${renderFull(data.full)}
+    <p class="method">${esc(data.methodNote || '')}</p><p class="note">${esc(data.riskNote || '')}</p></div>`;
+}
+// ---------- Deep Report bundle (1-5 coins, one payment, $1 per coin) ----------
+let bundleCoins = [], bundleReq = null, bundleTimer = null;
+const chainName = v => (document.querySelector(`#deepChain option[value="${v}"]`) || {}).textContent || v;
+async function deepApi(body) { return (await fetch(location.origin + '/api/deep-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json(); }
+function bundleRender(failed) {
+  const bad = {}; (failed || []).forEach(f => { bad[f.index] = f.message; });
+  document.getElementById('bundleList').innerHTML = bundleCoins.map((c, i) => `<div class="wallet-copy" style="margin-top:8px"><code>${esc(c.contract.slice(0, 8))}…${esc(c.contract.slice(-6))} · ${esc(chainName(c.chain))}</code>
+    <button type="button" class="btn btn-ghost bundle-rm" data-i="${i}">Remove</button></div>${bad[i] ? `<p class="note" style="color:#e66">${esc(bad[i])}</p>` : ''}`).join('');
+  document.getElementById('bundleCount').textContent = bundleCoins.length;
+  document.getElementById('bundleTotal').textContent = bundleCoins.length;
+}
+async function bundleRefresh() {
+  if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; }
+  bundleReq = null;
+  const pay = document.getElementById('bundlePay'); pay.style.display = 'none';
+  bundleRender();
+  if (!bundleCoins.length) return;
+  const st = document.getElementById('bundleResult');
+  st.innerHTML = '<div class="loader"><span class="spin"></span> Checking every coin has data before you pay...</div>';
+  let d; try { d = await deepApi({ action: 'bundle-request', coins: bundleCoins }); } catch { st.innerHTML = '<p class="note">Could not reach the server. No payment was taken — try again.</p>'; return; }
+  st.innerHTML = '';
+  if (!d.success) { bundleRender(d.failed); st.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; return; }
+  bundleReq = d;
+  document.getElementById('bundleLink').href = d.url;
+  loadQrLib().then(lib => { try { const q = lib(0, 'M'); q.addData(d.url); q.make(); document.getElementById('bundleQr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 4 }); } catch {} }).catch(() => {});
+  document.getElementById('bundleStatus').textContent = 'Waiting for payment… this list unlocks automatically once your wallet pays.';
+  pay.style.display = 'block';
+  bundleTimer = setInterval(() => bundleCheck(false), 5000);
+}
+async function bundleCheck(manual) {
+  if (!bundleReq) return;
+  const body = { action: 'bundle-report', coins: bundleCoins };
+  if (manual) { const tx = document.getElementById('bundleTx').value.trim(); if (!tx) return; body.txSignature = tx; }
+  else Object.assign(body, { reference: bundleReq.reference, exp: bundleReq.exp, sig: bundleReq.sig });
+  const out = document.getElementById('bundleResult');
+  if (manual) out.innerHTML = '<div class="loader"><span class="spin"></span> Verifying your payment, then building every report...</div>';
+  let d; try { d = await deepApi(body); } catch { return; }
+  if (!d.success) { if (manual || !d.pending) { if (manual) out.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; } return; }
+  if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; }
+  document.getElementById('bundlePay').style.display = 'none';
+  out.innerHTML = `<p class="note">Payment verified: ${esc(String(d.paid.amount))} USDC${d.paid.chain ? ' on ' + esc(d.paid.chain) : ''}. Thank you — this builds Reality Check.</p>` +
+    d.reports.map((r, i) => `<h3 style="margin-top:18px">Coin ${i + 1} of ${d.reports.length}: <code>${esc(r.contract.slice(0, 8))}…</code> · ${esc(chainName(r.chain))}</h3>` +
+      (r.success ? deepCardHtml(r) : `<div class="report-card"><p>${esc(r.message || 'This report failed to load. Your payment still counts — contact us.')}</p></div>`)).join('');
+  out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+document.getElementById('bundleAdd').addEventListener('click', function () {
+  const c = document.getElementById('deepContract').value.trim(), ch = document.getElementById('deepChain').value;
+  const st = document.getElementById('bundleResult');
+  if (!c) { st.innerHTML = '<p class="note">Type a contract address above first.</p>'; return; }
+  if (bundleCoins.length >= 5) { st.innerHTML = '<p class="note">Up to 5 coins per list.</p>'; return; }
+  if (bundleCoins.some(x => x.chain === ch && x.contract.toLowerCase() === c.toLowerCase())) { st.innerHTML = '<p class="note">That coin is already in your list.</p>'; return; }
+  bundleCoins.push({ contract: c, chain: ch });
+  document.getElementById('deepContract').value = '';
+  bundleRefresh();
+});
+document.getElementById('bundleList').addEventListener('click', function (e) {
+  const b = e.target.closest && e.target.closest('.bundle-rm'); if (!b) return;
+  bundleCoins.splice(Number(b.getAttribute('data-i')), 1); bundleRefresh();
+});
+document.getElementById('bundleVerify').addEventListener('click', function () { bundleCheck(true); });
 // ---------- Exit Door (Solana Pay, 1 USDC) ----------
 let exitReq = null, exitTimer = null;
 function exitShort(a) { return a ? esc(String(a).slice(0, 6)) + '…' + esc(String(a).slice(-4)) : 'unavailable'; }
@@ -1133,7 +1231,7 @@ document.getElementById('exitForm').addEventListener('submit', async function (e
   out.innerHTML = '<div class="loader"><span class="spin"></span> Creating your payment request...</div>';
   try {
     const d = await exitApi({ action: 'request', contract: mint });
-    if (!d.success) { out.innerHTML = `<div class="report-card"><p>${esc(d.message)}</p></div>`; return; }
+    if (!d.success) { out.innerHTML = `<div class="report-card"><p>${esc(d.message)}</p></div>`; const xi = document.getElementById('exitMint'); xi.focus(); xi.select(); return; }
     out.innerHTML = '';
     await showExitPay({ ...d, mint });
   } catch { out.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>'; }

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
@@ -33,8 +34,9 @@ async function fullOnly(res, address, chain, paidChainLabel, paidAmount, why) {
     riskNote: 'Public data only. Not financial advice. Never invest more than you can afford to lose.'
   });
 }
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
+const NOPAY = (why) => `We can't build a full report for this coin yet: ${why} No payment needed — try another coin.`;
+async function single(req, res, opts = {}) {
+  const PRICE = opts.price || 1;
   const { contract, chain, payChain, txSignature, precheck } = req.body || {};
   if (!contract || !chain) return res.status(400).json({ success: false, message: 'Contract and chain required' });
   if (precheck && chain === 'solana-mainnet') {
@@ -42,8 +44,11 @@ export default async function handler(req, res) {
     if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(m)) return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address — no payment needed.' });
     const l = await solLargest(m);
     const n = (l?.value || []).length;
-    return res.status(200).json(n ? { success: true, holders: n } : { success: false, message: 'Solana RPC returned no holder data for this token right now, so a deep report cannot run. No payment needed — try again in a minute or try another token.' });
+    return res.status(200).json(n ? { success: true, holders: n } : { success: false, message: NOPAY('the Solana network returned no holder list for it right now.') });
   }
+  let paidAmount = opts.pre ? 1 : 0;
+  let paidChainLabel = opts.pre ? opts.pre.chain : '';
+  if (!opts.pre) {
   if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your USDC payment transaction hash to unlock the deep report.' });
   if (chain === 'solana-mainnet' && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(contract).trim())) {
     return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address. Double-check it before paying — no payment was taken.' });
@@ -68,10 +73,9 @@ export default async function handler(req, res) {
                 rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
   };
   const sig = String(txSignature).trim();
-  if (await isTxUsed(sig, coinKey(chain, contract))) return res.status(200).json({ success: false, message: MSG.used });
+  const CLAIM = opts.claim || coinKey(chain, contract);
+  if (await isTxUsed(sig, CLAIM)) return res.status(200).json({ success: false, message: MSG.used });
   const nowSec = Math.floor(Date.now() / 1000);
-  let paidAmount = 0;
-  let paidChainLabel = '';
 
   // ---------- 1. Payment verification — auto-detects the chain from the hash ----------
   // Solana signatures are base58 (~88 chars); EVM hashes are 0x + 64 hex.
@@ -100,8 +104,8 @@ export default async function handler(req, res) {
     const sumUsdc = (list) => (list || []).reduce((s, b) =>
       (b.mint === USDC_SOL_MINT && b.owner === RC_SOL) ? s + Number(b.uiTokenAmount?.uiAmount || 0) : s, 0);
     const received = sumUsdc(txj.meta?.postTokenBalances) - sumUsdc(txj.meta?.preTokenBalances);
-    if (received < 1) {
-      return { status: 'invalid', reason: 'That transaction did not send at least 1 USDC to the Reality Check wallet on Solana.' };
+    if (received < PRICE - 1e-9) {
+      return { status: 'invalid', reason: `That transaction did not send at least ${PRICE} USDC to the Reality Check wallet on Solana.` };
     }
     return { status: 'ok', amount: received, chain: 'Solana' };
   };
@@ -146,8 +150,8 @@ export default async function handler(req, res) {
       try { total += BigInt(log.data); } catch {}
     }
     const need = 10n ** BigInt(decimals);
-    if (total < need) {
-      return { status: 'invalid', reason: `No 1 USDC transfer to the Reality Check wallet found in that ${cfg.label} transaction.` };
+    if (total < need * BigInt(PRICE)) {
+      return { status: 'invalid', reason: `No ${PRICE} USDC transfer to the Reality Check wallet found in that ${cfg.label} transaction.` };
     }
     return { status: 'ok', amount: Number(total) / Number(need), chain: cfg.label };
   };
@@ -179,7 +183,9 @@ export default async function handler(req, res) {
   }
   paidAmount = v.amount;
   paidChainLabel = v.chain;
-  { const claim = await claimTx(sig, coinKey(chain, contract)); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
+  { const claim = await claimTx(sig, CLAIM); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
+  if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, amount: paidAmount, chain: paidChainLabel });
+  }
 
   // ---------- 2. Payment OK — deep wallet forensics ----------
   let clean = String(contract).trim();
@@ -470,4 +476,74 @@ export default async function handler(req, res) {
   } catch (e) {
     return fullOnly(res, clean, chain, paidChainLabel, paidAmount, 'Wallet DNA failed to load (data provider error). All other sections are below.');
   }
+}
+
+// ---------- Bundle: 1-5 coins, ONE payment of exactly $1 x N, each coin gets its own Deep Report ----------
+const RC_SOL_W = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
+const USDC_SPL = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const B58A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const b58 = (buf) => { let n = BigInt('0x' + Buffer.from(buf).toString('hex')), s = ''; while (n > 0n) { s = B58A[Number(n % 58n)] + s; n /= 58n; } for (const x of buf) { if (x === 0) s = '1' + s; else break; } return s; };
+const call = (fn, body, opts) => new Promise((resolve) => {
+  const r = { status() { return r; }, json(j) { resolve(j); return r; }, send(x) { resolve({ success: false, message: String(x) }); return r; } };
+  Promise.resolve(fn({ method: 'POST', body }, r, opts)).catch(() => resolve({ success: false, message: 'This report failed to load (data provider error).' }));
+});
+function normList(coins) {
+  if (!Array.isArray(coins) || coins.length < 1 || coins.length > 5) return null;
+  const out = []; const seen = new Set();
+  for (const c of coins) {
+    const chain = String(c?.chain || ''); let contract = String(c?.contract || '').trim();
+    if (!chain || !contract) return null;
+    if (chain !== 'solana-mainnet') contract = contract.toLowerCase();
+    const k = coinKey(chain, contract); if (seen.has(k)) return null; seen.add(k); out.push({ chain, contract, k });
+  }
+  return out;
+}
+const listKey = (list) => 'bundle:' + list.map(x => x.k).sort().join(',');
+const bsign = (ref, lk, exp, n) => crypto.createHmac('sha256', process.env.RC_REF_SECRET).update(`deepbundle|${ref}|${lk}|${exp}|${n}|${RC_SOL_W}`).digest('hex');
+async function precheckOne(host, c) {
+  if (c.chain === 'solana-mainnet') return call(single, { contract: c.contract, chain: c.chain, precheck: true });
+  try {
+    const r = await fetch(`https://${host}/api/check`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c.contract, chain: c.chain }), signal: AbortSignal.timeout(60000) });
+    const j = await r.json();
+    return j.success ? { success: true } : { success: false, message: NOPAY(j.message || 'we could not read its holder data.') };
+  } catch { return { success: false, message: NOPAY('our data check could not reach the server.') }; }
+}
+async function bundle(req, res) {
+  const { action, coins, reference, exp, sig, txSignature, payChain } = req.body || {};
+  const list = normList(coins);
+  if (!list) return res.status(200).json({ success: false, message: 'Add 1 to 5 different coins (address + chain) to your list.' });
+  const N = list.length, lk = listKey(list);
+  const host = req.headers?.host || 'www.realitycheckglobal.trade';
+  if (action === 'bundle-precheck' || action === 'bundle-request') {
+    const results = await Promise.all(list.map(c => precheckOne(host, c)));
+    const failed = results.map((r, i) => r.success ? null : { index: i, contract: list[i].contract, chain: list[i].chain, message: r.message || NOPAY('no data.') }).filter(Boolean);
+    if (failed.length) return res.status(200).json({ success: false, failed, message: 'Some coins in your list cannot be reported yet. Remove or swap them — no payment needed for those.' });
+    if (action === 'bundle-precheck') return res.status(200).json({ success: true, count: N, totalUsdc: N });
+    if (!process.env.RC_REF_SECRET) return res.status(200).json({ success: false, message: 'Bundle payments are not configured yet.' });
+    const ref = b58(crypto.randomBytes(32)); const e = Math.floor(Date.now() / 1000) + 1800;
+    const p = new URLSearchParams({ amount: String(N), 'spl-token': USDC_SPL, reference: ref, label: 'Reality Check', message: `Deep Report x${N} coins`, memo: `RC-DEEP-x${N}` });
+    return res.status(200).json({ success: true, count: N, totalUsdc: N, reference: ref, exp: e, sig: bsign(ref, lk, e, N), recipient: RC_SOL_W, url: `solana:${RC_SOL_W}?${p.toString()}` });
+  }
+  if (action !== 'bundle-report') return res.status(400).json({ success: false, message: 'Unknown action' });
+  let paySig = txSignature ? String(txSignature).trim() : '';
+  let pc = payChain || 'auto';
+  if (!paySig) {
+    if (!reference || !exp || !sig) return res.status(200).json({ success: false, message: 'Missing payment reference.' });
+    const expected = bsign(String(reference), lk, Number(exp), N);
+    if (String(sig).length !== expected.length || !crypto.timingSafeEqual(Buffer.from(String(sig)), Buffer.from(expected))) return res.status(200).json({ success: false, message: 'This payment request does not match this list of coins.' });
+    if (Math.floor(Date.now() / 1000) > Number(exp) + 600) return res.status(200).json({ success: false, message: 'This payment request expired. Start a new one (no charge if you did not pay).' });
+    const sigs = await solCall('getSignaturesForAddress', [String(reference), { limit: 5, commitment: 'confirmed' }], 2);
+    if (!sigs || !sigs.length) return res.status(200).json({ success: false, pending: true, message: 'Waiting for your payment to confirm on Solana…' });
+    paySig = sigs[sigs.length - 1].signature; pc = 'solana';
+  }
+  const v = await call(single, { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig }, { price: N, claim: lk, verifyOnly: true });
+  if (!v.success) return res.status(200).json({ success: false, message: (v.message || 'Payment could not be verified.') + (N > 1 ? ` This list needs ${N} USDC in one payment.` : '') });
+  const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
+  return res.status(200).json({ success: true, paid: { amount: v.amount, chain: v.chain, signature: paySig }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
+}
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
+  const a = req.body?.action;
+  if (a === 'bundle-precheck' || a === 'bundle-request' || a === 'bundle-report') return bundle(req, res);
+  return single(req, res);
 }
