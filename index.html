@@ -380,7 +380,7 @@ function formatSupply(n) {
   return Number(n).toLocaleString();
 }
 function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&#38;','<':'&#60;','>':'&#62;','"':'&#34;',"'":'&#39;'}[c]));
 }
 function verdictClass(v) {
   v = (v || '').toLowerCase();
