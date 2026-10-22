@@ -679,10 +679,10 @@ document.getElementById('checkForm').addEventListener('submit', async function (
         </div>
       `;
     } else {
-      resultDiv.innerHTML = `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${data.explorer ? `<p><a href="${esc(data.explorer)}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
+      resultDiv.innerHTML = partialHtml(data);
     }
   } catch (err) {
-    resultDiv.innerHTML = '<div class="report-card"><p>Error generating report. Please refresh and try again.</p></div>';
+    resultDiv.innerHTML = '<div class="report-card"><p>We could not reach the Reality Check server just now (network or provider hiccup). Nothing is wrong with your input — please try again in a minute.</p></div>';
   }
 });
 document.getElementById('riskForm').addEventListener('submit', async function (e) {
@@ -744,10 +744,10 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
       `;
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else {
-      resultDiv.innerHTML = `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${data.explorer ? `<p><a href="${esc(data.explorer)}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
+      resultDiv.innerHTML = partialHtml(data);
     }
   } catch (err) {
-    resultDiv.innerHTML = '<div class="report-card"><p>Error generating your risk report. Please refresh and try again.</p></div>';
+    resultDiv.innerHTML = '<div class="report-card"><p>We could not reach the Reality Check server just now (network or provider hiccup). Nothing is wrong with your input — please try again in a minute.</p></div>';
   }
 });
 // ---------- RC News feed ----------
@@ -776,12 +776,43 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
     feed.innerHTML = '<div class="report-card"><p>Could not load the news feed. Please refresh.</p></div>';
   }
 })();
+// ---------- Honest partial results (real market data only) ----------
+function partialHtml(data) {
+  const m = data.market;
+  const money = v => (v === null || v === undefined) ? 'unavailable' : formatNum(v);
+  const marketHtml = m ? `
+    <h4 class="scen-title">What we could verify from live market data${m.symbol ? ' — ' + esc(m.name || '') + ' (' + esc(m.symbol) + ')' : ''}</h4>
+    <div class="dna-facts">
+      <span>💵 Price: ${m.priceUsd ? '$' + esc(String(m.priceUsd)) : 'unavailable'}</span>
+      <span>💧 DEX liquidity: ${money(m.liquidityUsd)}</span>
+      <span>📊 24h DEX volume: ${money(m.volume24hUsd)}</span>
+      <span>🏷️ FDV: ${money(m.fdvUsd)}</span>
+      <span>🔗 ${esc(String(m.pairCount))} trading pair(s)</span>
+    </div>
+    <p class="note">Holder concentration could not be checked, so no score is given. Thin liquidity (under ~$50k) means even small sells move the price a lot.</p>
+    ${m.url ? `<p><a href="${esc(m.url)}" target="_blank" rel="noopener">View pairs on ${esc(m.source)}</a></p>` : ''}` : '';
+  return `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${marketHtml}${data.explorer ? `<p><a href="${esc(data.explorer)}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
+}
 // ---------- Premium Deep Report ----------
-document.getElementById('deepForm').addEventListener('submit', function (e) {
+document.getElementById('deepForm').addEventListener('submit', async function (e) {
   e.preventDefault();
   const c = document.getElementById('deepContract').value.trim();
   const ch = document.getElementById('deepChain').value;
   if (!c) return;
+  // Free pre-check so nobody pays for a token we cannot analyse
+  const dr = document.getElementById('deepResult');
+  document.getElementById('payPanel').style.display = 'none';
+  dr.innerHTML = '<div class="loader"><span class="spin"></span> Checking we have holder data for this token before you pay...</div>';
+  try {
+    const pre = await (await fetch(location.origin + '/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract: c, chain: ch }) })).json();
+    if (!pre.success) {
+      dr.innerHTML = partialHtml({ ...pre, message: 'No payment needed — we cannot run a deep report for this token right now. ' + (pre.message || '') });
+      return;
+    }
+  } catch {
+    dr.innerHTML = '<div class="report-card"><p>We could not reach the Reality Check server just now. No payment was taken — please try again in a minute.</p></div>';
+    return;
+  }
   document.getElementById('payPanel').style.display = 'block';
   document.getElementById('deepResult').innerHTML = '';
   document.getElementById('payPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

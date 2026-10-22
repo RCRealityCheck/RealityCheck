@@ -1,3 +1,4 @@
+import { marketSnapshot, partialMessage } from './_market.js';
 // "Your Personal Risk" — Reality Check's original product.
 // The key insight: top holders are NOT all equal. Liquidity pools, vesting
 // contracts and multisigs CANNOT dump like a person. Only personal wallets
@@ -62,12 +63,15 @@ export default async function handler(req, res) {
 
   try {
     const url = `https://api.covalenthq.com/v1/${cChain}/tokens/${clean}/token_holders_v2/`;
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(20000) });
     const j = await r.json();
     if (!j.data || !j.data.items || j.data.items.length === 0) {
+      const market = await marketSnapshot(clean, chain);
       return res.status(200).json({
         success: false,
-        message: 'No holder data found for this contract on the selected chain. Check the address and chain, or open the explorer.',
+        partial: true,
+        message: market ? partialMessage('none') : 'No holder data and no live market pairs found for this contract on the selected chain. Double-check the address and chain, or open the explorer.',
+        market,
         explorer: explorers[chain] || '#'
       });
     }
@@ -106,7 +110,7 @@ export default async function handler(req, res) {
       else needRpc.push(i);
     });
     // then contract-vs-person via RPC fallbacks, only for the rest
-    const rpcs = RPCS[cChain] || [];
+    const rpcs = RPCS[chain] || [];
     let pending = [...needRpc];
     for (const rpc of rpcs) {
       if (!pending.length) break;
@@ -202,9 +206,13 @@ export default async function handler(req, res) {
       explorer: explorers[chain] || '#'
     });
   } catch (e) {
+    console.error('personal-risk failed', e && e.message);
+    const market = await marketSnapshot(clean, chain);
     res.status(200).json({
       success: false,
-      message: 'Could not load holder data right now. Try again or open the explorer.',
+      partial: true,
+      message: market ? partialMessage('error') : 'Could not load holder data right now. Try again in a minute or open the explorer.',
+      market,
       explorer: explorers[chain] || '#'
     });
   }

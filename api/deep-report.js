@@ -173,7 +173,7 @@ export default async function handler(req, res) {
 
   try {
     const h = await covGet(`https://api.covalenthq.com/v1/${cChain}/tokens/${clean}/token_holders_v2/`);
-    if (!h.data?.items?.length) return res.status(200).json({ success: false, message: 'No holder data for this contract.' });
+    if (!h.data?.items?.length) return res.status(200).json({ success: false, message: 'Payment verified, but there is no holder data for this contract on this chain, so the deep report cannot run. Your payment stays valid for 30 minutes — paste the same hash with another EVM token, or contact Reality Check.' });
     const items = h.data.items;
     const total = BigInt(items[0].total_supply || '0');
     const name = items[0].contract_name || 'Token';
@@ -209,7 +209,7 @@ export default async function handler(req, res) {
       else needRpc.push(i);
     });
     let pending = [...needRpc];
-    for (const rpc of (RPCS[cChain] || [])) {
+    for (const rpc of (RPCS[chain] || [])) {
       if (!pending.length) break;
       const results = await Promise.all(pending.map(async (idx) => [idx, await getCode(rpc, topN[idx].address)]));
       const still = [];

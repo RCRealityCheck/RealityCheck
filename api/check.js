@@ -1,3 +1,4 @@
+import { marketSnapshot, partialMessage } from './_market.js';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   const { contract, chain } = req.body || {};
@@ -31,12 +32,15 @@ export default async function handler(req, res) {
 
   try {
     const url = `https://api.covalenthq.com/v1/${cChain}/tokens/${clean}/token_holders_v2/`;
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(20000) });
     const j = await r.json();
     if (!j.data || !j.data.items || j.data.items.length === 0) {
+      const market = await marketSnapshot(clean, chain);
       return res.status(200).json({
         success: false,
-        message: 'No holder data found for this contract on the selected chain. Check the address and chain, or open the explorer.',
+        partial: true,
+        message: market ? partialMessage('none') : 'No holder data and no live market pairs found for this contract on the selected chain. Double-check the address and chain, or open the explorer.',
+        market,
         explorer: explorers[chain] || '#'
       });
     }
@@ -81,9 +85,12 @@ export default async function handler(req, res) {
       explorer: explorers[chain] || '#'
     });
   } catch (e) {
+    const market = await marketSnapshot(clean, chain);
     res.status(200).json({
       success: false,
-      message: 'Could not load holder data right now. Try again or open the explorer.',
+      partial: true,
+      message: market ? partialMessage('error') : 'Could not load holder data right now. Try again in a minute or open the explorer.',
+      market,
       explorer: explorers[chain] || '#'
     });
   }
