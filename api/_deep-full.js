@@ -147,7 +147,7 @@ export async function buildFull(address, chain, ctx = {}) {
   const sumPct = arr => +arr.reduce((s, h) => s + h.pct, 0).toFixed(2);
   const poolSet = new Set(pairs.map(p => String(p.pairAddress).toLowerCase()));
   const burnedH = holders.filter(h => h.category === 'burn' || BURN.has(String(h.address).toLowerCase()));
-  const cex = holders.filter(h => h.tag && CEX_WORDS.test(h.tag));
+  const cex = solH ? [] : holders.filter(h => h.tag && CEX_WORDS.test(h.tag));
   const lockedH = holders.filter(h => !burnedH.includes(h) && (h.locked || (h.tag && LOCKER_WORDS.test(h.tag))));
   const poolH = holders.filter(h => h.category === 'pool' || poolSet.has(String(h.address).toLowerCase()));
   const labelled = new Set([...burnedH, ...cex, ...lockedH, ...poolH]);
