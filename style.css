@@ -40,7 +40,7 @@ body {
   padding: 64px 20px 52px;
   position: relative;
 }
-.logo-ring svg { filter: drop-shadow(0 0 24px rgba(126, 182, 255, 0.35)); animation: float 6s ease-in-out infinite; }
+.logo-ring svg, .logo-ring img { filter: drop-shadow(0 0 24px rgba(126, 182, 255, 0.35)); animation: float 6s ease-in-out infinite; border-radius: 50%; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .hero h1 { font-size: clamp(2.6rem, 7vw, 4.2rem); margin: 18px 0 6px; font-weight: 800; letter-spacing: -0.02em; }
 .grad-text {
