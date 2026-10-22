@@ -366,3 +366,11 @@ a { color: var(--blue); }
   .sticky-nav a { padding: 7px 10px; font-size: 0.82rem; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---------- Exit Door ---------- */
+.exit-list { margin: 12px 0; padding-left: 20px; line-height: 1.8; }
+.exit-qr { display: flex; justify-content: center; margin: 12px auto; background: #fff; border-radius: 12px; padding: 8px; width: fit-content; }
+#exitDeepLink { margin-bottom: 8px; text-align: center; }
+.exit-table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 0.9rem; }
+.exit-table th, .exit-table td { padding: 8px; border-bottom: 1px solid var(--panel-border); text-align: left; }
+.exit-holders { font-size: 0.85rem; line-height: 1.7; }

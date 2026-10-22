@@ -45,6 +45,7 @@
   <a href="#report">Get Report</a>
   <a href="#personal">Your Personal Risk</a>
   <a href="#premium">Deep Report</a>
+  <a href="#exitdoor">Exit Door</a>
   <a href="#rcnews">RC News</a>
   <a href="#why">Why I built this</a>
   <a href="#how">How it works</a>
@@ -172,6 +173,37 @@
   <div id="deepResult"></div>
 </section>
 
+<section id="exitdoor" class="accent-violet">
+  <div class="section-head">
+    <h2>Exit Door — can you actually get out?</h2>
+    <p>An <strong>optional supporter report</strong> for Solana tokens. Every free report above stays free, forever. Exit Door answers the one question that matters when things go wrong: <strong>if you sell, what do you really get back — and who can sell before you?</strong></p>
+    <ul class="exit-list">
+      <li>🚪 Exit-liquidity simulator — live Jupiter quotes for selling $100, $1k and $10k</li>
+      <li>🕸️ Linked wallets — top holders clustered by who funded them</li>
+      <li>🧑‍💻 Deployer history — who created the token and how old their wallet is</li>
+      <li>🔓 Unlock calendar — which top holders sit in lock / vesting programs</li>
+    </ul>
+    <p class="premium-price">1 USDC <span>on Solana = 1 Exit Door report. Paid straight to Reality Check, verified on-chain.</span></p>
+  </div>
+  <form id="exitForm" class="card-form">
+    <label for="exitMint">Solana token mint address</label>
+    <input type="text" id="exitMint" placeholder="e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" required autocomplete="off">
+    <button type="submit" class="btn btn-primary btn-full">Open Exit Door — 1 USDC</button>
+  </form>
+  <div id="exitPay" style="display:none">
+    <div class="report-card pay-card">
+      <h3>Pay 1 USDC with Solana Pay</h3>
+      <button type="button" class="btn btn-primary btn-full" id="exitPhantom">Pay with Phantom (this browser)</button>
+      <div class="pay-divider"><span>or scan with your phone</span></div>
+      <div id="exitQr" class="exit-qr"></div>
+      <a id="exitDeepLink" class="btn btn-ghost btn-full" href="#">Open in Phantom on this phone</a>
+      <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
+      <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each request has its own reference and only unlocks this token. Requests expire after 30 minutes.</p>
+    </div>
+  </div>
+  <div id="exitResult"></div>
+</section>
+
 <section id="rcnews" class="accent-rose">
   <div class="section-head">
     <h2>RC News — Reality Check News</h2>
@@ -267,7 +299,11 @@
   <div class="faq-list">
     <details class="faq-item" open>
       <summary>Is this free?</summary>
-      <p>Yes. Free forever. No account required. No token. No catch.</p>
+      <p>Yes. The General Report and Personal Risk check are free forever — no account, no token, no catch. The Deep Report and Exit Door are optional 1 USDC supporter reports for people who want extra forensic detail; they help keep the free reports free. Nothing free will ever be moved behind a payment.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How does paying for Exit Door work?</summary>
+      <p>You pay 1 USDC on Solana with Phantom (or any Solana Pay wallet). We never hold your funds or keys — the payment goes straight to the Reality Check wallet and our server checks it on-chain before showing the report. If some data can't be read from the chain, the report says "data unavailable" instead of guessing.</p>
     </details>
     <details class="faq-item">
       <summary>What makes Reality Check different?</summary>
@@ -914,6 +950,121 @@ async function runDeepReport(autoDetect) {
   } catch (err) {
     resultDiv.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>';
   }
+}
+// ---------- Exit Door (Solana Pay, 1 USDC) ----------
+let exitReq = null, exitTimer = null;
+function exitShort(a) { return a ? esc(String(a).slice(0, 6)) + '…' + esc(String(a).slice(-4)) : 'unavailable'; }
+function exitDate(t) { return t ? new Date(t * 1000).toLocaleDateString() : 'unavailable'; }
+function loadQrLib() {
+  return new Promise((resolve, reject) => {
+    if (window.qrcode) return resolve(window.qrcode);
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+    s.onload = () => resolve(window.qrcode);
+    s.onerror = () => reject(new Error('QR library failed'));
+    document.head.appendChild(s);
+  });
+}
+async function exitApi(body) {
+  const r = await fetch(location.origin + '/api/exit-door', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return r.json();
+}
+document.getElementById('exitForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const mint = document.getElementById('exitMint').value.trim();
+  const out = document.getElementById('exitResult');
+  if (exitTimer) clearInterval(exitTimer);
+  out.innerHTML = '<div class="loader"><span class="spin"></span> Creating your payment request...</div>';
+  try {
+    const d = await exitApi({ action: 'request', contract: mint });
+    if (!d.success) { out.innerHTML = `<div class="report-card"><p>${esc(d.message)}</p></div>`; return; }
+    exitReq = { ...d, mint };
+    out.innerHTML = '';
+    document.getElementById('exitPay').style.display = 'block';
+    document.getElementById('exitDeepLink').href = d.url;
+    try {
+      const qr = (await loadQrLib())(0, 'M'); qr.addData(d.url); qr.make();
+      document.getElementById('exitQr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4 });
+    } catch { document.getElementById('exitQr').textContent = 'QR unavailable — use the Phantom button.'; }
+    document.getElementById('exitStatus').textContent = 'Waiting for payment… this page unlocks the report automatically.';
+    exitTimer = setInterval(checkExitPayment, 4000);
+    document.getElementById('exitPay').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch { out.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>'; }
+});
+document.getElementById('exitPhantom').addEventListener('click', async function () {
+  if (!exitReq) return;
+  const status = document.getElementById('exitStatus');
+  try {
+    const sw = await loadSolanaWeb3();
+    if (!window.solana || !window.solana.isPhantom) throw new Error('Phantom not found in this browser — scan the QR code instead.');
+    const provider = window.solana;
+    await provider.connect();
+    const user = provider.publicKey;
+    const connection = new sw.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+    const MINT = new sw.PublicKey(exitReq.usdcMint);
+    const TOKEN = new sw.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const ASSOC = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8j');
+    const rc = new sw.PublicKey(exitReq.recipient);
+    const [fromAta] = await sw.PublicKey.findProgramAddress([user.toBuffer(), TOKEN.toBuffer(), MINT.toBuffer()], ASSOC);
+    const [toAta] = await sw.PublicKey.findProgramAddress([rc.toBuffer(), TOKEN.toBuffer(), MINT.toBuffer()], ASSOC);
+    const tx = new sw.Transaction();
+    if (!(await connection.getAccountInfo(toAta))) {
+      tx.add(new sw.TransactionInstruction({ programId: ASSOC, data: Buffer.alloc(0), keys: [
+        { pubkey: user, isSigner: true, isWritable: true }, { pubkey: toAta, isSigner: false, isWritable: true },
+        { pubkey: rc, isSigner: false, isWritable: false }, { pubkey: MINT, isSigner: false, isWritable: false },
+        { pubkey: sw.SystemProgram.programId, isSigner: false, isWritable: false }, { pubkey: TOKEN, isSigner: false, isWritable: false }] }));
+    }
+    // transferChecked (12) with the Solana Pay reference as an extra read-only key
+    const data = Buffer.alloc(10); data[0] = 12; data.writeBigUInt64LE(BigInt(exitReq.amount * 1000000), 1); data[9] = 6;
+    tx.add(new sw.TransactionInstruction({ programId: TOKEN, data, keys: [
+      { pubkey: fromAta, isSigner: false, isWritable: true }, { pubkey: MINT, isSigner: false, isWritable: false },
+      { pubkey: toAta, isSigner: false, isWritable: true }, { pubkey: user, isSigner: true, isWritable: false },
+      { pubkey: new sw.PublicKey(exitReq.reference), isSigner: false, isWritable: false }] }));
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    tx.feePayer = user;
+    await provider.signAndSendTransaction(tx);
+    status.textContent = 'Payment sent — confirming on Solana…';
+  } catch (err) { status.textContent = (err && err.message) ? err.message : 'Payment cancelled.'; }
+});
+async function checkExitPayment() {
+  if (!exitReq) return;
+  const status = document.getElementById('exitStatus');
+  if (Date.now() / 1000 > exitReq.exp) { clearInterval(exitTimer); status.textContent = 'Request expired. Start a new one (no charge if you did not pay).'; return; }
+  let d;
+  try { d = await exitApi({ action: 'report', contract: exitReq.mint, reference: exitReq.reference, exp: exitReq.exp, sig: exitReq.sig }); } catch { return; }
+  if (d.pending) return;
+  clearInterval(exitTimer);
+  if (!d.success) { status.textContent = d.message || 'Could not unlock the report.'; if (d.paidOk) exitTimer = setInterval(checkExitPayment, 15000); return; }
+  document.getElementById('exitPay').style.display = 'none';
+  renderExitDoor(d);
+}
+function renderExitDoor(d) {
+  const r = d.report;
+  const sells = (r.exitLiquidity.sells || []).map(s => s.available
+    ? `<tr><td>$${s.usd.toLocaleString()}</td><td>$${s.receiveUsd.toLocaleString()}</td><td class="${s.lossPct > 10 ? 'neg' : s.lossPct > 3 ? '' : 'pos'}">${s.lossPct}%</td><td>${esc(s.route || '—')}</td></tr>`
+    : `<tr><td>$${s.usd.toLocaleString()}</td><td colspan="3">data unavailable (no route / no price)</td></tr>`).join('');
+  const clusters = r.clusters.length ? r.clusters.map(c => `<div class="cluster-card"><h5>🚨 Shared funder ${exitShort(c.funder)}</h5><p>${c.members.length} top wallets, combined <strong>${c.combinedPct}%</strong> of supply.</p></div>`).join('')
+    : `<p>${r.holdersAvailable ? 'No shared funders found among traced holders.' : 'Holder data unavailable.'} <span class="note">(${esc(r.clusterCoverage)})</span></p>`;
+  const holders = r.holders.map((h, i) => `<li>#${i + 1} ${exitShort(h.owner)} — ${h.pct ?? '?'}%${h.lockedBy ? ' 🔒 ' + esc(h.lockedBy) : h.isProgramOwned ? ' (program / pool)' : ''}${h.funder ? ' · funded by ' + exitShort(h.funder) : ''}</li>`).join('');
+  const dep = r.deployer;
+  const lockList = r.vesting.lockedHolders.map(l => `<li>${exitShort(l.owner)} — ${l.pct}% in ${esc(l.program)}</li>`).join('');
+  document.getElementById('exitResult').innerHTML = `
+    <div class="report-card risk-card">
+      <h3>🚪 Exit Door — ${exitShort(r.mint)}</h3>
+      <p class="note">Payment verified on-chain (${esc(String(d.paid.amount))} USDC). Thank you for supporting Reality Check.</p>
+      <h4>Exit-liquidity simulator</h4>
+      <p class="note">Price: ${r.exitLiquidity.price ? '$' + r.exitLiquidity.price.toPrecision(4) : 'data unavailable'} · live Jupiter sell quotes into USDC</p>
+      <table class="exit-table"><tr><th>You sell</th><th>You get</th><th>Lost to slippage</th><th>Route</th></tr>${sells}</table>
+      <h4>Linked wallets</h4>${clusters}${holders ? `<ul class="exit-holders">${holders}</ul>` : ''}
+      <h4>Deployer history</h4>
+      <p>Deployer: ${exitShort(dep.address)} · token created ${exitDate(dep.createdAt)} · deployer wallet first seen ${exitDate(dep.walletFirstSeen)} · ${dep.walletTxCount === null ? 'tx count unavailable' : dep.walletTxCount + (dep.countComplete ? '' : '+') + ' transactions'}</p>
+      <p>Mint authority: ${r.authorities.mintAuthority ? '⚠️ active — more tokens can be printed' : '✅ revoked'} · Freeze authority: ${r.authorities.freezeAuthority ? '⚠️ active — wallets can be frozen' : '✅ revoked'}</p>
+      <h4>Unlock / vesting calendar</h4>
+      ${lockList ? `<ul>${lockList}</ul><p>Locked in top 10: <strong>${r.vesting.lockedPct}%</strong></p>` : ''}
+      <p class="note">${esc(r.vesting.note)}</p>
+      <p class="note">${esc(d.riskNote)}</p>
+    </div>`;
+  document.getElementById('exitResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 </script>
 </body>
