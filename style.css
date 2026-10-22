@@ -374,3 +374,11 @@ a { color: var(--blue); }
 .exit-table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 0.9rem; }
 .exit-table th, .exit-table td { padding: 8px; border-bottom: 1px solid var(--panel-border); text-align: left; }
 .exit-holders { font-size: 0.85rem; line-height: 1.7; }
+
+/* ---------- Deep Report full sections ---------- */
+.full-report { margin-top: 18px; }
+.full-sec { background: rgba(0,0,0,0.25); border: 1px solid var(--panel-border); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+.full-sec h4 { margin: 0 0 8px; }
+.full-sec p { margin: 6px 0; line-height: 1.6; }
+.full-sec .src { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+.full-sec .na { color: var(--muted); }
