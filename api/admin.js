@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   const secret = process.env.RC_ADMIN_SECRET;
-  if (!secret || secret.length < 32 || !process.env.KV_REST_API_URL) return res.status(503).json({ success: false, message: 'Admin is not configured.' });
+  if (!secret || secret.length < 12 || !process.env.KV_REST_API_URL) return res.status(503).json({ success: false, message: 'Admin is not configured.' });
   const failKey = `rc:admfail:${iph(req)}:${Math.floor(Date.now() / 3600000)}`;
   let fails = 0;
   try { fails = Number(await kv(['GET', failKey])) || 0; } catch { return res.status(503).json({ success: false, message: 'Store unreachable.' }); }
