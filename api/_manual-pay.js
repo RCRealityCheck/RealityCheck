@@ -11,11 +11,11 @@ export const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
 const USDC_SOL_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL_RPCS = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'].filter(Boolean);
 const EVM_CHAINS = {
-  ethereum: { label: 'Ethereum', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', confirmations: 3, decimals: 6, rpcs: ['https://eth.llamarpc.com', 'https://ethereum.publicnode.com', 'https://rpc.ankr.com/eth'] },
-  base:     { label: 'Base', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', confirmations: 20, decimals: 6, rpcs: ['https://base.llamarpc.com', 'https://base.publicnode.com', 'https://rpc.ankr.com/base'] },
-  bnb:      { label: 'BNB Chain', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', confirmations: 15, decimals: 18, rpcs: ['https://binance.llamarpc.com', 'https://bsc.publicnode.com', 'https://rpc.ankr.com/bsc'] },
-  polygon:  { label: 'Polygon', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', confirmations: 20, decimals: 6, rpcs: ['https://polygon.llamarpc.com', 'https://polygon-bor.publicnode.com', 'https://rpc.ankr.com/polygon'] },
-  arbitrum: { label: 'Arbitrum', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', confirmations: 20, decimals: 6, rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
+  ethereum: { label: 'Ethereum', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', confirmations: 3, decimals: 6, rpcs: ['https://ethereum.publicnode.com', 'https://eth.drpc.org', 'https://1rpc.io/eth'] },
+  base:     { label: 'Base', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', confirmations: 20, decimals: 6, rpcs: ['https://base.publicnode.com', 'https://mainnet.base.org', 'https://base.drpc.org', 'https://1rpc.io/base'] },
+  bnb:      { label: 'BNB Chain', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', confirmations: 15, decimals: 18, rpcs: ['https://bsc.publicnode.com', 'https://bsc-dataseed.bnbchain.org', 'https://1rpc.io/bnb'] },
+  polygon:  { label: 'Polygon', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', confirmations: 20, decimals: 6, rpcs: ['https://polygon-bor.publicnode.com', 'https://polygon.drpc.org', 'https://1rpc.io/matic'] },
+  arbitrum: { label: 'Arbitrum', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', confirmations: 20, decimals: 6, rpcs: ['https://arbitrum-one.publicnode.com', 'https://arb1.arbitrum.io/rpc', 'https://1rpc.io/arb'] }
 };
 
 export const MSG = {
@@ -35,62 +35,85 @@ async function post(url, method, params) {
   return r.json();
 }
 
-async function verifySol(sig, price, maxAge) {
-  let tx = null, reached = false;
-  for (const u of SOL_RPCS) {
-    try {
-      let j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
-      // newer transaction versions: retry allowing them instead of reporting "busy"
-      if (j.error && j.error.code === -32015) j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 1, commitment: 'confirmed' }]);
-      // malformed signature: the node answered, the tx simply doesn't exist
-      if (j.error && j.error.code === -32602) { reached = true; continue; }
-      if (!j.error) { reached = true; if (j.result) { tx = j.result; break; } }
-    } catch {}
-  }
-  if (!tx) return { status: reached ? 'invalid' : 'busy', reason: reached ? MSG.notFound : MSG.busy, pending: reached };
-  if (tx.meta && tx.meta.err) return { status: 'invalid', reason: MSG.failed };
-  const now = Math.floor(Date.now() / 1000);
-  if (!tx.blockTime) return { status: 'invalid', reason: MSG.notFound, pending: true };
-  if (now - tx.blockTime > maxAge) return { status: 'invalid', reason: MSG.tooOld(maxAge) };
-  const sum = (l, own) => (l || []).reduce((s, b) => (b.mint === USDC_SOL_MINT && (!own || b.owner === RC_SOL)) ? s + BigInt(b.uiTokenAmount?.amount || '0') : s, 0n);
-  const received = sum(tx.meta?.postTokenBalances, true) - sum(tx.meta?.preTokenBalances, true);
-  if (received <= 0n) return { status: 'invalid', reason: MSG.wrongAddress };
-  if (received < BigInt(Math.round(price * 1e6))) return { status: 'invalid', reason: MSG.wrongAmount(price) };
-  return { status: 'ok', chain: 'Solana', amount: Number(received) / 1e6, micro: Number(received), blockTime: tx.blockTime };
+// ---- Two-source rule (audit M1): every payment must be seen identically by at least 2 independent RPC providers.
+// If only one source sees it, or sources disagree, the answer is "still confirming — try again in a minute".
+function consensus(outs) {
+  const seen = outs.filter(o => o.kind === 'tx');
+  if (seen.length === 0) return outs.some(o => o.kind === 'none') ? { kind: 'none' } : { kind: 'down' };
+  const k0 = seen[0].key;
+  if (seen.some(o => o.key !== k0)) return { kind: 'disagree' };
+  if (seen.length < 2) return { kind: 'single' };
+  return { kind: 'ok', v: seen[0] };
 }
 
-async function evmRpc(cfg, method, params) {
-  for (const u of cfg.rpcs) {
-    try { const j = await post(u, method, params); if (!j.error && j.result !== undefined && j.result !== null) return j.result; } catch {}
-  }
-  return null;
+async function solSource(u, sig) {
+  try {
+    let j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
+    // newer transaction versions: retry allowing them instead of reporting "busy"
+    if (j.error && j.error.code === -32015) j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 1, commitment: 'confirmed' }]);
+    if (j.error && j.error.code === -32602) return { kind: 'none' }; // malformed signature: node answered, tx doesn't exist
+    if (j.error) return { kind: 'down' };
+    const tx = j.result; if (!tx) return { kind: 'none' };
+    const sum = (l) => (l || []).reduce((t, b) => (b.mint === USDC_SOL_MINT && b.owner === RC_SOL) ? t + BigInt(b.uiTokenAmount?.amount || '0') : t, 0n);
+    const received = sum(tx.meta?.postTokenBalances) - sum(tx.meta?.preTokenBalances);
+    const failed = !!(tx.meta && tx.meta.err), bt = tx.blockTime || 0;
+    return { kind: 'tx', failed, bt, received, key: `${failed}|${bt}|${received}` };
+  } catch { return { kind: 'down' }; }
+}
+
+async function verifySol(sig, price, maxAge) {
+  const c = consensus(await Promise.all(SOL_RPCS.map(u => solSource(u, sig))));
+  if (c.kind === 'down') return { status: 'busy', reason: MSG.busy };
+  if (c.kind === 'none') return { status: 'invalid', reason: MSG.notFound, pending: true };
+  if (c.kind !== 'ok') return { status: 'invalid', pending: true, reason: MSG.confirming };
+  const { failed, bt, received } = c.v;
+  if (failed) return { status: 'invalid', reason: MSG.failed };
+  if (!bt) return { status: 'invalid', reason: MSG.notFound, pending: true };
+  if (Math.floor(Date.now() / 1000) - bt > maxAge) return { status: 'invalid', reason: MSG.tooOld(maxAge) };
+  if (received <= 0n) return { status: 'invalid', reason: MSG.wrongAddress };
+  if (received < BigInt(Math.round(price * 1e6))) return { status: 'invalid', reason: MSG.wrongAmount(price) };
+  return { status: 'ok', chain: 'Solana', amount: Number(received) / 1e6, micro: Number(received), blockTime: bt };
+}
+
+async function rpc1(u, method, params) { const j = await post(u, method, params); if (j.error) throw new Error('rpc'); return j.result; }
+
+async function evmSource(cfg, u, sig) {
+  try {
+    const receipt = await rpc1(u, 'eth_getTransactionReceipt', [sig]);
+    if (!receipt) return { kind: 'none' };
+    const block = await rpc1(u, 'eth_getBlockByNumber', [receipt.blockNumber, false]);
+    const bt = block?.timestamp ? parseInt(block.timestamp, 16) : 0;
+    const latest = parseInt(await rpc1(u, 'eth_blockNumber', []), 16);
+    if (!bt || !Number.isFinite(latest)) return { kind: 'down' };
+    const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    const to = '0x000000000000000000000000' + RC_EVM.slice(2).toLowerCase();
+    let total = 0n;
+    for (const log of (receipt.logs || [])) {
+      if ((log.address || '').toLowerCase() !== cfg.usdc.toLowerCase()) continue;
+      const t = log.topics || [];
+      if ((t[0] || '').toLowerCase() !== TRANSFER || (t[2] || '').toLowerCase() !== to) continue;
+      try { total += BigInt(log.data); } catch {}
+    }
+    const bn = parseInt(receipt.blockNumber, 16), ok = receipt.status === '0x1';
+    return { kind: 'tx', ok, bt, bn, total, latest, key: `${ok}|${bn}|${bt}|${total}` };
+  } catch { return { kind: 'down' }; }
 }
 
 async function verifyEvm(cfg, sig, price, maxAge) {
-  const receipt = await evmRpc(cfg, 'eth_getTransactionReceipt', [sig]);
-  if (!receipt) return { status: 'not-found' };
-  if (receipt.status !== '0x1') return { status: 'invalid', reason: MSG.failed };
-  const block = await evmRpc(cfg, 'eth_getBlockByNumber', [receipt.blockNumber, false]);
-  const bt = block?.timestamp ? parseInt(block.timestamp, 16) : 0;
-  if (!bt) return { status: 'invalid', reason: MSG.busy };
+  const outs = await Promise.all(cfg.rpcs.map(u => evmSource(cfg, u, sig)));
+  const c = consensus(outs);
+  if (c.kind === 'none') return { status: 'not-found' };
+  if (c.kind === 'down') return { status: 'invalid', reason: MSG.busy };
+  if (c.kind !== 'ok') return { status: 'invalid', pending: true, reason: MSG.confirming };
+  const { ok, bt, bn, total } = c.v;
+  if (!ok) return { status: 'invalid', reason: MSG.failed };
   if (Math.floor(Date.now() / 1000) - bt > maxAge) return { status: 'invalid', reason: MSG.tooOld(maxAge) };
+  // Finality: N confirmations, measured by the most conservative agreeing source.
+  const latest = Math.min(...outs.filter(o => o.kind === 'tx').map(o => o.latest));
+  if (latest - bn + 1 < cfg.confirmations) return { status: 'invalid', pending: true, reason: MSG.confirming };
   // Decimals are hard-coded per chain (never read from an RPC, which could lie about the scale).
-  const decimals = cfg.decimals;
-  // Finality: require N confirmations before accepting (reorg protection).
-  let latest = NaN; try { latest = parseInt(await evmRpc(cfg, 'eth_blockNumber', []), 16); } catch {}
-  if (!Number.isFinite(latest)) return { status: 'invalid', reason: MSG.busy };
-  if (latest - parseInt(receipt.blockNumber, 16) + 1 < cfg.confirmations) return { status: 'invalid', pending: true, reason: MSG.confirming };
-  const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-  const to = '0x000000000000000000000000' + RC_EVM.slice(2).toLowerCase();
-  let total = 0n;
-  for (const log of (receipt.logs || [])) {
-    if ((log.address || '').toLowerCase() !== cfg.usdc.toLowerCase()) continue;
-    const t = log.topics || [];
-    if ((t[0] || '').toLowerCase() !== TRANSFER || (t[2] || '').toLowerCase() !== to) continue;
-    try { total += BigInt(log.data); } catch {}
-  }
+  const unit = 10n ** BigInt(cfg.decimals);
   if (total === 0n) return { status: 'invalid', reason: MSG.wrongAddress };
-  const unit = 10n ** BigInt(decimals);
   if (total * 100n < BigInt(Math.round(price * 100)) * unit) return { status: 'invalid', reason: MSG.wrongAmount(price) };
   return { status: 'ok', chain: cfg.label, amount: Number(total) / Number(unit), micro: Number(total * 1000000n / unit), blockTime: bt };
 }
