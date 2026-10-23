@@ -400,3 +400,4 @@ a { color: var(--blue); }
 /* ---------- Payment inputs: full-width, normal size on mobile (16px avoids iOS zoom) ---------- */
 #txSig, #exitTxSig, #bundleTx { display: block; width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px 14px; margin: 6px 0 10px; border-radius: 10px; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.35); color: inherit; font-family: monospace; }
 label[for="txSig"], label[for="exitTxSig"] { display: block; margin-top: 12px; }
+.rc-why { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.45; }

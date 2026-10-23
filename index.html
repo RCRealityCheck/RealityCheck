@@ -168,14 +168,14 @@
     <button type="button" class="btn btn-ghost btn-full" id="bundleAdd">Add this coin to my list</button>
     <div id="bundleList"></div>
     <div id="bundlePay" style="display:none">
-      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> The Reality Check wallet must <strong>RECEIVE exactly</strong> the amount shown below ($1 per coin plus a tiny unique tag that identifies your checkout, e.g. about $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send — if your payment arrives short, send the exact difference as a top-up and paste both transaction IDs.</div>
-      <div class="rc-exact" id="bundleExact"><span class="rc-exact-l">Send EXACTLY</span> <strong class="rc-amt" id="bundleAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="bundleAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="bundleSessNote">Preparing your checkout…</p></div>
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Send about <strong>$1.11 per coin</strong> to cover fees (minimum <strong>$1 per coin must ARRIVE</strong>; more is fine). Exchanges like Binance deduct withdrawal fees from what you send — if less than $1 per coin arrives, top up the difference and paste both transaction IDs.</div>
+      <div class="rc-exact" id="bundleExact"><span class="rc-exact-l">Suggested: send</span> <strong class="rc-amt" id="bundleAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="bundleAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="bundleSessNote">Preparing your checkout…</p><p class="note rc-why"><strong>Why the odd cents?</strong> The last digits of your amount are unique to you. They protect you from fraud: your payment is matched to your checkout, so you get your report and no one else can claim it.</p></div>
       <p class="pay-note">Total: <strong id="bundleTotal">0</strong> USDC ($1 × <span id="bundleCount">0</span> coins), paid once.</p>
       <a id="bundleLink" class="btn btn-primary btn-full" href="#">Open in your wallet (Solana USDC)</a>
       <div class="exit-qr" id="bundleQr"></div>
       <p class="note" id="bundleStatus"></p>
       <div class="pay-divider"><span>or send to the wallet address</span></div>
-      <p class="pay-note">Or send exactly the amount shown above in USDC from any wallet or exchange to one of the deposit addresses below (scan the QR or tap Copy), then paste the transaction ID:</p>
+      <p class="pay-note">Or send the suggested amount shown above in USDC (at least $1 per coin must arrive) from any wallet or exchange to one of the deposit addresses below (scan the QR or tap Copy), then paste the transaction ID:</p>
       <p class="pay-note" style="margin-bottom:6px"><strong>Solana - USDC:</strong></p>
       <div class="exit-qr rc-addr-qr" data-qr="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk"></div>
       <div class="wallet-copy"><code>DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk</code><button type="button" class="btn btn-ghost copy-any" data-t="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk">Copy</button></div>
@@ -197,8 +197,8 @@
   <div id="payPanel" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC — your chain, your choice</h3>
-      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> The Reality Check wallet must <strong>RECEIVE exactly</strong> the amount shown below ($1 per coin plus a tiny unique tag that identifies your checkout, e.g. about $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send — if your payment arrives short, send the exact difference as a top-up and paste both transaction IDs.</div>
-      <div class="rc-exact" id="deepExact"><span class="rc-exact-l">Send EXACTLY</span> <strong class="rc-amt" id="deepAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="deepAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="deepSessNote">Preparing your checkout…</p></div>
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Send about <strong>$1.11 per coin</strong> to cover fees (minimum <strong>$1 per coin must ARRIVE</strong>; more is fine). Exchanges like Binance deduct withdrawal fees from what you send — if less than $1 per coin arrives, top up the difference and paste both transaction IDs.</div>
+      <div class="rc-exact" id="deepExact"><span class="rc-exact-l">Suggested: send</span> <strong class="rc-amt" id="deepAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="deepAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="deepSessNote">Preparing your checkout…</p><p class="note rc-why"><strong>Why the odd cents?</strong> The last digits of your amount are unique to you. They protect you from fraud: your payment is matched to your checkout, so you get your report and no one else can claim it.</p></div>
       <label for="payChain">Payment chain</label>
       <select id="payChain">
         <option value="solana">Solana (cheapest)</option>
@@ -213,7 +213,7 @@
       <p class="note" id="payHint">Your wallet opens right here — approve, and the report unlocks automatically.</p>
       <p class="note" style="text-align:center;margin:4px 0 8px"><a id="deepPhantomApp" href="#" style="display:none">Have Phantom? Open this page in the Phantom app</a></p>
       <div class="pay-divider"><span>or pay manually</span></div>
-      <p class="pay-note">Send <strong>exactly the amount shown above</strong> on any supported chain to the Reality Check wallet, then paste the transaction hash — <strong>we detect the chain automatically</strong>.</p>
+      <p class="pay-note">Send <strong>the suggested amount shown above</strong> (at least 1 USDC must arrive) on any supported chain to the Reality Check wallet, then paste the transaction hash — <strong>we detect the chain automatically</strong>.</p>
       <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Solana:</strong></p>
       <div class="exit-qr rc-addr-qr" data-qr="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk"></div>
       <div class="wallet-copy">
@@ -261,8 +261,8 @@
   <div id="exitPay" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC with Solana Pay</h3>
-      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> The Reality Check wallet must <strong>RECEIVE exactly</strong> the amount shown below ($1 per coin plus a tiny unique tag that identifies your checkout, e.g. about $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send — if your payment arrives short, send the exact difference as a top-up and paste both transaction IDs.</div>
-      <div class="rc-exact" id="exitExact"><span class="rc-exact-l">Send EXACTLY</span> <strong class="rc-amt" id="exitAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="exitAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="exitSessNote">Preparing your checkout…</p></div>
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Send about <strong>$1.11 per coin</strong> to cover fees (minimum <strong>$1 per coin must ARRIVE</strong>; more is fine). Exchanges like Binance deduct withdrawal fees from what you send — if less than $1 per coin arrives, top up the difference and paste both transaction IDs.</div>
+      <div class="rc-exact" id="exitExact"><span class="rc-exact-l">Suggested: send</span> <strong class="rc-amt" id="exitAmt">…</strong> <span class="rc-exact-u">USDC</span> <button type="button" class="btn btn-ghost copy-any" id="exitAmtCopy" data-t="">Copy amount</button><p class="note rc-exact-n" id="exitSessNote">Preparing your checkout…</p><p class="note rc-why"><strong>Why the odd cents?</strong> The last digits of your amount are unique to you. They protect you from fraud: your payment is matched to your checkout, so you get your report and no one else can claim it.</p></div>
       <button type="button" class="btn btn-primary btn-full" id="exitPhantom" style="display:none">Pay with Phantom (this browser)</button>
       <a id="exitDeepLink" class="btn btn-primary btn-full" href="#">Open in your wallet</a>
       <p class="note"><strong>$1 = one report for one coin.</strong> Each coin needs its own payment.</p>
@@ -286,9 +286,9 @@
         <button type="button" class="btn btn-ghost btn-full rc-topup-add" data-for="exitTopupIds">+ Add another transaction ID</button>
       </div>
       <button type="button" class="btn btn-ghost btn-full" id="exitVerifyManual">Verify my payment and open Exit Door</button>
-      <p class="note">Send exactly the amount shown above. Payments from any wallet or exchange are checked on-chain, and only this browser can use them to unlock this report.</p>
+      <p class="note">Send the suggested amount shown above (at least 1 USDC must arrive). Payments from any wallet or exchange are checked on-chain, and only this browser can use them to unlock this report.</p>
       <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
-      <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each checkout has its own reference and only unlocks this token. Your exact amount stays reserved for 24 hours.</p>
+      <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each checkout has its own reference and only unlocks this token. Your checkout and its suggested amount stay reserved for 24 hours.</p>
     </div>
   </div>
   <div id="exitResult"></div>
@@ -1026,13 +1026,13 @@ async function rcCheckout(p, endpoint, k, payload) {
   try { d = await (await fetch(location.origin + endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ action: 'checkout' }, payload, prev ? { sessionId: prev.sessionId, token: prev.token } : {})) })).json(); }
   catch { d = { success: false, message: 'Could not reach the server to start your checkout. No payment was taken — please try again.' }; }
   if (!d.success) { if (note) note.textContent = d.message || 'Could not start checkout.'; rcSess[p] = null; return null; }
-  const sess = { sessionId: d.sessionId, token: d.token || (prev && prev.token), amountText: d.amountText, micro: d.micro, exp: d.exp, status: d.status, cents: !!d.cents };
+  const sess = { sessionId: d.sessionId, token: d.token || (prev && prev.token), amountText: d.amountText, micro: d.micro, exp: d.exp, status: d.status };
   rcSessPut(k, sess); rcSess[p] = sess;
   document.getElementById(p + 'Amt').textContent = sess.amountText;
   document.getElementById(p + 'AmtCopy').setAttribute('data-t', sess.amountText);
   if (note) note.textContent = sess.status === 'paid'
     ? 'This browser already paid for this — tap verify (no transaction ID needed) to show it again.'
-    : 'This exact amount is reserved for your checkout for ' + (sess.cents ? '3 hours' : '24 hours') + '. Only this browser can use the payment to unlock this report.';
+    : 'This exact amount is unique to your checkout (24 hours), so we can match it instantly. Any amount of at least ' + (d.minimum || 1) + ' USDC also works. Only this browser can use the payment to unlock this report.';
   return sess;
 }
 function rcSessBody(p) { const x = rcSess[p]; return x ? { sessionId: x.sessionId, token: x.token } : {}; }
@@ -1049,7 +1049,7 @@ function rcTxIds(mainId, p) {
 function rcShowShort(p, sf) {
   const box = document.getElementById(p + 'Topup'); if (!box) return;
   if (!sf) return;
-  document.getElementById(p + 'Short').innerHTML = `<strong>Received:</strong> ${esc(String(sf.received))} USDC · <strong>Required:</strong> ${esc(String(sf.required))} USDC · <strong>Short:</strong> ${esc(String(sf.short))} USDC<br>Send exactly the shortfall to the same address (make sure it ARRIVES in full), then paste that transaction ID below and verify again. All IDs are checked and counted together — each can only be used once.`;
+  document.getElementById(p + 'Short').innerHTML = `<strong>Received:</strong> ${esc(String(sf.received))} USDC · <strong>Required:</strong> ${esc(String(sf.required))} USDC · <strong>Short:</strong> ${esc(String(sf.short))} USDC<br>Send at least the shortfall plus fees to the same address (make sure it ARRIVES in full), then paste that transaction ID below and verify again. All IDs are checked and counted together — each can only be used once.`;
   box.style.display = 'block';
 }
 document.addEventListener('click', function (e) {
@@ -1414,7 +1414,7 @@ document.getElementById('exitPhantomApp').addEventListener('click', async functi
   try { const u = new URL(location.href); u.searchParams.delete('xd_resume'); u.searchParams.delete('rc_grant'); history.replaceState(null, '', u.toString()); } catch {}
   let r; try { r = await deepApi({ action: 'redeem', code }); } catch { r = null; }
   const m = r && r.meta;
-  const sess = r && r.success ? { sessionId: r.sessionId, token: r.token, amountText: r.amountText, micro: r.micro, exp: r.exp, status: r.status, cents: !!r.cents } : null;
+  const sess = r && r.success ? { sessionId: r.sessionId, token: r.token, amountText: r.amountText, micro: r.micro, exp: r.exp, status: r.status } : null;
   if (!sess || !m) {
     const box = document.getElementById(p.get('xd_resume') ? 'exitResult' : 'deepResult');
     box.innerHTML = `<div class="report-card"><p>${esc((r && r.message) || 'This link could not be used.')}</p></div>`; box.scrollIntoView({ block: 'nearest' }); return;
