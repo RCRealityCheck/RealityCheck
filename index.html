@@ -727,6 +727,7 @@ document.getElementById('checkForm').addEventListener('submit', async function (
     });
     const data = await res.json();
     if (data.success) {
+      setTimeout(() => rcRelatedNews(resultDiv, data, contract), 0);
       const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
       const holdersHtml = (data.topHolders || []).map(h => {
         const a = esc(h.address || '');
@@ -777,6 +778,7 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
     });
     const data = await res.json();
     if (data.success) {
+      setTimeout(() => rcRelatedNews(resultDiv, data, contract), 0);
       const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
       const scoreCls = data.score >= 80 ? 'v-green' : data.score >= 55 ? 'v-amber' : data.score >= 35 ? 'v-amber' : 'v-red';
       const greenHtml = (data.green || []).map(g => `<li class="flag-good">${esc(g)}</li>`).join('') || '<li class="flag-good">No standout strengths in the holder data.</li>';
@@ -827,6 +829,43 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
     resultDiv.innerHTML = '<div class="report-card"><p>We could not reach the Reality Check server just now (network or provider hiccup). Nothing is wrong with your input — please try again in a minute.</p></div>';
   }
 });
+// ---------- Related RC News (strict matching; hidden when nothing matches) ----------
+// Optional news.json field per item: "coins": ["GMX", "0xfc5a…", "solana:<mint>"] — exact symbols/addresses for precise tagging.
+let rcNewsCache = null;
+const RC_NEWS_GENERIC = new Set(['the','and','for','you','one','two','all','new','top','buy','sell','hold','safe','hack','scam','rug','news','token','coin','crypto','wallet','money','cash','gold','moon','pump','dump','meme','dog','cat','pepe','inu','ai','app','dao','defi','nft','web3','usd','usdc','usdt','dai','eth','btc','sol','bnb','weth','wbtc','wsol','ether','bitcoin','ethereum','solana','base','arbitrum','polygon','avalanche','exchange','bridge','vault','pool','finance','protocol','network','labs','capital','security','alert','fake']);
+async function rcNewsItems() {
+  if (!rcNewsCache) rcNewsCache = fetch('news.json', { cache: 'no-store' }).then(r => r.json()).then(d => d.items || []).catch(() => []);
+  return rcNewsCache;
+}
+function rcNewsMatches(n, coin) {
+  const addr = String(coin.contract || '').trim().toLowerCase();
+  const sym = String(coin.symbol || '').trim().toLowerCase(), name = String(coin.name || '').trim().toLowerCase();
+  const tags = Array.isArray(n.coins) ? n.coins.map(x => String(x || '').trim().toLowerCase()).filter(Boolean) : null;
+  if (tags && tags.length) {
+    // Tagged stories match ONLY on their tags (exact address, chain:address, or exact symbol/name).
+    return tags.some(t => (addr && (t === addr || t.endsWith(':' + addr))) || (sym && t === sym) || (name && t === name));
+  }
+  const text = ((n.title || '') + ' ' + (n.what || '')).toLowerCase();
+  if (addr && addr.length >= 32 && text.includes(addr)) return true;
+  const word = (w) => w && w.length >= 3 && !RC_NEWS_GENERIC.has(w) && new RegExp('(^|[^a-z0-9$])\\$?' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])', 'i').test(text);
+  return word(sym) || (name.length >= 4 && word(name));
+}
+async function rcRelatedNews(box, data, contract) {
+  try {
+    if (!box || !data) return;
+    const coin = { contract: contract || data.contract || '', symbol: data.symbol || '', name: data.name || '' };
+    const hits = (await rcNewsItems()).filter(n => rcNewsMatches(n, coin)).slice(0, 5);
+    if (!hits.length || !box.isConnected) return;
+    const old = box.querySelector('.rc-related-news'); if (old) old.remove();
+    const sec = document.createElement('div'); sec.className = 'report-card rc-related-news';
+    sec.innerHTML = '<h4>Related RC News</h4><ul>' + hits.map(n => {
+      const src = (n.sources || []).find(x => /^https?:\/\//i.test(String(x.url || ''))) || null;
+      const t = esc(n.title || '');
+      return `<li>${src ? `<a href="${esc(safeUrl(src.url))}" target="_blank" rel="noopener nofollow">${t}</a>` : t} <span class="news-date">· ${esc(n.date || '')}</span>${src ? ` <span class="news-date">· ${esc(src.name || '')}</span>` : ''}</li>`;
+    }).join('') + '</ul>';
+    box.appendChild(sec);
+  } catch {}
+}
 // ---------- RC News feed ----------
 (async function loadNews() {
   const feed = document.getElementById('newsFeed');
@@ -1196,6 +1235,7 @@ async function runDeepReport(autoDetect) {
     });
     const data = await res.json();
     if (data.success) {
+      setTimeout(() => rcRelatedNews(resultDiv, data, contract), 0);
       const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
       const dnaHtml = (data.wallets || []).map((w, i) => {
         const age = w.ageDays === null ? 'unknown age' : w.ageIsMinimum ? 'over ' + w.ageDays + ' days old' : w.ageDays === 0 ? 'created today' : w.ageDays + ' days old';

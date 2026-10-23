@@ -401,3 +401,6 @@ a { color: var(--blue); }
 #txSig, #exitTxSig, #bundleTx { display: block; width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px 14px; margin: 6px 0 10px; border-radius: 10px; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.35); color: inherit; font-family: monospace; }
 label[for="txSig"], label[for="exitTxSig"] { display: block; margin-top: 12px; }
 .rc-why { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.45; }
+.rc-related-news h4 { margin: 0 0 8px; }
+.rc-related-news ul { margin: 0; padding-left: 18px; }
+.rc-related-news li { margin: 6px 0; line-height: 1.4; overflow-wrap: anywhere; }
