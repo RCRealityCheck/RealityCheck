@@ -7,22 +7,21 @@ import crypto from 'crypto';
 import { verifyManualTx, manualMaxAge, MSG, parseTxList, txKey } from './_manual-pay.js';
 
 export const SESSION_TTL = 86400;          // 4-decimal checkout: open 24h (= manual payment window)
-export const CENTS_TTL = 3 * 3600;         // 2-decimal checkout: open 3h (only 25 slots per price)
 const CLAIM_GRACE = 3600;                  // a payment sent just before expiry can still be claimed for 1h
 const REPLACED_HOLD = 2 * 3600;            // amount of a replaced checkout stays reserved (for this browser) 2h
 const PAID_KEEP = 7 * 86400;               // paid sessions kept 7 days so the same browser can re-show
-const TAGS = 499;                          // 4-decimal tag = 0.0001 .. 0.0499 USDC
-const CENT_TAGS = 25;                      // 2-decimal tag = 0.01 .. 0.25 USDC
+export const SUGGEST = 1.11;               // suggested $1.11 per coin (covers fees); minimum that must ARRIVE is $1 per coin
+const TAG_MAIN = [1, 99];                  // tag 0.0001 .. 0.0099 -> e.g. 1.1101 .. 1.1199
+const TAG_EXT = [100, 399];                // if those run out: 0.0100 .. 0.0399 -> e.g. 1.1200 .. 1.1499
 const MAX_CHECKOUTS_PER_IP_HOUR = 40;
 const MAX_CHECKOUTS_GLOBAL_HOUR = 2000;
 export const RESUME_TTL = 600;             // Phantom hand-off code: 10 minutes, single use
 export const GRANT_TTL = 86400;            // admin unlock link: 24h, single use
 export const CONTACT = 'Reality Check on X (@RC_Reality_ — https://x.com/RC_Reality_)';
 export const BUSY = 'Checkout is busy right now — please try again in a few minutes. No payment was taken.';
-export const CENTS_BUSY = 'All 2-decimal amounts are taken right now. Please try again in a few minutes, or untick the 2-decimal option to use a 4-decimal amount instead. No payment was taken.';
 
 const sha = (t) => crypto.createHash('sha256').update(String(t)).digest('hex');
-export const fmt = (micro) => (micro / 1e6).toFixed(micro % 10000 === 0 ? 2 : micro % 100 === 0 ? 4 : 6);
+export const fmt = (micro) => (micro / 1e6).toFixed(micro % 100 === 0 ? 4 : 6);
 const B58A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const b58 = (buf) => { let n = BigInt('0x' + Buffer.from(buf).toString('hex')), s = ''; while (n > 0n) { s = B58A[Number(n % 58n)] + s; n /= 58n; } for (const x of buf) { if (x === 0) s = '1' + s; else break; } return s; };
 
@@ -34,7 +33,7 @@ const enabled = () => !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_
 const D = (deps) => ({ kv: deps.kv || kvReal, verify: deps.verify || verifyManualTx, now: deps.now || (() => Math.floor(Date.now() / 1000)), enabled: deps.kv ? true : enabled() });
 export const kvCmd = (args, deps = {}) => D(deps).kv(args);
 
-const pub = (s, token) => ({ sessionId: s.id, ...(token ? { token } : {}), amount: s.micro / 1e6, amountText: fmt(s.micro), micro: s.micro, exp: s.exp, status: s.status, cents: !!s.cents, ...(s.meta ? { meta: s.meta } : {}) });
+const pub = (s, token) => ({ sessionId: s.id, ...(token ? { token } : {}), amount: s.micro / 1e6, amountText: fmt(s.micro), micro: s.micro, minimum: s.price, exp: s.exp, status: s.status, ...(s.meta ? { meta: s.meta } : {}) });
 
 export async function loadSession(kv, id) {
   if (!/^[a-f0-9]{32}$/.test(String(id || ''))) return null;
@@ -61,8 +60,8 @@ async function authed(kv, { sessionId, token, claim }) {
   return { s };
 }
 
-// Create (or reuse) a checkout for `claim` at `price` USDC. cents=true -> 2-decimal amount (exchange-friendly).
-export async function createSession({ claim, price, ip, prevId, prevToken, cents = false, meta = null }, deps = {}) {
+// Create (or reuse) a checkout for `claim`. price = minimum USDC (N coins = N); suggested amount = N x 1.11 + unique tag.
+export async function createSession({ claim, price, ip, prevId, prevToken, meta = null }, deps = {}) {
   const { kv, now, enabled: on } = D(deps);
   if (!on) return { ok: false, message: 'Payments are temporarily unavailable (checkout store not configured). No payment was taken.' };
   try {
@@ -72,8 +71,8 @@ export async function createSession({ claim, price, ip, prevId, prevToken, cents
       const s = await loadSession(kv, prevId);
       if (s && tokenOk(s, prevToken) && s.claim === claim) {
         if (s.status === 'paid') return { ok: true, reused: true, ...pub(s) };
-        if (s.status === 'open' && !!s.cents === !!cents && s.exp - t > (cents ? 900 : 3600)) return { ok: true, reused: true, ...pub(s) };
-        if (s.status === 'open') prev = s; // mode switch or nearly expired -> replace, release its amount early
+        if (s.status === 'open' && s.exp - t > 3600) return { ok: true, reused: true, ...pub(s) };
+        if (s.status === 'open') prev = s; // nearly expired -> replace, release its amount early
       }
     }
     const hour = Math.floor(t / 3600);
@@ -85,16 +84,14 @@ export async function createSession({ claim, price, ip, prevId, prevToken, cents
       if (n > MAX_CHECKOUTS_PER_IP_HOUR) return { ok: false, busy: true, message: 'Too many checkouts from this connection in the last hour. Please try again later. No payment was taken.' };
     }
     const id = crypto.randomBytes(16).toString('hex'), token = crypto.randomBytes(32).toString('base64url');
-    const ttl = cents ? CENTS_TTL : SESSION_TTL, hold = ttl + 2 * CLAIM_GRACE;
-    const base = Math.round(price * 1e6);
+    const ttl = SESSION_TTL, hold = ttl + 2 * CLAIM_GRACE;
+    const base = Math.round(price * SUGGEST * 1e6);
     let micro = 0;
-    if (cents) {
-      const order = crypto.randomInt(CENT_TAGS);
-      for (let i = 0; i < CENT_TAGS && !micro; i++) { const m = base + (1 + (order + i) % CENT_TAGS) * 10000; if ((await kv(['SET', `rc:amt:${m}`, id, 'NX', 'EX', hold])) === 'OK') micro = m; }
-    } else {
-      for (let i = 0; i < 40 && !micro; i++) { const m = base + (1 + crypto.randomInt(TAGS)) * 100; if ((await kv(['SET', `rc:amt:${m}`, id, 'NX', 'EX', hold])) === 'OK') micro = m; }
-    }
-    if (!micro) return { ok: false, busy: true, message: cents ? CENTS_BUSY : BUSY };
+    const tryTag = async (k) => { const m = base + k * 100; if ((await kv(['SET', `rc:amt:${m}`, id, 'NX', 'EX', hold])) === 'OK') micro = m; };
+    for (let i = 0; i < 25 && !micro; i++) await tryTag(TAG_MAIN[0] + crypto.randomInt(TAG_MAIN[1] - TAG_MAIN[0] + 1));
+    for (let i = 0; i < 40 && !micro; i++) await tryTag(TAG_EXT[0] + crypto.randomInt(TAG_EXT[1] - TAG_EXT[0] + 1)); // extend rather than fail
+    for (let k = TAG_MAIN[0]; k <= TAG_EXT[1] && !micro; k++) await tryTag(k);                                    // last resort: scan every slot
+    if (!micro) return { ok: false, busy: true, message: BUSY };
     const alt = [];
     if (prev) {
       // Same browser switched mode: the old amount stays valid for THIS session for a short hold, then is freed.
@@ -102,9 +99,10 @@ export async function createSession({ claim, price, ip, prevId, prevToken, cents
       await releaseAmount(kv, prev, REPLACED_HOLD);
       try { await save(kv, { ...prev, status: 'replaced', replacedBy: id }); } catch {}
     }
-    const s = { id, th: sha(token), claim, price, micro, cents: !!cents, created: t, since: prev ? Math.min(prev.since || prev.created, t) : t, exp: t + ttl, status: 'open', alt, ...(meta ? { meta } : {}) };
+    const s = { id, th: sha(token), claim, price, micro, created: t, since: prev ? Math.min(prev.since || prev.created, t) : t, exp: t + ttl, status: 'open', alt, ...(meta ? { meta } : {}) };
     await kv(['SET', `rc:sess:${id}`, JSON.stringify(s), 'EX', hold]);
-    return { ok: true, ...pub(s, prev ? token : token) };
+    try { await kv(['SADD', `rc:claimidx:${claim}`, id]); await kv(['EXPIRE', `rc:claimidx:${claim}`, hold]); } catch {}
+    return { ok: true, ...pub(s, token) };
   } catch { return { ok: false, busy: true, message: BUSY }; }
 }
 
@@ -125,29 +123,51 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
     const keys = ids.map(txKey);
     if (new Set(keys).size !== keys.length) return { ok: false, message: 'The same transaction ID was pasted twice. Each payment can only be counted once.' };
     const bound = await Promise.all(keys.map(k => kv(['GET', `rc:paidtx:${encodeURIComponent(k)}`])));
+    const held = bound.findIndex(b => b != null && String(b).startsWith('held:'));
+    if (held >= 0) return { ok: false, held: true, message: `Transaction ${held + 1} is held for the owner to confirm, because more than one checkout could match it. Please message ${CONTACT} with your transaction ID — nothing was charged twice.` };
     const used = bound.findIndex(b => b != null);
     if (used >= 0) return { ok: false, message: `Transaction ${used + 1} was already used to unlock a report. Each payment can only be used once — nothing was claimed.` };
     const vs = await Promise.all(ids.map(id => verify(id, { price: 0, maxAgeSec: manualMaxAge() })));
     const bad = vs.findIndex(v => v.status !== 'ok' || !(v.micro > 0));
     if (bad >= 0) return { ok: false, pending: !!vs[bad].pending, message: `Transaction ${bad + 1}: ${vs[bad].reason || MSG.notFound} Nothing was claimed.` };
     const since = s.since || s.created;
-    const early = vs.findIndex(v => !v.blockTime || v.blockTime < since - 120);
+    const early = vs.findIndex(v => !v.blockTime || v.blockTime < since - 30);
     if (early >= 0) return { ok: false, message: `Transaction ${early + 1} was sent before this checkout started, so it cannot pay for it. Nothing was claimed.` };
     const sum = vs.reduce((x, v) => x + v.micro, 0);
+    const minMicro = Math.round(s.price * 1e6);
     const targets = [s.micro, ...(s.alt || []).filter(x => x.until > t).map(x => x.micro)];
-    const match = targets.some(m => Math.abs(sum - m) <= 1);
-    if (!match) {
-      const diff = sum - s.micro;
-      if (diff < -1) { const sf = { received: sum / 1e6, required: s.micro / 1e6, short: -diff / 1e6 }; return { ok: false, shortfall: sf, message: `We received ${fmt(sum)} USDC but this checkout needs exactly ${fmt(s.micro)} USDC — ${fmt(-diff)} USDC short (exchange or network fees are often deducted). Send exactly ${fmt(-diff)} USDC more to the same address and paste ALL your transaction IDs below.` }; }
-      return { ok: false, overpaid: { received: sum / 1e6, required: s.micro / 1e6 }, message: `We received ${fmt(sum)} USDC, but this checkout needs exactly ${fmt(s.micro)} USDC, so it could not be matched automatically. Nothing was claimed. Please contact ${CONTACT} with your transaction ID(s) and this amount so we can sort it out.` };
+    const tagged = targets.some(m => Math.abs(sum - m) <= 1);
+    if (!tagged) {
+      // (c) under the minimum -> top-up
+      if (sum < minMicro) { const sf = { received: sum / 1e6, required: minMicro / 1e6, short: (minMicro - sum) / 1e6 }; return { ok: false, shortfall: sf, message: `We received ${fmt(sum)} USDC but at least ${fmt(minMicro)} USDC must arrive — ${fmt(minMicro - sum)} USDC short (exchange or network fees are often deducted). Send at least ${fmt(minMicro - sum)} USDC more (plus fees) to the same address and paste ALL your transaction IDs below.` }; }
+      // (b) untagged, >= minimum: must not be some OTHER checkout's exact tag ...
+      const amts = [sum, ...vs.map(v => v.micro)];
+      const owners = await Promise.all(amts.map(m => kv(['GET', `rc:amt:${m}`])));
+      if (owners.some(o => o != null && o !== s.id)) return { ok: false, message: 'That payment exactly matches a different checkout\'s amount, so it cannot unlock this one. Nothing was claimed. If it is yours, message ' + CONTACT + ' with the transaction ID.' };
+      // ... and must not be ambiguous: another open, unpaid checkout for the same report opened before the payment.
+      const firstTx = Math.min(...vs.map(v => v.blockTime));
+      let others = []; try { others = (await kv(['SMEMBERS', `rc:claimidx:${s.claim}`])) || []; } catch {}
+      const rivals = [];
+      for (const oid of others) {
+        if (oid === s.id) continue;
+        const o = await loadSession(kv, oid);
+        if (o && o.status === 'open' && t <= o.exp + CLAIM_GRACE && (o.since || o.created) - 30 <= firstTx) rivals.push(oid);
+      }
+      if (rivals.length) {
+        // Hold every tx so nobody (neither checkout) can claim it until the owner decides.
+        for (const k of keys) { try { await kv(['SET', `rc:paidtx:${encodeURIComponent(k)}`, `held:${s.id}`, 'NX', 'EX', PAID_KEEP]); } catch {} }
+        try { await kv(['LPUSH', 'rc:held', JSON.stringify({ t, txs: ids, claim: s.claim, meta: s.meta || null, amount: fmt(sum), chain: [...new Set(vs.map(v => v.chain))].join(' + '), claimedBy: s.id, rivals })]); await kv(['LTRIM', 'rc:held', 0, 499]); } catch {}
+        return { ok: false, held: true, message: `We received ${fmt(sum)} USDC, but another checkout for this same report was also open, so we can't tell automatically whose payment this is. It is held safely — nobody can use it. Please message ${CONTACT} with your transaction ID and the owner will send you an unlock link. (Sending the exact suggested amount avoids this.)` };
+      }
     }
     const done = [];
     try {
       for (const k of keys) { if ((await kv(['SET', `rc:paidtx:${encodeURIComponent(k)}`, `sess:${s.id}`, 'NX', 'EX', PAID_KEEP])) !== 'OK') throw new Error('taken'); done.push(k); }
-      const paid = { ...s, status: 'paid', txs: ids, paidMicro: sum, chain: [...new Set(vs.map(v => v.chain))].join(' + '), paidAt: t };
+      const paid = { ...s, status: 'paid', txs: ids, paidMicro: sum, tagged, chain: [...new Set(vs.map(v => v.chain))].join(' + '), paidAt: t };
       if ((await kv(['SET', `rc:sess:${s.id}`, JSON.stringify(paid), 'XX', 'EX', PAID_KEEP])) !== 'OK') throw new Error('sess');
       await releaseAmount(kv, s, 0);
-      return { ok: true, amount: sum / 1e6, chain: paid.chain, ids };
+      try { await kv(['SREM', `rc:claimidx:${s.claim}`, s.id]); } catch {}
+      return { ok: true, amount: sum / 1e6, chain: paid.chain, ids, tagged };
     } catch (e) {
       for (const k of done) { try { if ((await kv(['GET', `rc:paidtx:${encodeURIComponent(k)}`])) === `sess:${s.id}`) await kv(['DEL', `rc:paidtx:${encodeURIComponent(k)}`]); } catch {} }
       return { ok: false, message: e.message === 'taken' ? 'One of these transactions was just used for another report. Nothing was claimed.' : MSG.busy };
@@ -217,7 +237,14 @@ export async function adminGrant({ claim, price, meta, note, txIds }, deps = {})
   const t = now(), id = crypto.randomBytes(16).toString('hex');
   const ids = parseTxList(txIds), done = [];
   try {
-    for (const tx of ids) { if ((await kv(['SET', `rc:paidtx:${encodeURIComponent(txKey(tx))}`, `grant:${id}`, 'NX', 'EX', PAID_KEEP])) !== 'OK') throw new Error('taken'); done.push(tx); }
+    for (const tx of ids) {
+      const k = `rc:paidtx:${encodeURIComponent(txKey(tx))}`;
+      if ((await kv(['SET', k, `grant:${id}`, 'NX', 'EX', PAID_KEEP])) !== 'OK') {
+        const cur = await kv(['GET', k]);
+        if (!String(cur || '').startsWith('held:') || (await kv(['SET', k, `grant:${id}`, 'XX', 'EX', PAID_KEEP])) !== 'OK') throw new Error('taken');
+      }
+      done.push(tx);
+    }
   } catch (e) {
     for (const tx of done) { try { if ((await kv(['GET', `rc:paidtx:${encodeURIComponent(txKey(tx))}`])) === `grant:${id}`) await kv(['DEL', `rc:paidtx:${encodeURIComponent(txKey(tx))}`]); } catch {} }
     return { ok: false, message: e.message === 'taken' ? 'One of those transaction IDs is already bound to a report. Look it up first.' : MSG.busy };
@@ -228,4 +255,4 @@ export async function adminGrant({ claim, price, meta, note, txIds }, deps = {})
   await kv(['SET', `rc:code:${code}`, JSON.stringify({ type: 'grant', id }), 'EX', GRANT_TTL]);
   return { ok: true, sessionId: id, code };
 }
-export const sessionSummary = (s) => s && ({ sessionId: s.id, claim: s.claim, meta: s.meta || null, status: s.status, amount: fmt(s.micro), cents: !!s.cents, created: s.created, exp: s.exp, paidAt: s.paidAt || null, paid: s.paidMicro ? fmt(s.paidMicro) : null, chain: s.chain || null, txs: s.txs || [], granted: !!s.granted, note: s.note || '', hasReference: !!s.ref, replacedBy: s.replacedBy || null });
+export const sessionSummary = (s) => s && ({ sessionId: s.id, claim: s.claim, meta: s.meta || null, status: s.status, amount: fmt(s.micro), minimum: s.price, tagged: s.tagged ?? null, created: s.created, exp: s.exp, paidAt: s.paidAt || null, paid: s.paidMicro ? fmt(s.paidMicro) : null, chain: s.chain || null, txs: s.txs || [], granted: !!s.granted, note: s.note || '', hasReference: !!s.ref, replacedBy: s.replacedBy || null });

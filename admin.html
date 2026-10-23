@@ -44,6 +44,12 @@
       <pre id="lookupOut" style="display:none"></pre>
     </section>
     <section class="card">
+      <h2>Held payments</h2>
+      <p class="note">Payments of at least $1/coin that were not the exact suggested amount while another checkout for the same report was open. Nobody can use them until you issue an unlock link below (paste the transaction ID into it).</p>
+      <button id="heldBtn" class="ghost">Show held payments</button>
+      <pre id="heldOut" style="display:none"></pre>
+    </section>
+    <section class="card">
       <h2>Issue an unlock link</h2>
       <p class="note">Creates an already-paid checkout and a single-use link (valid 24h) that binds it to the buyer's browser. Only send it to the buyer, privately.</p>
       <label for="gKind">Report</label>
@@ -107,7 +113,7 @@ $('lookupBtn').onclick = async () => {
   const s = j.session;
   if (s) {
     lines.push('', 'Session ' + s.sessionId, 'Report: ' + s.claim, 'Coin(s): ' + JSON.stringify(s.meta), 'Status: ' + s.status + (s.granted ? ' (admin grant)' : '') + (s.replacedBy ? ' → ' + s.replacedBy : ''),
-      'Exact amount: ' + s.amount + ' USDC' + (s.cents ? ' (2-decimal)' : ''), 'Created: ' + ts(s.created), 'Expires: ' + ts(s.exp),
+      'Suggested amount: ' + s.amount + ' USDC (minimum ' + s.minimum + ')' + (s.tagged === false ? ' — paid untagged' : ''), 'Created: ' + ts(s.created), 'Expires: ' + ts(s.exp),
       'Paid: ' + (s.paid ? s.paid + ' USDC on ' + s.chain + ' at ' + ts(s.paidAt) : '—'), 'Tx IDs: ' + (s.txs.join(', ') || '—'), s.note ? 'Note: ' + s.note : '');
   } else if (j.type === 'session') lines.push('No such session.');
   out.textContent = lines.join('\n');
@@ -124,6 +130,11 @@ $('grantBtn').onclick = async () => {
   $('grantLink').textContent = j.link; $('grantLink').style.display = ''; $('copyLink').style.display = '';
 };
 $('copyLink').onclick = async () => { try { await navigator.clipboard.writeText($('grantLink').textContent); $('copyLink').textContent = 'Copied!'; } catch { $('copyLink').textContent = 'Select the link and copy it'; } setTimeout(() => { $('copyLink').textContent = 'Copy link'; }, 2500); };
+$('heldBtn').onclick = async () => {
+  const out = $('heldOut'); out.style.display = ''; out.textContent = 'Loading…';
+  const j = await api({ action: 'held' });
+  out.textContent = j.success ? (j.held.map(h => ts(h.t) + '  ' + h.amount + ' USDC on ' + h.chain + '  [' + h.status + ']\n  report: ' + h.claim + '\n  coin(s): ' + JSON.stringify(h.meta) + '\n  tx: ' + h.txs.join(', ') + '\n  checkouts: ' + [h.claimedBy, ...(h.rivals || [])].join(', ')).join('\n\n') || 'No held payments.') : (j.message || 'Failed.');
+};
 $('logBtn').onclick = async () => {
   const out = $('logOut'); out.style.display = ''; out.textContent = 'Loading…';
   const j = await api({ action: 'log' });

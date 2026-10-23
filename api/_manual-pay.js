@@ -1,3 +1,6 @@
+// RULE (A J): every amount used for matching is the USDC actually CREDITED to our receiving address in the tx —
+// Solana: net change of OUR USDC token balance (post - pre, owner = RC wallet); EVM: sum of USDC Transfer logs whose
+// recipient is our address. Never the sender's debited amount.
 // Manual-transfer verification: someone copied the published address and sent USDC
 // from any wallet or exchange, then pasted the transaction ID.
 // Solana: confirmed/finalized, USDC mint, >= price to the RC wallet, within maxAgeSec.

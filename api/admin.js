@@ -82,6 +82,19 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, sessionId: g.sessionId, link: `${SITE}/?rc_grant=${g.code}`, expiresInHours: 24 });
   }
 
+  if (action === 'held') {
+    // Payments held because two open checkouts could match them. Issue an unlock link (with the tx ID) to release one.
+    const rows = await kv(['LRANGE', 'rc:held', 0, 199]);
+    const list = [];
+    for (const r of rows || []) {
+      let h; try { h = JSON.parse(r); } catch { continue; }
+      const st = await Promise.all((h.txs || []).map(tx => kv(['GET', `rc:paidtx:${encodeURIComponent(txKey(tx))}`])));
+      list.push({ ...h, status: st.every(x => String(x || '').startsWith('held:')) ? 'held' : st.map(x => x || 'free').join(', ') });
+    }
+    await log(req, 'view-held', null);
+    return res.status(200).json({ success: true, held: list });
+  }
+
   if (action === 'log') {
     const rows = await kv(['LRANGE', 'rc:adminlog', 0, 99]);
     await log(req, 'view-log', null);
