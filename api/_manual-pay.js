@@ -124,3 +124,71 @@ export async function txBoundCoin(raw) {
 }
 // Blocked if the tx already unlocked a DIFFERENT coin.
 export async function isTxUsed(raw, coin) { const b = await txBoundCoin(raw); return b != null && b !== coin; }
+
+// ---------- Underpayment top-up: combine several manual payments ----------
+// Parse a list of tx IDs from an array or a comma/space/newline separated string. Max 5.
+export function parseTxList(v) {
+  const arr = Array.isArray(v) ? v : (v == null ? [] : [v]);
+  return arr.flatMap(x => String(x || '').split(/[\s,]+/)).map(s => s.trim()).filter(Boolean);
+}
+const r6 = (n) => Math.round(Number(n) * 1e6) / 1e6;
+export const shortfallInfo = (received, required) => ({ received: r6(received), required: r6(required), short: r6(Math.max(0, required - received)) });
+export const shortfallMsg = (s) => `We received ${s.received} USDC but this needs ${s.required} USDC — ${s.short} USDC short (exchange or network fees are often deducted). Send the difference and paste ALL your transaction IDs below to combine them.`;
+
+// For a single tx that failed the full-price check: is it a real, recent, UNCLAIMED payment to us that is just short?
+// Returns shortfall info or null. Never claims anything.
+export async function measureShort(raw, required, deps = {}) {
+  const verify = deps.verify || verifyManualTx, bound = deps.bound || txBoundCoin;
+  try {
+    if ((await bound(raw)) != null) return null;
+    const v = await verify(raw, { price: 0, maxAgeSec: manualMaxAge() });
+    if (v.status !== 'ok' || !(v.amount > 0) || v.amount >= required - 1e-9) return null;
+    return shortfallInfo(v.amount, required);
+  } catch { return null; }
+}
+
+async function kvSetNx(raw, coin) {
+  const j = await kv(`set/rc:paidtx:${encodeURIComponent(txKey(raw))}/${encodeURIComponent(coin)}/NX`);
+  return j.result === 'OK';
+}
+async function kvDelIf(raw, coin) {
+  // Only remove a key we set ourselves (value === coin) — rollback after a partial claim.
+  const k = `rc:paidtx:${encodeURIComponent(txKey(raw))}`;
+  try { const g = await kv(`get/${k}`); if (g.result === coin) await kv(`del/${k}`); } catch {}
+}
+
+// Verify every tx independently, sum, and only if sum >= required claim ALL of them for `coin`.
+// Returns { ok, amount, chain, ids } or { ok:false, message, shortfall? }.
+export async function combineAndClaim(rawList, required, coin, deps = {}) {
+  const verify = deps.verify || verifyManualTx, bound = deps.bound || txBoundCoin;
+  const setNx = deps.setNx || kvSetNx, delIf = deps.delIf || kvDelIf;
+  const enforced = deps.enforced ?? oneTimeEnforced();
+  const ids = parseTxList(rawList);
+  if (!ids.length) return { ok: false, message: 'Paste your transaction ID(s) first.' };
+  if (ids.length > 5) return { ok: false, message: 'Combine at most 5 transaction IDs.' };
+  const keys = ids.map(txKey);
+  if (new Set(keys).size !== keys.length) return { ok: false, message: 'The same transaction ID was pasted twice. Each payment can only be counted once.' };
+  let bounds;
+  try { bounds = await Promise.all(ids.map(id => bound(id))); } catch { return { ok: false, message: MSG.busy }; }
+  if (bounds.every(b => b === coin)) {
+    // Exact same set already unlocked this coin/list: allow re-showing it (like single-ID reshow).
+    if (enforced) { const vs = await Promise.all(ids.map(id => verify(id, { price: 0, maxAgeSec: manualMaxAge() }))); if (vs.every(v => v.status === 'ok')) return { ok: true, reshow: true, ids, amount: r6(vs.reduce((s, v) => s + v.amount, 0)), chain: [...new Set(vs.map(v => v.chain))].join(' + ') }; }
+  }
+  const usedIdx = bounds.findIndex(b => b != null);
+  if (usedIdx >= 0) return { ok: false, message: `Transaction ${usedIdx + 1} was already used to unlock a report. Each payment can only be used once — nothing was claimed.` };
+  const vs = await Promise.all(ids.map(id => verify(id, { price: 0, maxAgeSec: manualMaxAge() })));
+  const bad = vs.findIndex(v => v.status !== 'ok' || !(v.amount > 0));
+  if (bad >= 0) return { ok: false, pending: !!vs[bad].pending, message: `Transaction ${bad + 1}: ${vs[bad].reason || MSG.notFound} Nothing was claimed.` };
+  const total = r6(vs.reduce((s, v) => s + v.amount, 0));
+  if (total < required - 1e-9) { const s = shortfallInfo(total, required); return { ok: false, shortfall: s, message: shortfallMsg(s) }; }
+  if (enforced) {
+    const done = [];
+    try {
+      for (const id of ids) { if (!(await setNx(id, coin))) throw new Error('taken'); done.push(id); }
+    } catch (e) {
+      await Promise.all(done.map(id => delIf(id, coin)));
+      return { ok: false, message: e.message === 'taken' ? 'One of these transactions was just used for another report. Nothing was claimed.' : MSG.busy };
+    }
+  }
+  return { ok: true, ids, amount: total, chain: [...new Set(vs.map(v => v.chain))].join(' + ') };
+}

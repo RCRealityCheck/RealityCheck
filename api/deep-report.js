@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { solDeep, deployerFacts } from './_sol-deep.js';
-import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
+import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG, parseTxList, combineAndClaim, measureShort, shortfallMsg } from './_manual-pay.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -54,6 +54,14 @@ async function single(req, res, opts = {}) {
   if (chain === 'solana-mainnet' && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(contract).trim())) {
     return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address. Double-check it before paying — no payment was taken.' });
   }
+  const multiIds = parseTxList(req.body?.txSignatures);
+  if (multiIds.length > 1) {
+    // Top-up: several payments combined to reach the price (all verified, all claimed together or none).
+    const c = await combineAndClaim(multiIds, PRICE, opts.claim || coinKey(chain, contract));
+    if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, pending: !!c.pending });
+    paidAmount = c.amount; paidChainLabel = c.chain;
+    if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, amount: paidAmount, chain: paidChainLabel });
+  } else {
 
   const RC_SOL = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
   const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
@@ -180,12 +188,15 @@ async function single(req, res, opts = {}) {
     v = { status: 'invalid', reason: "That doesn't look like a complete transaction hash. Copy the FULL hash from your wallet app — it's a long string (starts with 0x on EVM chains)." };
   }
   if (!v || v.status !== 'ok') {
+    const sf = await measureShort(sig, PRICE);
+    if (sf) return res.status(200).json({ success: false, shortfall: sf, message: shortfallMsg(sf) });
     return res.status(200).json({ success: false, message: v?.reason || 'Payment could not be verified.' });
   }
   paidAmount = v.amount;
   paidChainLabel = v.chain;
   { const claim = await claimTx(sig, CLAIM); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
   if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, amount: paidAmount, chain: paidChainLabel });
+  }
   }
 
   // ---------- 2. Payment OK — deep wallet forensics ----------
@@ -524,8 +535,10 @@ async function bundle(req, res) {
     if (!sigs || !sigs.length) return res.status(200).json({ success: false, pending: true, message: 'Waiting for your payment to confirm on Solana…' });
     paySig = sigs[sigs.length - 1].signature; pc = 'solana';
   }
-  const v = await call(single, { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig }, { price: N, claim: lk, verifyOnly: true });
-  if (!v.success) return res.status(200).json({ success: false, message: (v.message || 'Payment could not be verified.') + (N > 1 ? ` This list needs ${N} USDC in one payment.` : '') });
+  const vb = { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig };
+  if (txSignature && req.body?.txSignatures) vb.txSignatures = req.body.txSignatures;
+  const v = await call(single, vb, { price: N, claim: lk, verifyOnly: true });
+  if (!v.success) return res.status(200).json({ success: false, shortfall: v.shortfall, pending: !!v.pending, message: (v.message || 'Payment could not be verified.') + (N > 1 && !v.shortfall && !vb.txSignatures ? ` This list needs ${N} USDC in one payment.` : '') });
   const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
   return res.status(200).json({ success: true, paid: { amount: v.amount, chain: v.chain, signature: paySig }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
 }

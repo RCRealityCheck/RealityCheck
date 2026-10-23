@@ -7,7 +7,7 @@
 // Env: RC_PAYMENT_WALLET (Solana wallet), SOLANA_RPC_URL, RC_REF_SECRET (required),
 // optional KV_REST_API_URL + KV_REST_API_TOKEN (Upstash / Vercel KV) for one-time-use references.
 import crypto from 'crypto';
-import { verifyManualTx, claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
+import { verifyManualTx, claimTx, isTxUsed, coinKey, manualMaxAge, MSG, parseTxList, combineAndClaim, measureShort, shortfallMsg } from './_manual-pay.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
@@ -248,9 +248,27 @@ export default async function handler(req, res) {
   if (action === 'manual') {
     // Paid by copying the published address (any wallet / exchange): verify the pasted tx ID.
     if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your transaction ID to unlock the report.' });
+    const multiIds = parseTxList(req.body?.txSignatures);
+    if (multiIds.length > 1) {
+      // Top-up: verify every payment first (no claim), build the report, then claim all together or none.
+      const pre = await combineAndClaim(multiIds, PRICE_USDC, coinKey('solana', mint), { setNx: async () => true, delIf: async () => {} });
+      if (!pre.ok) return res.status(200).json({ success: false, message: pre.message, shortfall: pre.shortfall, pending: !!pre.pending });
+      let report;
+      try { report = await buildReport(mint); } catch {
+        return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Try again in a minute. Your payment still counts.' });
+      }
+      const c = pre.reshow ? pre : await combineAndClaim(multiIds, PRICE_USDC, coinKey('solana', mint));
+      if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall });
+      return res.status(200).json({ success: true, paid: { signature: c.ids.join(', '), amount: c.amount, chain: c.chain }, report,
+        riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
+    }
     if (await isTxUsed(txSignature, coinKey('solana', mint))) return res.status(200).json({ success: false, message: MSG.used });
     const v = await verifyManualTx(txSignature, { price: PRICE_USDC, maxAgeSec: manualMaxAge() });
-    if (v.status !== 'ok') return res.status(200).json({ success: false, pending: !!v.pending, message: v.reason || MSG.busy });
+    if (v.status !== 'ok') {
+      const sf = await measureShort(txSignature, PRICE_USDC);
+      if (sf) return res.status(200).json({ success: false, shortfall: sf, message: shortfallMsg(sf) });
+      return res.status(200).json({ success: false, pending: !!v.pending, message: v.reason || MSG.busy });
+    }
     let report;
     try { report = await buildReport(mint); } catch {
       return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Try again in a minute. Your payment still counts.' });
