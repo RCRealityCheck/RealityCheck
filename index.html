@@ -172,7 +172,14 @@
       <a id="bundleLink" class="btn btn-primary btn-full" href="#">Open in your wallet (Solana USDC)</a>
       <div class="exit-qr" id="bundleQr"></div>
       <p class="note" id="bundleStatus"></p>
-      <p class="pay-note">Or send the total in USDC on any supported chain to the addresses shown in the payment panel (Solana: <code>DYkd…qAvk</code>, EVM: <code>0xa214…b5eA</code>), then paste the transaction ID:</p>
+      <div class="pay-divider"><span>or send to the wallet address</span></div>
+      <p class="pay-note">Or send the total in USDC from any wallet or exchange to one of the deposit addresses below (scan the QR or tap Copy), then paste the transaction ID:</p>
+      <p class="pay-note" style="margin-bottom:6px"><strong>Solana - USDC:</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk"></div>
+      <div class="wallet-copy"><code>DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk</code><button type="button" class="btn btn-ghost copy-any" data-t="DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk">Copy</button></div>
+      <p class="pay-note" style="margin-bottom:6px"><strong>Ethereum (also Base, BNB, Polygon, Arbitrum) - USDC:</strong></p>
+      <div class="exit-qr rc-addr-qr" data-qr="0xa214852e96a6d263a14DdA188Fd90395a733b5eA"></div>
+      <div class="wallet-copy"><code>0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code><button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button></div>
       <input type="text" id="bundleTx" placeholder="Paste the FULL transaction ID" autocomplete="off">
       <button type="button" class="btn btn-ghost btn-full" id="bundleVerify">Verify payment & show all reports</button>
       <p class="note">One payment unlocks this exact list only. Payments are verified on-chain.</p>
@@ -946,7 +953,7 @@ document.addEventListener('click', function (e) {
   const btn = e.target.closest && e.target.closest('.copy-any');
   if (!btn) return;
   rcCopyText(btn.getAttribute('data-t')).then(ok => {
-    btn.textContent = ok ? 'Copied ✓' : 'Press and hold the address to copy';
+    btn.textContent = ok ? 'Copied!' : 'Press and hold the address to copy';
     setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
   });
 });
@@ -1180,6 +1187,7 @@ async function bundleRefresh() {
   loadQrLib().then(lib => { try { const q = lib(0, 'M'); q.addData(d.url); q.make(); document.getElementById('bundleQr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 4 }); } catch {} }).catch(() => {});
   document.getElementById('bundleStatus').textContent = 'Waiting for payment… this list unlocks automatically once your wallet pays.';
   pay.style.display = 'block';
+  rcRenderAddrQrs();
   bundleTimer = setInterval(() => bundleCheck(false), 5000);
 }
 async function bundleCheck(manual) {
