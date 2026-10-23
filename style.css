@@ -389,3 +389,10 @@ a { color: var(--blue); }
 .rc-topup { margin: 10px 0 12px; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,120,120,0.55); background: rgba(255,80,80,0.08); }
 .rc-short { margin-top: 0; }
 .rc-topup textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.8rem; padding: 10px; border-radius: 8px; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.35); color: inherit; margin: 6px 0 8px; resize: vertical; word-break: break-all; }
+
+/* ---------- Exact checkout amount ---------- */
+.rc-exact { margin: 4px 0 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(80,200,255,0.55); background: rgba(40,160,255,0.10); text-align: center; }
+.rc-exact .rc-amt { font-size: 1.6rem; font-family: monospace; color: #7fe0ff; letter-spacing: 0.02em; word-break: break-all; }
+.rc-exact-l, .rc-exact-u { font-weight: 700; }
+.rc-exact .copy-any { display: block; margin: 8px auto 0; }
+.rc-exact-n { margin: 8px 0 0; }
