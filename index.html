@@ -211,6 +211,7 @@
       <button type="button" class="btn btn-primary btn-full" id="oneClickPay">Pay 1 USDC with Phantom</button>
       <p class="note"><strong>$1 = one report for one coin.</strong> Checking several coins? Use the list above to pay once — still $1 per coin.</p>
       <p class="note" id="payHint">Your wallet opens right here — approve, and the report unlocks automatically.</p>
+      <p class="note" style="text-align:center;margin:4px 0 8px"><a id="deepPhantomApp" href="#" style="display:none">Have Phantom? Open this page in the Phantom app</a></p>
       <div class="pay-divider"><span>or pay manually</span></div>
       <p class="pay-note">Send <strong>exactly the amount shown above</strong> on any supported chain to the Reality Check wallet, then paste the transaction hash — <strong>we detect the chain automatically</strong>.</p>
       <p class="pay-note" style="margin-bottom:6px"><strong>USDC on Solana:</strong></p>
@@ -287,7 +288,7 @@
       <button type="button" class="btn btn-ghost btn-full" id="exitVerifyManual">Verify my payment and open Exit Door</button>
       <p class="note">Send exactly the amount shown above. Payments from any wallet or exchange are checked on-chain, and only this browser can use them to unlock this report.</p>
       <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
-      <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each request has its own reference and only unlocks this token. Requests expire after 30 minutes.</p>
+      <p class="note">Non-custodial: your wallet sends USDC directly to <code>DYkd…qAvk</code>. Each checkout has its own reference and only unlocks this token. Your exact amount stays reserved for 24 hours.</p>
     </div>
   </div>
   <div id="exitResult"></div>
@@ -959,8 +960,7 @@ document.getElementById('deepForm').addEventListener('submit', async function (e
   document.getElementById('payPanel').style.display = 'block';
   rcRenderAddrQrs();
   document.getElementById('deepResult').innerHTML = '';
-  { const cc = ch === 'solana-mainnet' ? c : c.toLowerCase(); const sx = await rcCheckout('deep', '/api/deep-report', 'deep:' + ch + ':' + cc, { kind: 'deep', contract: c, chain: ch });
-    document.getElementById('oneClickPay').textContent = (document.getElementById('payChain').value === 'solana' ? 'Pay ' + (sx ? sx.amountText : '') + ' USDC with Phantom' : 'Pay ' + (sx ? sx.amountText : '') + ' USDC with wallet').replace('  ', ' '); }
+  await deepOpenCheckout(c, ch);
   document.getElementById('payPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   document.getElementById('verifyPay').onclick = function () { runDeepReport(true); };
 });
@@ -993,6 +993,27 @@ function rcRenderAddrQrs() {
     });
   }).catch(() => {});
 }
+// ---------- Wallet detection: hide wallet-specific buttons when the wallet is not in this browser ----------
+function rcHasPhantom() { return !!((window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) || (window.solana && window.solana.isPhantom)); }
+function rcPhantomBrowse(url) { return 'https://phantom.app/ul/browse/' + encodeURIComponent(url) + '?ref=' + encodeURIComponent(location.origin); }
+function deepPayUi() {
+  const ch = document.getElementById('payChain').value;
+  const avail = ch === 'solana' ? rcHasPhantom() : !!window.ethereum;
+  const at = rcSess.deep ? rcSess.deep.amountText : '';
+  const btn = document.getElementById('oneClickPay');
+  btn.textContent = ch === 'solana' ? 'Pay ' + at + ' USDC with Phantom' : 'Pay ' + at + ' USDC with wallet';
+  btn.style.display = avail ? '' : 'none';
+  document.getElementById('payHint').style.display = avail ? '' : 'none';
+  const app = document.getElementById('deepPhantomApp');
+  if (!avail && ch === 'solana' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')) { app.href = rcPhantomBrowse(location.origin + location.pathname + '#premium'); app.style.display = ''; } else app.style.display = 'none';
+}
+async function deepOpenCheckout(c, ch) {
+  const cc = ch === 'solana-mainnet' ? c : c.toLowerCase();
+  rcLastDeep = { c, ch };
+  await rcCheckout('deep', '/api/deep-report', 'deep:' + ch + ':' + cc, { kind: 'deep', contract: c, chain: ch });
+  deepPayUi(); [300, 1000, 2500].forEach(t => setTimeout(deepPayUi, t));
+}
+let rcLastDeep = null;
 // ---------- Checkout sessions: unique exact amount + secret token kept in this browser ----------
 const rcSess = {};
 function rcSessGet(k) { try { const v = JSON.parse(localStorage.getItem('rcCk:' + k) || 'null'); return v && v.sessionId && v.token ? v : null; } catch { return null; } }
@@ -1005,13 +1026,13 @@ async function rcCheckout(p, endpoint, k, payload) {
   try { d = await (await fetch(location.origin + endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ action: 'checkout' }, payload, prev ? { sessionId: prev.sessionId, token: prev.token } : {})) })).json(); }
   catch { d = { success: false, message: 'Could not reach the server to start your checkout. No payment was taken — please try again.' }; }
   if (!d.success) { if (note) note.textContent = d.message || 'Could not start checkout.'; rcSess[p] = null; return null; }
-  const sess = { sessionId: d.sessionId, token: d.token || (prev && prev.token), amountText: d.amountText, micro: d.micro, exp: d.exp, status: d.status };
+  const sess = { sessionId: d.sessionId, token: d.token || (prev && prev.token), amountText: d.amountText, micro: d.micro, exp: d.exp, status: d.status, cents: !!d.cents };
   rcSessPut(k, sess); rcSess[p] = sess;
   document.getElementById(p + 'Amt').textContent = sess.amountText;
   document.getElementById(p + 'AmtCopy').setAttribute('data-t', sess.amountText);
   if (note) note.textContent = sess.status === 'paid'
     ? 'This browser already paid for this — tap verify (no transaction ID needed) to show it again.'
-    : 'This exact amount is reserved for your checkout for 24 hours. Only this browser can use the payment to unlock this report.';
+    : 'This exact amount is reserved for your checkout for ' + (sess.cents ? '3 hours' : '24 hours') + '. Only this browser can use the payment to unlock this report.';
   return sess;
 }
 function rcSessBody(p) { const x = rcSess[p]; return x ? { sessionId: x.sessionId, token: x.token } : {}; }
@@ -1039,8 +1060,7 @@ document.addEventListener('click', function (e) {
 });
 // ---------- One-click wallet pay (no copy-paste) ----------
 document.getElementById('payChain').addEventListener('change', function () {
-  const at = rcSess.deep ? rcSess.deep.amountText : '1';
-  document.getElementById('oneClickPay').textContent = this.value === 'solana' ? 'Pay ' + at + ' USDC with Phantom' : 'Pay ' + at + ' USDC with wallet';
+  deepPayUi();
 });
 // ---------- One-click wallet pay (no copy-paste) ----------
 function loadSolanaWeb3() {
@@ -1152,7 +1172,7 @@ document.getElementById('oneClickPay').addEventListener('click', async function 
     await runDeepReport(false);
   } catch (err) {
     const msg = (err && err.message) ? err.message : 'Payment cancelled or failed.';
-    resultDiv.innerHTML = `<div class="report-card"><p>${esc(msg)} You can also pay manually below.</p></div>`;
+    resultDiv.innerHTML = `<div class="report-card"><p>${esc(msg)}</p></div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = origText;
@@ -1258,10 +1278,13 @@ async function bundleRefresh() {
   let d; try { d = await deepApi({ action: 'bundle-request', coins: bundleCoins }); } catch { st.innerHTML = '<p class="note">Could not reach the server. No payment was taken — try again.</p>'; return; }
   st.innerHTML = '';
   if (!d.success) { bundleRender(d.failed); st.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; return; }
-  bundleReq = d;
   pay.style.display = 'block';
   const bs = await rcCheckout('bundle', '/api/deep-report', 'bundle:' + bundleCoins.map(x => x.chain + ':' + (x.chain === 'solana-mainnet' ? x.contract : x.contract.toLowerCase())).sort().join(','), { kind: 'bundle', coins: bundleCoins });
-  if (bs) { d.url = rcSetPayAmount(d.url, bs.amountText); document.getElementById('bundleTotal').textContent = bs.amountText; }
+  if (!bs) return;
+  try { d = await deepApi(Object.assign({ action: 'bundle-request', coins: bundleCoins }, rcSessBody('bundle'))); } catch { return; }
+  if (!d.success || !d.url) { document.getElementById('bundleStatus').textContent = d.message || 'Could not prepare the wallet request. You can still pay to the addresses below.'; rcRenderAddrQrs(); return; }
+  bundleReq = d;
+  document.getElementById('bundleTotal').textContent = bs.amountText;
   document.getElementById('bundleLink').href = d.url;
   loadQrLib().then(lib => { try { const q = lib(0, 'M'); q.addData(d.url); q.make(); document.getElementById('bundleQr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 4 }); } catch {} }).catch(() => {});
   document.getElementById('bundleStatus').textContent = 'Waiting for payment… this list unlocks automatically once your wallet pays.';
@@ -1273,11 +1296,11 @@ async function bundleCheck(manual) {
   if (!bundleReq) return;
   const body = { action: 'bundle-report', coins: bundleCoins };
   if (manual) { const tx = document.getElementById('bundleTx').value.trim(); if (!tx && !(rcSess.bundle && rcSess.bundle.status === 'paid')) return; Object.assign(body, rcSessBody('bundle')); if (tx) body.txSignature = tx; const ids = rcTxIds('bundleTx', 'bundle'); if (ids.length > 1) body.txSignatures = ids; }
-  else Object.assign(body, { reference: bundleReq.reference, exp: bundleReq.exp, sig: bundleReq.sig });
+  else Object.assign(body, rcSessBody('bundle'));
   const out = document.getElementById('bundleResult');
   if (manual) out.innerHTML = '<div class="loader"><span class="spin"></span> Verifying your payment, then building every report...</div>';
   let d; try { d = await deepApi(body); } catch { return; }
-  if (!d.success) { if (manual || !d.pending) { if (manual) { out.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; rcShowShort('bundle', d.shortfall); } } return; }
+  if (!d.success) { if (manual) { out.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; rcShowShort('bundle', d.shortfall); } else if (!d.pending) { document.getElementById('bundleStatus').textContent = d.message || ''; rcShowShort('bundle', d.shortfall); if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; } } return; }
   if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; }
   document.getElementById('bundlePay').style.display = 'none';
   out.innerHTML = `<p class="note">Payment verified: ${esc(String(d.paid.amount))} USDC${d.paid.chain ? ' on ' + esc(d.paid.chain) : ''}. Thank you — this builds Reality Check.</p>` +
@@ -1328,12 +1351,20 @@ document.getElementById('exitForm').addEventListener('submit', async function (e
     const d = await exitApi({ action: 'request', contract: mint });
     if (!d.success) { out.innerHTML = `<div class="report-card"><p>${esc(d.message)}</p></div>`; const xi = document.getElementById('exitMint'); xi.focus(); xi.select(); return; }
     out.innerHTML = '';
-    document.getElementById('exitPay').style.display = 'block';
-    const xs = await rcCheckout('exit', '/api/exit-door', 'exit:' + mint, { contract: mint });
-    if (xs) { d.amount = xs.micro / 1e6; d.url = rcSetPayAmount(d.url, xs.amountText); }
-    await showExitPay({ ...d, mint });
+    await exitOpen(mint);
   } catch { out.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>'; }
 });
+// Open (or re-open) this browser's checkout for an Exit Door mint, then its session-bound Solana Pay request.
+async function exitOpen(mint) {
+  const out = document.getElementById('exitResult');
+  document.getElementById('exitPay').style.display = 'block';
+  exitReq = exitReq && exitReq.mint === mint ? exitReq : { mint };
+  const xs = await rcCheckout('exit', '/api/exit-door', 'exit:' + mint, { contract: mint });
+  if (!xs) return;
+  let d; try { d = await exitApi(Object.assign({ action: 'request', contract: mint }, rcSessBody('exit'))); } catch { d = null; }
+  if (!d || !d.success || !d.url) { out.innerHTML = `<div class="report-card"><p>${esc((d && d.message) || 'Could not prepare the wallet request. You can still pay to the addresses below.')}</p></div>`; rcRenderAddrQrs(); return; }
+  await showExitPay({ ...d, mint });
+}
 function exitHasPhantom() {
   return !!((window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) || (window.solana && window.solana.isPhantom));
 }
@@ -1341,19 +1372,12 @@ function exitProvider() {
   return (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) ? window.phantom.solana : window.solana;
 }
 function exitIsMobile() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''); }
-function exitResumeUrl(r) {
-  const u = new URL(location.origin + location.pathname);
-  u.searchParams.set('xd_mint', r.mint); u.searchParams.set('xd_ref', r.reference);
-  u.searchParams.set('xd_exp', String(r.exp)); u.searchParams.set('xd_sig', r.sig);
-  u.hash = 'exitdoor';
-  return u.toString();
-}
 function exitUpdateButtons() {
   const has = exitHasPhantom();
   const btn = document.getElementById('exitPhantom'), app = document.getElementById('exitPhantomApp');
   btn.style.display = has ? '' : 'none';
   if (!has && exitIsMobile() && exitReq) {
-    app.href = 'https://phantom.app/ul/browse/' + encodeURIComponent(exitResumeUrl(exitReq)) + '?ref=' + encodeURIComponent('https://www.realitycheckglobal.trade');
+    app.href = '#'; // a single-use 10-minute hand-off code is created only when tapped (no unlock data in URLs)
     app.style.display = '';
   } else app.style.display = 'none';
 }
@@ -1375,22 +1399,45 @@ async function showExitPay(r) {
   exitTimer = setInterval(checkExitPayment, 4000);
   document.getElementById('exitPay').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-// Resume a pending Exit Door payment from the URL (e.g. after opening this page inside Phantom)
-(function exitResume() {
-  try {
-    const p = new URLSearchParams(location.search);
-    const mint = p.get('xd_mint'), reference = p.get('xd_ref'), exp = Number(p.get('xd_exp')), sig = p.get('xd_sig');
-    const b58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-    if (!mint || !reference || !sig || !b58.test(mint) || !b58.test(reference) || !/^[0-9a-f]{64}$/.test(sig) || !exp) return;
-    const out = document.getElementById('exitResult');
-    if (Date.now() / 1000 > exp) { out.innerHTML = '<div class="report-card"><p>This payment request expired. Start a new one (no charge if you did not pay).</p></div>'; document.getElementById('exitMint').value = mint; return; }
-    const recipient = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk', usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    const xs = rcSessGet('exit:' + mint);
-    if (xs) { rcSess.exit = xs; document.getElementById('exitAmt').textContent = xs.amountText; document.getElementById('exitAmtCopy').setAttribute('data-t', xs.amountText); document.getElementById('exitSessNote').textContent = 'This exact amount is reserved for your checkout. Only this browser can use the payment to unlock this report.'; }
-    const amount = xs ? xs.micro / 1e6 : 1;
-    const q = new URLSearchParams({ amount: xs ? xs.amountText : String(amount), 'spl-token': usdcMint, reference, label: 'Reality Check', message: `Exit Door report ${mint.slice(0, 6)}…`, memo: `RC-EXIT-${mint.slice(0, 8)}` });
-    showExitPay({ success: true, mint, reference, exp, sig, recipient, amount, usdcMint, url: `solana:${recipient}?${q.toString()}` });
-  } catch {}
+document.getElementById('exitPhantomApp').addEventListener('click', async function (e) {
+  e.preventDefault();
+  if (!exitReq || !rcSess.exit) return;
+  const status = document.getElementById('exitStatus');
+  let d; try { d = await exitApi(Object.assign({ action: 'resume-code', contract: exitReq.mint }, rcSessBody('exit'))); } catch { d = null; }
+  if (!d || !d.success) { status.textContent = (d && d.message) || 'Could not prepare the Phantom link. Try again.'; return; }
+  location.href = rcPhantomBrowse(location.origin + location.pathname + '?xd_resume=' + encodeURIComponent(d.code) + '#exitdoor');
+});
+// Single-use codes in the URL: Phantom hand-off (?xd_resume=) or an owner unlock link (?rc_grant=).
+(async function rcRedeemFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const code = p.get('xd_resume') || p.get('rc_grant'); if (!code) return;
+  try { const u = new URL(location.href); u.searchParams.delete('xd_resume'); u.searchParams.delete('rc_grant'); history.replaceState(null, '', u.toString()); } catch {}
+  let r; try { r = await deepApi({ action: 'redeem', code }); } catch { r = null; }
+  const m = r && r.meta;
+  const sess = r && r.success ? { sessionId: r.sessionId, token: r.token, amountText: r.amountText, micro: r.micro, exp: r.exp, status: r.status, cents: !!r.cents } : null;
+  if (!sess || !m) {
+    const box = document.getElementById(p.get('xd_resume') ? 'exitResult' : 'deepResult');
+    box.innerHTML = `<div class="report-card"><p>${esc((r && r.message) || 'This link could not be used.')}</p></div>`; box.scrollIntoView({ block: 'nearest' }); return;
+  }
+  if (m.kind === 'exit') {
+    rcSessPut('exit:' + m.mint, sess); rcSess.exit = sess;
+    document.getElementById('exitMint').value = m.mint;
+    if (sess.status === 'paid') { const d = await exitApi(Object.assign({ action: 'manual', contract: m.mint }, rcSessBody('exit'))); if (d && d.success) renderExitDoor(d); else document.getElementById('exitResult').innerHTML = `<div class="report-card"><p>${esc((d && d.message) || '')}</p></div>`; }
+    else await exitOpen(m.mint);
+    document.getElementById('exitdoor').scrollIntoView({ block: 'start' });
+  } else if (m.kind === 'deep') {
+    const cc = m.chain === 'solana-mainnet' ? m.contract : m.contract.toLowerCase();
+    rcSessPut('deep:' + m.chain + ':' + cc, sess); rcSess.deep = sess;
+    document.getElementById('deepContract').value = m.contract; document.getElementById('deepChain').value = m.chain;
+    document.getElementById('premium').scrollIntoView({ block: 'start' });
+    await runDeepReport(true);
+  } else if (m.kind === 'bundle') {
+    bundleCoins = m.coins.map(x => ({ contract: x.contract, chain: x.chain }));
+    rcSessPut('bundle:' + bundleCoins.map(x => x.chain + ':' + (x.chain === 'solana-mainnet' ? x.contract : x.contract.toLowerCase())).sort().join(','), sess); rcSess.bundle = sess;
+    bundleRender(); bundleReq = {};
+    document.getElementById('premium').scrollIntoView({ block: 'start' });
+    await bundleCheck(true);
+  }
 })();
 document.getElementById('exitPhantom').addEventListener('click', async function () {
   if (!exitReq) return;
@@ -1448,10 +1495,10 @@ async function checkExitPayment() {
   const status = document.getElementById('exitStatus');
   if (Date.now() / 1000 > exitReq.exp) { clearInterval(exitTimer); status.textContent = 'Request expired. Start a new one (no charge if you did not pay).'; return; }
   let d;
-  try { d = await exitApi({ action: 'report', contract: exitReq.mint, reference: exitReq.reference, exp: exitReq.exp, sig: exitReq.sig }); } catch { return; }
+  try { d = await exitApi(Object.assign({ action: 'report', contract: exitReq.mint }, rcSessBody('exit'))); } catch { return; }
   if (d.pending) return;
   clearInterval(exitTimer);
-  if (!d.success) { status.textContent = d.message || 'Could not unlock the report.'; if (d.paidOk) exitTimer = setInterval(checkExitPayment, 15000); return; }
+  if (!d.success) { status.textContent = d.message || 'Could not unlock the report.'; rcShowShort('exit', d.shortfall); if (d.paidOk) exitTimer = setInterval(checkExitPayment, 15000); return; }
   document.getElementById('exitPay').style.display = 'none';
   renderExitDoor(d);
 }

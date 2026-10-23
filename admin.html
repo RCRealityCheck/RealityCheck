@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Reality Check — Admin</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #0b0d14; color: #e8eaf2; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.3rem; margin: 6px 0 14px; } h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  .card { background: #151926; border: 1px solid #2a3045; border-radius: 12px; padding: 16px; margin: 14px 0; }
+  label { display: block; font-size: 0.85rem; color: #aab; margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #333a52; background: #0e1120; color: inherit; font: inherit; }
+  textarea { font-family: monospace; font-size: 0.8rem; }
+  button { margin-top: 12px; width: 100%; padding: 12px; border: 0; border-radius: 10px; background: #3d7bff; color: #fff; font-weight: 700; font-size: 1rem; }
+  button.ghost { background: #252b40; }
+  pre { white-space: pre-wrap; word-break: break-all; background: #0e1120; border-radius: 8px; padding: 10px; font-size: 0.78rem; margin: 10px 0 0; }
+  .note { color: #99a; font-size: 0.8rem; } .err { color: #ff8a8a; } .ok { color: #8affb0; }
+  .link { word-break: break-all; font-family: monospace; background: #0e1120; padding: 10px; border-radius: 8px; display: block; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔒 Reality Check — Admin</h1>
+  <section class="card" id="loginCard">
+    <h2>Sign in</h2>
+    <p class="note">Owner only. The secret is kept in this tab only (cleared when you close it). Too many wrong attempts lock this connection for an hour.</p>
+    <form id="loginForm">
+      <label for="secret">Admin secret</label>
+      <input type="password" id="secret" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <p id="loginMsg" class="note"></p>
+  </section>
+  <div id="app" style="display:none">
+    <section class="card">
+      <h2>Look up a payment</h2>
+      <label for="q">Transaction ID, session ID (32 chars) or exact amount (e.g. 1.0205)</label>
+      <input id="q" autocomplete="off">
+      <button id="lookupBtn">Look up</button>
+      <pre id="lookupOut" style="display:none"></pre>
+    </section>
+    <section class="card">
+      <h2>Issue an unlock link</h2>
+      <p class="note">Creates an already-paid checkout and a single-use link (valid 24h) that binds it to the buyer's browser. Only send it to the buyer, privately.</p>
+      <label for="gKind">Report</label>
+      <select id="gKind"><option value="deep">Deep Report (one coin)</option><option value="exit">Exit Door (Solana mint)</option><option value="bundle">Deep Report bundle (2-5 coins)</option></select>
+      <div id="gOne">
+        <label for="gChain">Chain</label>
+        <select id="gChain"><option value="solana-mainnet">Solana</option><option value="eth-mainnet">Ethereum</option><option value="bsc-mainnet">BNB Chain</option><option value="avalanche-mainnet">Avalanche</option><option value="base-mainnet">Base</option><option value="polygon-mainnet">Polygon</option><option value="arbitrum-mainnet">Arbitrum</option></select>
+        <label for="gContract">Contract / mint address</label>
+        <input id="gContract" autocomplete="off">
+      </div>
+      <div id="gMany" style="display:none">
+        <label for="gCoins">Coins, one per line as chain,address (e.g. solana-mainnet,CSoc…pump)</label>
+        <textarea id="gCoins" rows="5"></textarea>
+      </div>
+      <label for="gTx">Buyer's transaction ID(s) to mark as used (optional, one per line)</label>
+      <textarea id="gTx" rows="2"></textarea>
+      <label for="gNote">Note (why)</label>
+      <input id="gNote" maxlength="200" autocomplete="off">
+      <button id="grantBtn">Create unlock link</button>
+      <p id="grantMsg" class="note"></p>
+      <span id="grantLink" class="link" style="display:none"></span>
+      <button id="copyLink" class="ghost" style="display:none">Copy link</button>
+    </section>
+    <section class="card">
+      <h2>Admin log</h2>
+      <button id="logBtn" class="ghost">Show last 100 actions</button>
+      <pre id="logOut" style="display:none"></pre>
+    </section>
+    <button id="logout" class="ghost">Sign out</button>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const getS = () => sessionStorage.getItem('rcAdm') || '';
+async function api(body) {
+  const r = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-rc-admin': getS() }, body: JSON.stringify(body) });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (r.status === 401 || r.status === 429) { sessionStorage.removeItem('rcAdm'); show(false); $('loginMsg').textContent = j.message || 'Signed out.'; }
+  return j;
+}
+function show(on) { $('loginCard').style.display = on ? 'none' : ''; $('app').style.display = on ? '' : 'none'; }
+const ts = (t) => t ? new Date(t * 1000).toLocaleString() : '—';
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); sessionStorage.setItem('rcAdm', $('secret').value); $('secret').value = '';
+  $('loginMsg').textContent = 'Checking…';
+  const j = await api({ action: 'login' });
+  if (j.success) { $('loginMsg').textContent = ''; show(true); } else { sessionStorage.removeItem('rcAdm'); $('loginMsg').textContent = j.message || 'Sign-in failed.'; }
+});
+$('logout').onclick = () => { sessionStorage.removeItem('rcAdm'); show(false); };
+$('lookupBtn').onclick = async () => {
+  const out = $('lookupOut'); out.style.display = ''; out.textContent = 'Looking up…';
+  const j = await api({ action: 'lookup', q: $('q').value.trim() });
+  if (!j.success) { out.textContent = j.message || 'Lookup failed.'; return; }
+  const lines = [];
+  if (j.type === 'tx') {
+    lines.push('Transaction: ' + (j.status === 'ok' ? 'valid USDC payment to Reality Check' : 'NOT a valid payment (' + (j.reason || j.status) + ')'));
+    if (j.chain) lines.push('Chain: ' + j.chain); if (j.amount != null) lines.push('Amount received: ' + j.amount + ' USDC');
+    if (j.blockTime) lines.push('Time: ' + ts(j.blockTime));
+    lines.push('Claimed: ' + (j.claimed ? 'YES (' + j.boundTo + ')' : 'no — unused'));
+  } else if (j.type === 'amount') lines.push('Amount reserved by: ' + (j.reservedBy || 'nobody (free)'));
+  const s = j.session;
+  if (s) {
+    lines.push('', 'Session ' + s.sessionId, 'Report: ' + s.claim, 'Coin(s): ' + JSON.stringify(s.meta), 'Status: ' + s.status + (s.granted ? ' (admin grant)' : '') + (s.replacedBy ? ' → ' + s.replacedBy : ''),
+      'Exact amount: ' + s.amount + ' USDC' + (s.cents ? ' (2-decimal)' : ''), 'Created: ' + ts(s.created), 'Expires: ' + ts(s.exp),
+      'Paid: ' + (s.paid ? s.paid + ' USDC on ' + s.chain + ' at ' + ts(s.paidAt) : '—'), 'Tx IDs: ' + (s.txs.join(', ') || '—'), s.note ? 'Note: ' + s.note : '');
+  } else if (j.type === 'session') lines.push('No such session.');
+  out.textContent = lines.join('\n');
+};
+$('gKind').onchange = () => { const b = $('gKind').value === 'bundle'; $('gOne').style.display = b ? 'none' : ''; $('gMany').style.display = b ? '' : 'none'; if ($('gKind').value === 'exit') $('gChain').value = 'solana-mainnet'; };
+$('grantBtn').onclick = async () => {
+  const kind = $('gKind').value;
+  const body = { action: 'grant', kind, chain: $('gChain').value, contract: $('gContract').value.trim(), note: $('gNote').value.trim(), txIds: $('gTx').value.split(/[\s,]+/).filter(Boolean) };
+  if (kind === 'bundle') body.coins = $('gCoins').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [chain, contract] = l.split(',').map(x => (x || '').trim()); return { chain, contract }; });
+  $('grantMsg').textContent = 'Creating…'; $('grantLink').style.display = 'none'; $('copyLink').style.display = 'none';
+  const j = await api(body);
+  if (!j.success) { $('grantMsg').textContent = j.message || 'Failed.'; return; }
+  $('grantMsg').textContent = 'Single-use link (expires in 24h). Session ' + j.sessionId + '. Send it privately to the buyer:';
+  $('grantLink').textContent = j.link; $('grantLink').style.display = ''; $('copyLink').style.display = '';
+};
+$('copyLink').onclick = async () => { try { await navigator.clipboard.writeText($('grantLink').textContent); $('copyLink').textContent = 'Copied!'; } catch { $('copyLink').textContent = 'Select the link and copy it'; } setTimeout(() => { $('copyLink').textContent = 'Copy link'; }, 2500); };
+$('logBtn').onclick = async () => {
+  const out = $('logOut'); out.style.display = ''; out.textContent = 'Loading…';
+  const j = await api({ action: 'log' });
+  out.textContent = j.success ? (j.log.map(r => ts(r.t) + '  ' + r.action + '  ' + (r.detail ? JSON.stringify(r.detail) : '')).join('\n') || 'No actions yet.') : (j.message || 'Failed.');
+};
+if (getS()) api({ action: 'login' }).then(j => show(!!j.success));
+</script>
+</body>
+</html>
