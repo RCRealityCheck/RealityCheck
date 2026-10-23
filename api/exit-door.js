@@ -7,8 +7,8 @@
 // Env: RC_PAYMENT_WALLET (Solana wallet), SOLANA_RPC_URL, RC_REF_SECRET (required),
 // optional KV_REST_API_URL + KV_REST_API_TOKEN (Upstash / Vercel KV) for one-time-use references.
 import crypto from 'crypto';
-import { coinKey } from './_manual-pay.js';
-import { createSession, claimSession } from './_checkout.js';
+import { coinKey, RC_SOL } from './_manual-pay.js';
+import { createSession, claimSession, sessionRef, claimByReference, makeCode } from './_checkout.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
@@ -229,62 +229,60 @@ async function buildReport(mint) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   if (!process.env.RC_REF_SECRET) return res.status(200).json({ success: false, message: 'Exit Door is not configured yet. Free reports are unaffected.' });
-  const { action, contract, reference, exp, sig, txSignature } = req.body || {};
+  const { action, contract, txSignature } = req.body || {};
   const mint = String(contract || '').trim();
   if (!isSolAddr(mint)) return res.status(200).json({ success: false, message: 'Enter a Solana token mint address.' });
 
+  const ses = { sessionId: req.body?.sessionId, token: req.body?.token, claim: 'exit:' + coinKey('solana', mint) };
+  const fail = (c) => res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
+  const RISK = 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.';
+  const sendReport = async (c) => {
+    let report;
+    try { report = await buildReport(mint); } catch {
+      return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Tap verify again in a minute — this browser can re-open it without paying again.' });
+    }
+    return res.status(200).json({ success: true, reshow: !!c.reshow, paid: { amount: c.amount, chain: c.chain }, report, riskNote: RISK });
+  };
+
   if (action === 'request') {
+    // Free data pre-check, then a Solana Pay request for THIS checkout's exact amount and reference.
     const acct = await rpc('getAccountInfo', [mint, { encoding: 'jsonParsed' }]).catch(() => null);
     if (acct?.value?.data?.parsed?.type !== 'mint') return res.status(200).json({ success: false, message: 'That address is not a Solana token mint. Nothing was charged.' });
-    // Free data pre-check before any payment option is shown.
     let lg = null;
     for (let t = 0; t < 3 && !(lg?.value || []).length; t++) { if (t) await new Promise(r => setTimeout(r, 1200 * t)); lg = await rpc('getTokenLargestAccounts', [mint]).catch(() => null); }
     if (!(lg?.value || []).length) return res.status(200).json({ success: false, noData: true, message: "We can't build a full report for this coin yet: the Solana network returned no holder list for it right now. No payment needed — try another coin." });
-    const ref = b58(crypto.randomBytes(32));
-    const expiry = Math.floor(Date.now() / 1000) + REF_TTL_SEC;
-    const params = new URLSearchParams({ amount: String(PRICE_USDC), 'spl-token': USDC_MINT, reference: ref, label: 'Reality Check', message: `Exit Door report ${mint.slice(0, 6)}…`, memo: `RC-EXIT-${mint.slice(0, 8)}` });
-    return res.status(200).json({ success: true, reference: ref, exp: expiry, sig: sign(ref, mint, expiry), recipient: WALLET, amount: PRICE_USDC, usdcMint: USDC_MINT, url: `solana:${WALLET}?${params.toString()}` });
+    if (!ses.sessionId) return res.status(200).json({ success: true, needCheckout: true });
+    const r = await sessionRef(ses);
+    if (!r.ok) return fail(r);
+    const params = new URLSearchParams({ amount: r.amountText, 'spl-token': USDC_MINT, ...(r.reference ? { reference: r.reference } : {}), label: 'Reality Check', message: `Exit Door report ${mint.slice(0, 6)}…`, memo: `RC-EXIT-${mint.slice(0, 8)}` });
+    return res.status(200).json({ success: true, reference: r.reference, exp: r.exp, status: r.status, recipient: RC_SOL, amount: r.amount, amountText: r.amountText, usdcMint: USDC_MINT, url: `solana:${RC_SOL}?${params.toString()}` });
   }
 
   if (action === 'checkout') {
     res.setHeader('Cache-Control', 'no-store');
     const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
-    const s = await createSession({ claim: 'exit:' + coinKey('solana', mint), price: PRICE_USDC, ip, prevId: req.body?.sessionId, prevToken: req.body?.token });
-    return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, message: s.message });
+    const s = await createSession({ claim: ses.claim, price: PRICE_USDC, ip, prevId: ses.sessionId, prevToken: ses.token, meta: { kind: 'exit', mint } });
+    return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, busy: !!s.busy, message: s.message });
+  }
+
+  if (action === 'resume-code') {
+    // Phantom in-app browser hand-off: single-use, 10-minute code that moves this OPEN checkout once.
+    const c = await makeCode('resume', ses);
+    return res.status(200).json(c.ok ? { success: true, code: c.code } : { success: false, message: c.message });
   }
 
   if (action === 'manual') {
-    // Paid by copying the published address: needs this browser's checkout session + the exact amount.
-    const c = await claimSession({ sessionId: req.body?.sessionId, token: req.body?.token, claim: 'exit:' + coinKey('solana', mint), txIds: req.body?.txSignatures || txSignature });
-    if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
-    let report;
-    try { report = await buildReport(mint); } catch {
-      return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Tap verify again in a minute — this browser can re-open it without paying again.' });
-    }
-    return res.status(200).json({ success: true, reshow: !!c.reshow, paid: { amount: c.amount, chain: c.chain }, report,
-      riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
+    const c = await claimSession({ ...ses, txIds: req.body?.txSignatures || txSignature });
+    return c.ok ? sendReport(c) : fail(c);
   }
 
   if (action === 'report') {
-    if (!isSolAddr(reference) || !exp || !sig) return res.status(200).json({ success: false, message: 'Missing payment reference.' });
-    const expected = sign(reference, mint, Number(exp));
-    if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
-      return res.status(200).json({ success: false, message: 'This payment request does not match this contract.' });
-    }
-    if (Math.floor(Date.now() / 1000) > Number(exp)) return res.status(200).json({ success: false, message: 'This payment request expired. Start a new one (no charge if you did not pay).' });
-    let pay;
-    try { pay = await findAndValidate(reference); } catch { return res.status(200).json({ success: false, pending: true, message: 'Solana RPC is busy — still checking…' }); }
-    if (pay.status === 'pending') return res.status(200).json({ success: false, pending: true, message: 'Waiting for your payment to confirm on Solana…' });
-    if (pay.status !== 'ok') return res.status(200).json({ success: false, message: pay.reason });
-    try {
-      const report = await buildReport(mint);
-      const claim = await claimReference(reference, mint).catch(() => ({ enforced: false, ok: true }));
-      if (!claim.ok) return res.status(200).json({ success: false, message: 'This payment was already used to open a report.' });
-      return res.status(200).json({ success: true, paid: { signature: pay.signature, amount: pay.amount }, report,
-        riskNote: 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.' });
-    } catch (e) {
-      return res.status(200).json({ success: false, paidOk: true, message: 'Payment verified, but the report failed to load. Retry within 30 minutes — your payment still counts.' });
-    }
+    if (!ses.sessionId) return res.status(200).json({ success: false, needCheckout: true, message: 'This payment request is from an older version of the page. Please reload and start a new checkout (no charge if you did not pay).' });
+    const c = await claimByReference(ses, async (ref) => {
+      const sigs = await rpc('getSignaturesForAddress', [ref, { limit: 10, commitment: 'confirmed' }]);
+      return (sigs || []).filter(x => !x.err).map(x => x.signature).reverse();
+    });
+    return c.ok ? sendReport(c) : fail(c);
   }
   return res.status(400).json({ success: false, message: 'Unknown action' });
 }

@@ -1,7 +1,7 @@
 // Read-only health check for one-time-use payments. Never returns secret values.
 import crypto from 'crypto';
 import { claimTx, oneTimeEnforced, manualMaxAge } from './_manual-pay.js';
-import { createSession, claimSession } from './_checkout.js';
+import { createSession, claimSession, makeCode, redeemCode } from './_checkout.js';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const out = { oneTimeEnforced: oneTimeEnforced(), manualMaxAgeSec: manualMaxAge(), storeReachable: false, selfTest: null };
@@ -24,6 +24,10 @@ export default async function handler(req, res) {
       const badTok = a.ok ? await claimSession({ sessionId: a.sessionId, token: 'wrong', claim, txIds: ['x'] }) : { ok: true };
       const wrongCoin = a.ok ? await claimSession({ sessionId: a.sessionId, token: a.token, claim: claim + 'x', txIds: ['x'] }) : { ok: true };
       ck = { created: !!(a.ok && b.ok), uniqueAmounts: !!(a.ok && b.ok && a.micro !== b.micro), txWithoutTokenRejected: noTok.ok === false, wrongTokenRejected: badTok.ok === false, wrongCoinRejected: wrongCoin.ok === false };
+      const code = a.ok ? await makeCode('resume', { sessionId: a.sessionId, token: a.token, claim }) : { ok: false };
+      const r1 = code.ok ? await redeemCode(code.code) : { ok: false }, r2 = code.ok ? await redeemCode(code.code) : { ok: true };
+      const oldTok = a.ok ? await claimSession({ sessionId: a.sessionId, token: a.token, claim, txIds: ['x'] }) : { ok: true };
+      Object.assign(ck, { resumeCodeWorksOnce: !!(r1.ok && r1.token && r2.ok === false), oldTokenInvalidAfterResume: oldTok.ok === false && /browser/.test(oldTok.message || '') });
       for (const x of [a, b]) if (x.ok) { try { await kv(`del/rc:sess:${x.sessionId}`); await kv(`del/rc:amt:${x.micro}`); } catch {} }
     } catch { ck = { error: true }; }
     out.checkoutSelfTest = ck;

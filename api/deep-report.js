@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { solDeep, deployerFacts } from './_sol-deep.js';
 import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
-import { createSession, claimSession } from './_checkout.js';
+import { createSession, claimSession, sessionRef, claimByReference, redeemCode } from './_checkout.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -36,7 +36,7 @@ async function fullOnly(res, address, chain, paidChainLabel, paidAmount, why) {
     riskNote: 'Public data only. Not financial advice. Never invest more than you can afford to lose.'
   });
 }
-const deepClaim = (chain, contract) => { let c = String(contract || '').trim(); if (chain !== 'solana-mainnet') { c = c.toLowerCase(); if (!c.startsWith('0x')) c = '0x' + c; } return 'deep:' + coinKey(chain, c); };
+export const deepClaim = (chain, contract) => { let c = String(contract || '').trim(); if (chain !== 'solana-mainnet') { c = c.toLowerCase(); if (!c.startsWith('0x')) c = '0x' + c; } return 'deep:' + coinKey(chain, c); };
 const NOPAY = (why) => `We can't build a full report for this coin yet: ${why} No payment needed — try another coin.`;
 async function single(req, res, opts = {}) {
   const PRICE = opts.price || 1;
@@ -55,147 +55,12 @@ async function single(req, res, opts = {}) {
   if (chain === 'solana-mainnet' && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(contract).trim())) {
     return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address. Double-check it before paying — no payment was taken.' });
   }
-  if (!opts.trusted) {
+  {
     // Manual / one-click payments: only a checkout session (token held by this browser) + exact amount can unlock.
     const c = await claimSession({ sessionId: req.body?.sessionId, token: req.body?.token, claim: opts.claim || deepClaim(chain, contract), txIds: req.body?.txSignatures || txSignature });
     if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
     paidAmount = c.amount; paidChainLabel = c.chain;
     if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, reshow: !!c.reshow, amount: paidAmount, chain: paidChainLabel });
-  } else {
-  // Trusted path: Solana Pay reference flow (bundle), already authorised by the HMAC-signed reference.
-  if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your USDC payment transaction hash to unlock the deep report.' });
-
-  const RC_SOL = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
-  const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
-  const USDC_SOL_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-  // USDC contract addresses verified via CoinGecko (lowercase compare at runtime)
-  const PAY_CHAINS = {
-    solana:   { label: 'Solana', type: 'solana', usdc: USDC_SOL_MINT, wallet: RC_SOL,
-                rpcs: ['https://api.mainnet-beta.solana.com', 'https://solana.publicnode.com'] },
-    ethereum: { label: 'Ethereum', type: 'evm', usdc: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals: 6, wallet: RC_EVM,
-                rpcs: ['https://eth.llamarpc.com', 'https://ethereum.publicnode.com', 'https://rpc.ankr.com/eth'] },
-    bnb:      { label: 'BNB Chain', type: 'evm', usdc: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', decimals: 18, wallet: RC_EVM,
-                rpcs: ['https://binance.llamarpc.com', 'https://bsc.publicnode.com', 'https://rpc.ankr.com/bsc'] },
-    base:     { label: 'Base', type: 'evm', usdc: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', decimals: 6, wallet: RC_EVM,
-                rpcs: ['https://base.llamarpc.com', 'https://base.publicnode.com', 'https://rpc.ankr.com/base'] },
-    polygon:  { label: 'Polygon', type: 'evm', usdc: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', decimals: 6, wallet: RC_EVM,
-                rpcs: ['https://polygon.llamarpc.com', 'https://polygon-bor.publicnode.com', 'https://rpc.ankr.com/polygon'] },
-    arbitrum: { label: 'Arbitrum', type: 'evm', usdc: '0xaf88d065e77c8cc2239327c5edb3a432268e5831', decimals: 6, wallet: RC_EVM,
-                rpcs: ['https://arbitrum.llamarpc.com', 'https://arbitrum-one.publicnode.com', 'https://rpc.ankr.com/arbitrum'] }
-  };
-  const sig = String(txSignature).trim();
-  const CLAIM = opts.claim || coinKey(chain, contract);
-  if (await isTxUsed(sig, CLAIM)) return res.status(200).json({ success: false, message: MSG.used });
-  const nowSec = Math.floor(Date.now() / 1000);
-
-  // ---------- 1. Payment verification — auto-detects the chain from the hash ----------
-  // Solana signatures are base58 (~88 chars); EVM hashes are 0x + 64 hex.
-  // For EVM we probe each supported chain until the transaction is found.
-  const isEvmHash = /^0x[a-fA-F0-9]{64}$/.test(sig);
-  const isSolSig = /^[1-9A-HJ-NP-Za-km-z]{87,88}$/.test(sig);
-
-  const verifySolana = async () => {
-    let txj = null;
-    for (const rpc of PAY_CHAINS.solana.rpcs) {
-      try {
-        const r = await fetch(rpc, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTransaction', params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }] }),
-          signal: AbortSignal.timeout(15000)
-        });
-        const j = await r.json();
-        if (!j.error && j.result) { txj = j.result; break; }
-      } catch {}
-    }
-    if (!txj) return { status: 'not-found' };
-    if (txj.meta && txj.meta.err) return { status: 'invalid', reason: 'That transaction failed on-chain — no payment was made.' };
-    if (!txj.blockTime || nowSec - txj.blockTime > manualMaxAge()) {
-      return { status: 'invalid', reason: MSG.tooOld(manualMaxAge()) };
-    }
-    const sumUsdc = (list) => (list || []).reduce((s, b) =>
-      (b.mint === USDC_SOL_MINT && b.owner === RC_SOL) ? s + Number(b.uiTokenAmount?.uiAmount || 0) : s, 0);
-    const received = sumUsdc(txj.meta?.postTokenBalances) - sumUsdc(txj.meta?.preTokenBalances);
-    if (received < PRICE - 1e-9) {
-      return { status: 'invalid', reason: `That transaction did not send at least ${PRICE} USDC to the Reality Check wallet on Solana.` };
-    }
-    return { status: 'ok', amount: received, chain: 'Solana' };
-  };
-
-  const evmRpc = async (cfg, method, params) => {
-    for (const rpc of cfg.rpcs) {
-      try {
-        const r = await fetch(rpc, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-          signal: AbortSignal.timeout(15000)
-        });
-        const j = await r.json();
-        if (!j.error && j.result !== undefined && j.result !== null) return j.result;
-      } catch {}
-    }
-    return null;
-  };
-
-  const verifyEvm = async (cfg) => {
-    const receipt = await evmRpc(cfg, 'eth_getTransactionReceipt', [sig]);
-    if (!receipt) return { status: 'not-found' };
-    if (receipt.status !== '0x1') return { status: 'invalid', reason: 'That transaction failed on-chain — no payment was made.' };
-    const block = await evmRpc(cfg, 'eth_getBlockByNumber', [receipt.blockNumber, false]);
-    const blockTime = block?.timestamp ? parseInt(block.timestamp, 16) : 0;
-    if (!blockTime || nowSec - blockTime > manualMaxAge()) {
-      return { status: 'invalid', reason: MSG.tooOld(manualMaxAge()) };
-    }
-    let decimals = cfg.decimals ?? 6;
-    try {
-      const decHex = await evmRpc(cfg, 'eth_call', [{ to: cfg.usdc, data: '0x313ce567' }, 'latest']);
-      if (decHex && decHex !== '0x') decimals = parseInt(decHex, 16);
-    } catch {}
-    const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-    const paddedWallet = '0x000000000000000000000000' + RC_EVM.slice(2).toLowerCase();
-    let total = 0n;
-    for (const log of (receipt.logs || [])) {
-      if ((log.address || '').toLowerCase() !== cfg.usdc.toLowerCase()) continue;
-      const topics = log.topics || [];
-      if ((topics[0] || '').toLowerCase() !== TRANSFER) continue;
-      if ((topics[2] || '').toLowerCase() !== paddedWallet) continue;
-      try { total += BigInt(log.data); } catch {}
-    }
-    const need = 10n ** BigInt(decimals);
-    if (total < need * BigInt(PRICE)) {
-      return { status: 'invalid', reason: `No ${PRICE} USDC transfer to the Reality Check wallet found in that ${cfg.label} transaction.` };
-    }
-    return { status: 'ok', amount: Number(total) / Number(need), chain: cfg.label };
-  };
-
-  // Explicit chain (one-click pay knows it) or auto-detect (manual paste)
-  const explicit = payChain && payChain !== 'auto' ? PAY_CHAINS[payChain] : null;
-  let v = null;
-  if (explicit) {
-    v = explicit.type === 'solana' ? await verifySolana() : await verifyEvm(explicit);
-    if (v.status === 'not-found') {
-      v = { status: 'invalid', reason: `Transaction not found on ${explicit.label}. Did you pay on a different chain? Try pasting again — we check all chains automatically.` };
-    }
-  } else if (isEvmHash) {
-    v = { status: 'invalid', reason: 'Transaction not found on any supported chain (Solana, Ethereum, Base, BNB, Polygon, Arbitrum). Make sure you sent 1 USDC and pasted the full hash.' };
-    for (const key of ['ethereum', 'base', 'bnb', 'polygon', 'arbitrum']) {
-      const r = await verifyEvm(PAY_CHAINS[key]);
-      if (r.status !== 'not-found') { v = r; break; }
-    }
-  } else if (isSolSig) {
-    v = await verifySolana();
-    if (v.status === 'not-found') {
-      v = { status: 'invalid', reason: 'Transaction not found on Solana. Double-check the signature.' };
-    }
-  } else {
-    v = { status: 'invalid', reason: "That doesn't look like a complete transaction hash. Copy the FULL hash from your wallet app — it's a long string (starts with 0x on EVM chains)." };
-  }
-  if (!v || v.status !== 'ok') {
-    return res.status(200).json({ success: false, message: v?.reason || 'Payment could not be verified.' });
-  }
-  paidAmount = v.amount;
-  paidChainLabel = v.chain;
-  { const claim = await claimTx(sig, CLAIM); if (!claim.ok) return res.status(200).json({ success: false, message: claim.error ? MSG.busy : MSG.used }); }
-  if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, amount: paidAmount, chain: paidChainLabel });
   }
   }
 
@@ -486,7 +351,7 @@ const call = (fn, body, opts) => new Promise((resolve) => {
   const r = { status() { return r; }, json(j) { resolve(j); return r; }, send(x) { resolve({ success: false, message: String(x) }); return r; } };
   Promise.resolve(fn({ method: 'POST', body }, r, opts)).catch(() => resolve({ success: false, message: 'This report failed to load (data provider error).' }));
 });
-function normList(coins) {
+export function normList(coins) {
   if (!Array.isArray(coins) || coins.length < 1 || coins.length > 5) return null;
   const out = []; const seen = new Set();
   for (const c of coins) {
@@ -497,7 +362,7 @@ function normList(coins) {
   }
   return out;
 }
-const listKey = (list) => 'bundle:' + list.map(x => x.k).sort().join(',');
+export const listKey = (list) => 'bundle:' + list.map(x => x.k).sort().join(',');
 const bsign = (ref, lk, exp, n) => crypto.createHmac('sha256', process.env.RC_REF_SECRET).update(`deepbundle|${ref}|${lk}|${exp}|${n}|${RC_SOL_W}`).digest('hex');
 async function precheckOne(host, c) {
   if (c.chain === 'solana-mainnet') return call(single, { contract: c.contract, chain: c.chain, precheck: true });
@@ -508,67 +373,69 @@ async function precheckOne(host, c) {
   } catch { return { success: false, message: NOPAY('our data check could not reach the server.') }; }
 }
 async function bundle(req, res) {
-  const { action, coins, reference, exp, sig, txSignature, payChain } = req.body || {};
+  const { action, coins, txSignature } = req.body || {};
   const list = normList(coins);
   if (!list) return res.status(200).json({ success: false, message: 'Add 1 to 5 different coins (address + chain) to your list.' });
   const N = list.length, lk = listKey(list);
+  const ses = { sessionId: req.body?.sessionId, token: req.body?.token, claim: 'deepbundle:' + lk };
   const host = req.headers?.host || 'www.realitycheckglobal.trade';
   if (action === 'bundle-precheck' || action === 'bundle-request') {
     const results = await Promise.all(list.map(c => precheckOne(host, c)));
     const failed = results.map((r, i) => r.success ? null : { index: i, contract: list[i].contract, chain: list[i].chain, message: r.message || NOPAY('no data.') }).filter(Boolean);
     if (failed.length) return res.status(200).json({ success: false, failed, message: 'Some coins in your list cannot be reported yet. Remove or swap them — no payment needed for those.' });
-    if (action === 'bundle-precheck') return res.status(200).json({ success: true, count: N, totalUsdc: N });
-    if (!process.env.RC_REF_SECRET) return res.status(200).json({ success: false, message: 'Bundle payments are not configured yet.' });
-    const ref = b58(crypto.randomBytes(32)); const e = Math.floor(Date.now() / 1000) + 1800;
-    const p = new URLSearchParams({ amount: String(N), 'spl-token': USDC_SPL, reference: ref, label: 'Reality Check', message: `Deep Report x${N} coins`, memo: `RC-DEEP-x${N}` });
-    return res.status(200).json({ success: true, count: N, totalUsdc: N, reference: ref, exp: e, sig: bsign(ref, lk, e, N), recipient: RC_SOL_W, url: `solana:${RC_SOL_W}?${p.toString()}` });
+    if (action === 'bundle-precheck' || !ses.sessionId) return res.status(200).json({ success: true, count: N, totalUsdc: N, needCheckout: action === 'bundle-request' });
+    // Solana Pay request for THIS checkout: its exact amount and its own reference (only the token holder can claim it).
+    const r = await sessionRef(ses);
+    if (!r.ok) return res.status(200).json({ success: false, needCheckout: !!r.needCheckout, message: r.message });
+    const p = new URLSearchParams({ amount: r.amountText, 'spl-token': USDC_SPL, ...(r.reference ? { reference: r.reference } : {}), label: 'Reality Check', message: `Deep Report x${N} coins`, memo: `RC-DEEP-x${N}` });
+    return res.status(200).json({ success: true, count: N, totalUsdc: r.amount, amountText: r.amountText, status: r.status, reference: r.reference, exp: r.exp, recipient: RC_SOL_W, url: `solana:${RC_SOL_W}?${p.toString()}` });
   }
   if (action !== 'bundle-report') return res.status(400).json({ success: false, message: 'Unknown action' });
-  if (req.body?.sessionId || txSignature) {
+  let v;
+  if (txSignature || req.body?.txSignatures) {
     // Manual pay for a bundle: checkout session + exact amount (tx ID alone never unlocks).
-    const v = await call(single, { contract: list[0].contract, chain: list[0].chain, txSignature, txSignatures: req.body?.txSignatures, sessionId: req.body?.sessionId, token: req.body?.token }, { price: N, claim: 'deepbundle:' + lk, verifyOnly: true });
+    v = await call(single, { contract: list[0].contract, chain: list[0].chain, txSignature, txSignatures: req.body?.txSignatures, sessionId: ses.sessionId, token: ses.token }, { price: N, claim: ses.claim, verifyOnly: true });
     if (!v.success) return res.status(200).json(v);
-    const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
-    return res.status(200).json({ success: true, reshow: !!v.reshow, paid: { amount: v.amount, chain: v.chain }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
+  } else {
+    if (!ses.sessionId) return res.status(200).json({ success: false, needCheckout: true, message: 'This payment request is from an older version of the page. Please reload and start a new checkout (no charge if you did not pay).' });
+    const c = await claimByReference(ses, async (ref) => {
+      const sigs = await solCall('getSignaturesForAddress', [ref, { limit: 10, commitment: 'confirmed' }], 2);
+      return (sigs || []).filter(x => !x.err).map(x => x.signature).reverse();
+    });
+    if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
+    v = { success: true, reshow: !!c.reshow, amount: c.amount, chain: c.chain };
   }
-  let paySig = '';
-  let pc = payChain || 'auto';
-  {
-    if (!reference || !exp || !sig) return res.status(200).json({ success: false, message: 'Missing payment reference.' });
-    const expected = bsign(String(reference), lk, Number(exp), N);
-    if (String(sig).length !== expected.length || !crypto.timingSafeEqual(Buffer.from(String(sig)), Buffer.from(expected))) return res.status(200).json({ success: false, message: 'This payment request does not match this list of coins.' });
-    if (Math.floor(Date.now() / 1000) > Number(exp) + 600) return res.status(200).json({ success: false, message: 'This payment request expired. Start a new one (no charge if you did not pay).' });
-    const sigs = await solCall('getSignaturesForAddress', [String(reference), { limit: 5, commitment: 'confirmed' }], 2);
-    if (!sigs || !sigs.length) return res.status(200).json({ success: false, pending: true, message: 'Waiting for your payment to confirm on Solana…' });
-    paySig = sigs[sigs.length - 1].signature; pc = 'solana';
-  }
-  const v = await call(single, { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig }, { price: N, claim: lk, verifyOnly: true, trusted: true });
-  if (!v.success) return res.status(200).json({ success: false, message: (v.message || 'Payment could not be verified.') + (N > 1 ? ` This list needs ${N} USDC in one payment.` : '') });
   const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
-  return res.status(200).json({ success: true, paid: { amount: v.amount, chain: v.chain, signature: paySig }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
+  return res.status(200).json({ success: true, reshow: !!v.reshow, paid: { amount: v.amount, chain: v.chain }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
 }
 async function checkout(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const b = req.body || {};
   const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
-  let claim, price;
+  let claim, price, meta;
   if (b.kind === 'bundle') {
     const list = normList(b.coins);
     if (!list) return res.status(200).json({ success: false, message: 'Add 1 to 5 different coins (address + chain) to your list.' });
-    claim = 'deepbundle:' + listKey(list); price = list.length;
+    claim = 'deepbundle:' + listKey(list); price = list.length; meta = { kind: 'bundle', coins: list.map(x => ({ chain: x.chain, contract: x.contract })) };
   } else {
     const chain = String(b.chain || ''), c = String(b.contract || '').trim();
     const okAddr = chain === 'solana-mainnet' ? /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(c) : /^(0x)?[a-fA-F0-9]{40}$/.test(c);
     if (!chain || !okAddr) return res.status(200).json({ success: false, message: 'Enter a valid contract address first. No payment was taken.' });
-    claim = deepClaim(chain, c); price = 1;
+    claim = deepClaim(chain, c); price = 1; meta = { kind: 'deep', chain, contract: c };
   }
-  const s = await createSession({ claim, price, ip, prevId: b.sessionId, prevToken: b.token });
-  return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, message: s.message });
+  const s = await createSession({ claim, price, ip, prevId: b.sessionId, prevToken: b.token, meta });
+  return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, busy: !!s.busy, message: s.message });
 }
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   const a = req.body?.action;
   if (a === 'bundle-precheck' || a === 'bundle-request' || a === 'bundle-report') return bundle(req, res);
   if (a === 'checkout') return checkout(req, res);
+  if (a === 'redeem') {
+    // Single-use code from a Phantom hand-off or an admin unlock link -> a fresh token for THIS browser.
+    res.setHeader('Cache-Control', 'no-store');
+    const r = await redeemCode(req.body?.code);
+    return res.status(200).json(r.ok ? { success: true, ...r } : { success: false, message: r.message });
+  }
   return single(req, res);
 }
