@@ -18,6 +18,7 @@ const MAX_CHECKOUTS_GLOBAL_HOUR = 2000;
 export const RESUME_TTL = 600;             // Phantom hand-off code: 10 minutes, single use
 export const GRANT_TTL = 86400;            // admin unlock link: 24h, single use
 export const CONTACT = 'Reality Check on X (@RC_Reality_ — https://x.com/RC_Reality_)';
+export const HELP = "Message us on X @RC_Reality_ (https://x.com/RC_Reality_) with your transaction ID and we'll send your report link.";
 export const BUSY = 'Checkout is busy right now — please try again in a few minutes. No payment was taken.';
 
 const sha = (t) => crypto.createHash('sha256').update(String(t)).digest('hex');
@@ -51,10 +52,10 @@ async function releaseAmount(kv, s, holdSec) {
 }
 // Load + authorise a session for `claim`. Returns { s } or { err:{...} }.
 async function authed(kv, { sessionId, token, claim }) {
-  if (!sessionId || !token) return { err: { ok: false, needCheckout: true, message: 'For your security, a transaction ID alone cannot unlock a report. Open the payment screen again (tap Unlock / Open on this page) to start a checkout, and send the exact amount it shows.' } };
+  if (!sessionId || !token) return { err: { ok: false, needCheckout: true, message: 'For your security, a transaction ID alone cannot unlock a report. Open the payment screen again (tap Unlock / Open on this page) to start a checkout, and send the exact amount it shows. If you already paid and lost the page: ' + HELP } };
   const s = await loadSession(kv, sessionId);
-  if (!s) return { err: { ok: false, needCheckout: true, message: 'This checkout was not found or has expired. Start a new checkout on this page.' } };
-  if (!tokenOk(s, token)) return { err: { ok: false, message: 'This payment can only be verified from the browser that started this checkout.' } };
+  if (!s) return { err: { ok: false, needCheckout: true, message: 'This checkout was not found or has expired. Start a new checkout on this page. If you already paid: ' + HELP } };
+  if (!tokenOk(s, token)) return { err: { ok: false, message: 'This payment can only be verified from the browser that started this checkout. If you paid but lost that page or browser: ' + HELP } };
   if (s.claim !== claim) return { err: { ok: false, message: 'This checkout was opened for a different coin or list. Open the payment screen for this coin to get its own checkout.' } };
   if (s.status === 'replaced') return { err: { ok: false, needCheckout: true, message: 'This checkout was replaced by a newer one in this browser. Reload the payment screen.' } };
   return { s };
@@ -116,7 +117,7 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
     const s = a.s;
     if (s.status === 'paid') return { ok: true, reshow: true, amount: (s.paidMicro || 0) / 1e6, chain: s.chain, ids: s.txs };
     const t = now();
-    if (t > s.exp + CLAIM_GRACE) return { ok: false, needCheckout: true, message: `This checkout expired. If you already sent ${fmt(s.micro)} USDC for it, contact ${CONTACT} with your transaction ID. Otherwise start a new checkout.` };
+    if (t > s.exp + CLAIM_GRACE) return { ok: false, needCheckout: true, message: `This checkout expired. If you already sent ${fmt(s.micro)} USDC for it, ${HELP} Otherwise start a new checkout.` };
     const ids = parseTxList(txIds);
     if (!ids.length) return { ok: false, message: 'Paste your transaction ID first.' };
     if (ids.length > 5) return { ok: false, message: 'Combine at most 5 transaction IDs.' };
@@ -124,15 +125,15 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
     if (new Set(keys).size !== keys.length) return { ok: false, message: 'The same transaction ID was pasted twice. Each payment can only be counted once.' };
     const bound = await Promise.all(keys.map(k => kv(['GET', `rc:paidtx:${encodeURIComponent(k)}`])));
     const held = bound.findIndex(b => b != null && String(b).startsWith('held:'));
-    if (held >= 0) return { ok: false, held: true, message: `Transaction ${held + 1} is held for the owner to confirm, because more than one checkout could match it. Please message ${CONTACT} with your transaction ID — nothing was charged twice.` };
+    if (held >= 0) return { ok: false, held: true, message: `Transaction ${held + 1} is held for the owner to confirm, because more than one checkout could match it. Your payment is safe. ${HELP}` };
     const used = bound.findIndex(b => b != null);
-    if (used >= 0) return { ok: false, message: `Transaction ${used + 1} was already used to unlock a report. Each payment can only be used once — nothing was claimed.` };
+    if (used >= 0) return { ok: false, message: `Transaction ${used + 1} was already used to unlock a report. Each payment can only be used once — nothing was claimed. If it is your payment and you lost the page: ${HELP}` };
     const vs = await Promise.all(ids.map(id => verify(id, { price: 0, maxAgeSec: manualMaxAge() })));
     const bad = vs.findIndex(v => v.status !== 'ok' || !(v.micro > 0));
     if (bad >= 0) return { ok: false, pending: !!vs[bad].pending, message: `Transaction ${bad + 1}: ${vs[bad].reason || MSG.notFound} Nothing was claimed.` };
     const since = s.since || s.created;
     const early = vs.findIndex(v => !v.blockTime || v.blockTime < since - 30);
-    if (early >= 0) return { ok: false, message: `Transaction ${early + 1} was sent before this checkout started, so it cannot pay for it. Nothing was claimed.` };
+    if (early >= 0) return { ok: false, message: `Transaction ${early + 1} was sent before this checkout started, so it cannot pay for it. Nothing was claimed. If you paid first and opened the page after: ${HELP}` };
     const sum = vs.reduce((x, v) => x + v.micro, 0);
     const minMicro = Math.round(s.price * 1e6);
     const targets = [s.micro, ...(s.alt || []).filter(x => x.until > t).map(x => x.micro)];
@@ -143,7 +144,7 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
       // (b) untagged, >= minimum: must not be some OTHER checkout's exact tag ...
       const amts = [sum, ...vs.map(v => v.micro)];
       const owners = await Promise.all(amts.map(m => kv(['GET', `rc:amt:${m}`])));
-      if (owners.some(o => o != null && o !== s.id)) return { ok: false, message: 'That payment exactly matches a different checkout\'s amount, so it cannot unlock this one. Nothing was claimed. If it is yours, message ' + CONTACT + ' with the transaction ID.' };
+      if (owners.some(o => o != null && o !== s.id)) return { ok: false, message: 'That payment exactly matches a different checkout\'s amount, so it cannot unlock this one. Nothing was claimed. If it is yours: ' + HELP };
       // ... and must not be ambiguous: another open, unpaid checkout for the same report opened before the payment.
       const firstTx = Math.min(...vs.map(v => v.blockTime));
       let others = []; try { others = (await kv(['SMEMBERS', `rc:claimidx:${s.claim}`])) || []; } catch {}
@@ -157,7 +158,7 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
         // Hold every tx so nobody (neither checkout) can claim it until the owner decides.
         for (const k of keys) { try { await kv(['SET', `rc:paidtx:${encodeURIComponent(k)}`, `held:${s.id}`, 'NX', 'EX', PAID_KEEP]); } catch {} }
         try { await kv(['LPUSH', 'rc:held', JSON.stringify({ t, txs: ids, claim: s.claim, meta: s.meta || null, amount: fmt(sum), chain: [...new Set(vs.map(v => v.chain))].join(' + '), claimedBy: s.id, rivals })]); await kv(['LTRIM', 'rc:held', 0, 499]); } catch {}
-        return { ok: false, held: true, message: `We received ${fmt(sum)} USDC, but another checkout for this same report was also open, so we can't tell automatically whose payment this is. It is held safely — nobody can use it. Please message ${CONTACT} with your transaction ID and the owner will send you an unlock link. (Sending the exact suggested amount avoids this.)` };
+        return { ok: false, held: true, message: `We received ${fmt(sum)} USDC, but another checkout for this same report was also open, so we can't tell automatically whose payment this is. It is held safely — nobody can use it. ${HELP} (Sending the exact suggested amount avoids this.)` };
       }
     }
     const done = [];
@@ -215,15 +216,15 @@ export async function makeCode(type, { sessionId, token, claim }, deps = {}) {
 }
 export async function redeemCode(code, deps = {}) {
   const { kv, now } = D(deps);
-  if (!/^[A-Za-z0-9_-]{20,40}$/.test(String(code || ''))) return { ok: false, message: 'This link is invalid.' };
+  if (!/^[A-Za-z0-9_-]{20,40}$/.test(String(code || ''))) return { ok: false, message: 'This link is invalid. ' + HELP };
   try {
     const raw = await kv(['GETDEL', `rc:code:${code}`]);
-    if (!raw) return { ok: false, message: 'This link was already used or has expired. Each link works once.' };
+    if (!raw) return { ok: false, message: 'This link was already used or has expired. Each link works once. If you still need your report: ' + HELP };
     const c = JSON.parse(raw);
     const s = await loadSession(kv, c.id);
-    if (!s) return { ok: false, message: 'This checkout no longer exists.' };
-    if (c.type === 'resume' && (s.status !== 'open' || now() > s.exp)) return { ok: false, message: 'This checkout is already paid or expired, so it cannot be moved to another browser.' };
-    if (c.type === 'grant' && s.status !== 'paid') return { ok: false, message: 'This unlock link is not valid.' };
+    if (!s) return { ok: false, message: 'This checkout no longer exists. If you already paid: ' + HELP };
+    if (c.type === 'resume' && (s.status !== 'open' || now() > s.exp)) return { ok: false, message: 'This checkout is already paid or expired, so it cannot be moved to another browser. If you already paid: ' + HELP };
+    if (c.type === 'grant' && s.status !== 'paid') return { ok: false, message: 'This unlock link is not valid. ' + HELP };
     const token = crypto.randomBytes(32).toString('base64url');
     s.th = sha(token);
     if ((await save(kv, s)) !== 'OK') return { ok: false, message: MSG.busy };

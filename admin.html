@@ -20,6 +20,21 @@
   pre { white-space: pre-wrap; word-break: break-all; background: #0e1120; border-radius: 8px; padding: 10px; font-size: 0.78rem; margin: 10px 0 0; }
   .note { color: #99a; font-size: 0.8rem; } .err { color: #ff8a8a; } .ok { color: #8affb0; }
   .link { word-break: break-all; font-family: monospace; background: #0e1120; padding: 10px; border-radius: 8px; display: block; margin-top: 8px; }
+  .main { border-color: #3d7bff; }
+  label.big { font-size: 1.1rem; color: #fff; font-weight: 700; margin: 0 0 8px; }
+  #tx { font-size: 16px; padding: 14px; }
+  .bigbtn { font-size: 1.15rem; padding: 16px; }
+  .rcard { background: #0e1120; border: 1px solid #2a3045; border-radius: 12px; padding: 14px; margin-top: 14px; }
+  .rcard .head { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+  .rcard .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid #1d2234; font-size: 0.95rem; }
+  .rcard .row span:first-child { color: #99a; } .rcard .row span:last-child { text-align: right; word-break: break-all; }
+  .s-held .head { color: #ffcf5c; } .s-waiting .head { color: #8affb0; } .s-unlocked .head { color: #9ab; } .s-not-ours .head, .s-busy .head { color: #ff8a8a; }
+  .unlock { background: #16a34a; font-size: 1.1rem; padding: 16px; }
+  .copy { background: #3d7bff; font-size: 1.15rem; padding: 16px; }
+  .sent { color: #e8eaf2; font-size: 0.95rem; margin: 10px 0 0; }
+  details.adv summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+  .sub { border-top: 1px solid #2a3045; padding-top: 12px; margin-top: 14px; }
+  .more summary { color: #8fb3ff; font-size: 0.9rem; margin-top: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -36,20 +51,27 @@
     <p id="loginMsg" class="note"></p>
   </section>
   <div id="app" style="display:none">
+    <section class="card main">
+      <label for="tx" class="big">Paste the buyer's transaction ID</label>
+      <input id="tx" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The ID the buyer sent you on X">
+      <button id="checkBtn" class="bigbtn">Check payment</button>
+      <div id="res"></div>
+    </section>
     <section class="card">
+      <h2>Held payments</h2>
+      <p class="note">Paid, but waiting for you to unlock.</p>
+      <div id="heldList"><p class="note">Loading…</p></div>
+    </section>
+    <details class="card adv">
+      <summary>Advanced</summary>
+    <section class="sub">
       <h2>Look up a payment</h2>
       <label for="q">Transaction ID, session ID (32 chars) or exact amount (e.g. 1.0205)</label>
       <input id="q" autocomplete="off">
       <button id="lookupBtn">Look up</button>
       <pre id="lookupOut" style="display:none"></pre>
     </section>
-    <section class="card">
-      <h2>Held payments</h2>
-      <p class="note">Payments of at least $1/coin that were not the exact suggested amount while another checkout for the same report was open. Nobody can use them until you issue an unlock link below (paste the transaction ID into it).</p>
-      <button id="heldBtn" class="ghost">Show held payments</button>
-      <pre id="heldOut" style="display:none"></pre>
-    </section>
-    <section class="card">
+    <section class="sub">
       <h2>Issue an unlock link</h2>
       <p class="note">Creates an already-paid checkout and a single-use link (valid 24h) that binds it to the buyer's browser. Only send it to the buyer, privately.</p>
       <label for="gKind">Report</label>
@@ -73,11 +95,12 @@
       <span id="grantLink" class="link" style="display:none"></span>
       <button id="copyLink" class="ghost" style="display:none">Copy link</button>
     </section>
-    <section class="card">
+    <section class="sub">
       <h2>Admin log</h2>
       <button id="logBtn" class="ghost">Show last 100 actions</button>
       <pre id="logOut" style="display:none"></pre>
     </section>
+    </details>
     <button id="logout" class="ghost">Sign out</button>
   </div>
 </main>
@@ -96,7 +119,7 @@ $('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault(); sessionStorage.setItem('rcAdm', $('secret').value); $('secret').value = '';
   $('loginMsg').textContent = 'Checking…';
   const j = await api({ action: 'login' });
-  if (j.success) { $('loginMsg').textContent = ''; show(true); } else { sessionStorage.removeItem('rcAdm'); $('loginMsg').textContent = j.message || 'Sign-in failed.'; }
+  if (j.success) { $('loginMsg').textContent = ''; show(true); loadHeld(); } else { sessionStorage.removeItem('rcAdm'); $('loginMsg').textContent = j.message || 'Sign-in failed.'; }
 });
 $('logout').onclick = () => { sessionStorage.removeItem('rcAdm'); show(false); };
 $('lookupBtn').onclick = async () => {
@@ -130,7 +153,7 @@ $('grantBtn').onclick = async () => {
   $('grantLink').textContent = j.link; $('grantLink').style.display = ''; $('copyLink').style.display = '';
 };
 $('copyLink').onclick = async () => { try { await navigator.clipboard.writeText($('grantLink').textContent); $('copyLink').textContent = 'Copied!'; } catch { $('copyLink').textContent = 'Select the link and copy it'; } setTimeout(() => { $('copyLink').textContent = 'Copy link'; }, 2500); };
-$('heldBtn').onclick = async () => {
+if ($('heldBtn')) $('heldBtn').onclick = async () => {
   const out = $('heldOut'); out.style.display = ''; out.textContent = 'Loading…';
   const j = await api({ action: 'held' });
   out.textContent = j.success ? (j.held.map(h => ts(h.t) + '  ' + h.amount + ' USDC on ' + h.chain + '  [' + h.status + ']\n  report: ' + h.claim + '\n  coin(s): ' + JSON.stringify(h.meta) + '\n  tx: ' + h.txs.join(', ') + '\n  checkouts: ' + [h.claimedBy, ...(h.rivals || [])].join(', ')).join('\n\n') || 'No held payments.') : (j.message || 'Failed.');
@@ -140,7 +163,85 @@ $('logBtn').onclick = async () => {
   const j = await api({ action: 'log' });
   out.textContent = j.success ? (j.log.map(r => ts(r.t) + '  ' + r.action + '  ' + (r.detail ? JSON.stringify(r.detail) : '')).join('\n') || 'No actions yet.') : (j.message || 'Failed.');
 };
-if (getS()) api({ action: 'login' }).then(j => show(!!j.success));
+
+// ---------- Simple flow ----------
+const short = (a) => a && a.length > 14 ? a.slice(0, 6) + '…' + a.slice(-4) : a;
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function row(k, v) { const r = el('div', 'row'); r.append(el('span', null, k), el('span', null, v)); return r; }
+const LABEL = { held: 'Held for you', waiting: 'Waiting (paid, not used yet)', unlocked: 'Unlocked already', 'not-ours': 'Not a payment to us', busy: 'Could not check right now' };
+function linkBox(parent, j) {
+  const box = el('div'); box.append(el('p', 'ok', '✅ Link ready' + (j.what ? ' — ' + j.what.report : '')));
+  const l = el('span', 'link', j.link); const c = el('button', 'copy', 'Copy link');
+  c.onclick = async () => { try { await navigator.clipboard.writeText(j.link); c.textContent = 'Copied!'; } catch { c.textContent = 'Press and hold the link above to copy'; } setTimeout(() => { c.textContent = 'Copy link'; }, 2500); };
+  box.append(l, c, el('p', 'sent', 'Send this link to the buyer privately. It works once, for 24 hours.'));
+  parent.replaceChildren(box);
+}
+function coinPicker(parent, payChain) {
+  const w = el('div');
+  const lb = el('label', null, 'Which coin? Paste the coin address'); lb.htmlFor = 'uCoin';
+  const inp = el('input'); inp.id = 'uCoin'; inp.autocomplete = 'off'; inp.spellcheck = false;
+  const det = el('p', 'note', ''); inp.oninput = () => { const v = inp.value.trim(); det.textContent = /^0x[a-fA-F0-9]{40}$/.test(v) ? 'EVM coin — chain: ' + ($('uChain').selectedOptions[0].text) : /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v) ? 'Solana coin' : ''; };
+  const more = el('details', 'more'); more.append(el('summary', null, 'More options'));
+  const ks = el('select'); ks.id = 'uKind'; [['deep', 'Deep Report (one coin)'], ['exit', 'Exit Door'], ['bundle', 'Deep Report bundle (2–5 coins)']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; ks.append(o); });
+  const cs = el('select'); cs.id = 'uChain'; const guess = { Ethereum: 'eth-mainnet', Base: 'base-mainnet', 'BNB Chain': 'bsc-mainnet', Polygon: 'polygon-mainnet', Arbitrum: 'arbitrum-mainnet' }[payChain] || 'eth-mainnet';
+  [['eth-mainnet', 'Ethereum'], ['base-mainnet', 'Base'], ['bsc-mainnet', 'BNB Chain'], ['polygon-mainnet', 'Polygon'], ['arbitrum-mainnet', 'Arbitrum'], ['avalanche-mainnet', 'Avalanche']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; if (v === guess) o.selected = true; cs.append(o); });
+  cs.onchange = inp.oninput;
+  const bl = el('textarea'); bl.id = 'uCoins'; bl.rows = 4; bl.placeholder = 'Bundle: one coin address per line'; bl.style.display = 'none';
+  ks.onchange = () => { bl.style.display = ks.value === 'bundle' ? '' : 'none'; w.querySelector('#uCoin').parentElement; };
+  more.append(el('label', null, 'Report'), ks, el('label', null, 'Chain (for 0x… coins)'), cs, bl);
+  w.append(lb, inp, det, more); parent.append(w);
+}
+function unlockBody(tx) {
+  const b = { action: 'unlock', tx }; const ci = $('uCoin');
+  if (ci) {
+    b.coin = ci.value.trim(); b.kind = $('uKind').value; b.chain = $('uChain').value;
+    if (b.kind === 'bundle') b.coins = $('uCoins').value.split('\n').map(x => x.trim()).filter(Boolean).map(a => ({ contract: a, chain: /^0x/i.test(a) ? b.chain : 'solana-mainnet' }));
+  }
+  return b;
+}
+function unlockButton(parent, tx, out) {
+  const u = el('button', 'unlock', 'Unlock report for this buyer');
+  u.onclick = async () => {
+    u.disabled = true; u.textContent = 'Creating link…';
+    const j = await api(unlockBody(tx));
+    if (j.success) { linkBox(out, j); loadHeld(); }
+    else { u.disabled = false; u.textContent = 'Unlock report for this buyer'; let m = out.querySelector('.err'); if (!m) { m = el('p', 'err'); out.append(m); } m.textContent = j.message || 'Could not unlock.'; }
+  };
+  parent.append(u);
+}
+$('checkBtn').onclick = async () => {
+  const tx = $('tx').value.trim(), res = $('res');
+  if (!tx) { res.replaceChildren(el('p', 'err', 'Paste the transaction ID first.')); return; }
+  res.replaceChildren(el('p', 'note', 'Checking…'));
+  const j = await api({ action: 'check', tx });
+  if (!j.success) { res.replaceChildren(el('p', 'err', j.message || 'Could not check.')); return; }
+  const card = el('div', 'rcard s-' + j.status);
+  card.append(el('div', 'head', j.headline));
+  card.append(row('Paid to us?', j.paid ? 'Yes' : 'No'));
+  if (j.amount != null) card.append(row('Amount received', j.amount + ' USDC'));
+  if (j.chain) card.append(row('Chain', j.chain));
+  if (j.time) card.append(row('Time', ts(j.time)));
+  card.append(row('Status', LABEL[j.status] || j.status));
+  if (j.what) { card.append(row('Report', j.what.report)); j.what.coins.forEach(c => card.append(row('Coin', short(c.address) + ' (' + c.chain + ')'))); }
+  if (j.detail && j.status === 'not-ours') card.append(el('p', 'note', j.detail));
+  const act = el('div');
+  if (j.status === 'held' || j.status === 'waiting') { if (j.needCoin) coinPicker(act, j.chain); unlockButton(act, tx, act); }
+  card.append(act); res.replaceChildren(card);
+};
+async function loadHeld() {
+  const box = $('heldList');
+  const j = await api({ action: 'held' });
+  if (!j.success) { box.replaceChildren(el('p', 'err', j.message || 'Could not load.')); return; }
+  const items = (j.held || []).filter(h => h.status === 'held');
+  if (!items.length) { box.replaceChildren(el('p', 'note', 'Nothing waiting. 👍')); return; }
+  box.replaceChildren(...items.map(h => {
+    const c = el('div', 'rcard s-held');
+    c.append(row('Amount', h.amount + ' USDC' + (h.chain ? ' · ' + h.chain : '')), row('Time', ts(h.t)));
+    if (h.what) { c.append(row('Report', h.what.report)); h.what.coins.forEach(x => c.append(row('Coin', short(x.address) + ' (' + x.chain + ')'))); }
+    const act = el('div'); unlockButton(act, h.txs[0], act); c.append(act); return c;
+  }));
+}
+if (getS()) api({ action: 'login' }).then(j => { show(!!j.success); if (j.success) loadHeld(); });
 </script>
 </body>
 </html>
