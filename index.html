@@ -437,6 +437,8 @@ function formatSupply(n) {
   if (n == null || isNaN(n) || n === 0) return '—';
   return Number(n).toLocaleString();
 }
+// Only http(s) links from external data (blocks javascript:, data: etc.).
+const safeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '#';
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&#38;','<':'&#60;','>':'&#62;','"':'&#34;',"'":'&#39;'}[c]));
 }
@@ -501,7 +503,7 @@ async function loadCoinDetails(id) {
       return;
     }
     currentCoin = d;
-    const sourcesHtml = (d.sources || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join('');
+    const sourcesHtml = (d.sources || []).map(s => `<li><a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join('');
     const athPct = d.percent_from_ath != null ? Number(d.percent_from_ath).toFixed(1) + '% from ATH' : '';
     const ch24 = d.change_24h != null ? Number(d.change_24h).toFixed(2) + '%' : '—';
     resultDiv.innerHTML = `
@@ -750,7 +752,7 @@ document.getElementById('checkForm').addEventListener('submit', async function (
           <ul class="holders">${holdersHtml}</ul>
           <p class="upsell">Want the full 15-wallet reality map + Wallet DNA? <a href="#premium">Premium Deep Report — 1 USDC</a></p>
           <p class="note">${esc(data.note || '')}</p>
-          <p><a href="${esc(data.explorer || '#')}" target="_blank" rel="noopener" class="btn btn-ghost btn-full">View full holders on explorer</a></p>
+          <p><a href="${esc(safeUrl(data.explorer || '#'))}" target="_blank" rel="noopener" class="btn btn-ghost btn-full">View full holders on explorer</a></p>
         </div>
       `;
     } else {
@@ -811,7 +813,7 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
           <div class="verdict-box"><strong>Our verdict:</strong> ${esc(data.verdict || '')}</div>
           <p class="upsell">See all 15 wallets + their full DNA (ages, funders, hidden clusters)? <a href="#premium">Premium Deep Report — 1 USDC</a></p>
           <div class="risk-actions">
-            <a class="btn btn-ghost btn-full" href="${esc(data.explorer || '#')}" target="_blank" rel="noopener">Verify on explorer</a>
+            <a class="btn btn-ghost btn-full" href="${esc(safeUrl(data.explorer || '#'))}" target="_blank" rel="noopener">Verify on explorer</a>
             <a class="btn btn-primary btn-full" href="https://x.com/intent/tweet?text=${shareText}" target="_blank" rel="noopener">Share this reality on X</a>
           </div>
           <p class="note">${esc(data.riskNote || '')}</p>
@@ -844,7 +846,7 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
         </div>
         <h3>${esc(n.title || '')}</h3>
         <p class="news-what">${esc(n.what || '')}</p>
-        ${(n.sources || []).length ? `<p class="news-sources">Sources: ${(n.sources || []).map(s => `<a href="${esc(s.url || '#')}" target="_blank" rel="noopener">${esc(s.name || 'link')}</a>`).join(' · ')}</p>` : ''}
+        ${(n.sources || []).length ? `<p class="news-sources">Sources: ${(n.sources || []).map(s => `<a href="${esc(safeUrl(s.url || '#'))}" target="_blank" rel="noopener">${esc(s.name || 'link')}</a>`).join(' · ')}</p>` : ''}
         <div class="take-box"><strong>RC's take:</strong> ${esc(n.take || '')}</div>
       </article>`).join('');
   } catch (err) {
@@ -865,8 +867,8 @@ function partialHtml(data) {
       <span>🔗 ${esc(String(m.pairCount))} trading pair(s)</span>
     </div>
     <p class="note">Holder concentration could not be checked, so no score is given. Thin liquidity (under ~$50k) means even small sells move the price a lot.</p>
-    ${m.url ? `<p><a href="${esc(m.url)}" target="_blank" rel="noopener">View pairs on ${esc(m.source)}</a></p>` : ''}` : '';
-  return `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${marketHtml}${data.explorer ? `<p><a href="${esc(data.explorer)}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
+    ${m.url ? `<p><a href="${esc(safeUrl(m.url))}" target="_blank" rel="noopener">View pairs on ${esc(m.source)}</a></p>` : ''}` : '';
+  return `<div class="report-card"><p>${esc(data.message || 'No data found for this contract.')}</p>${marketHtml}${data.explorer ? `<p><a href="${esc(safeUrl(data.explorer))}" target="_blank" rel="noopener">Open explorer</a></p>` : ''}</div>`;
 }
 // ---------- Deep Report: full-truth sections ----------
 function renderFull(f) {
@@ -877,16 +879,16 @@ function renderFull(f) {
   const pct = x => (x === null || x === undefined) ? na : esc(String(x)) + '%';
   const usd = x => (x === null || x === undefined) ? na : '$' + Number(x).toLocaleString(undefined, { maximumFractionDigits: 0 });
   const sup = x => (x === null || x === undefined) ? na : Number(x).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  const addr = (a, base) => a ? `<a href="${esc((base || '') + a)}" target="_blank" rel="noopener"><code>${esc(String(a).slice(0, 8))}…${esc(String(a).slice(-4))}</code></a>` : na;
+  const addr = (a, base) => a ? `<a href="${esc(safeUrl((base || '') + a))}" target="_blank" rel="noopener"><code>${esc(String(a).slice(0, 8))}…${esc(String(a).slice(-4))}</code></a>` : na;
   const auth = (a, base, known) => a === 'active' ? '⚠️ active' : a ? addr(a, base) + ' ⚠️ active' : (known ? '✅ revoked' : na);
   const src = list => `<p class="src">Source: ${list && list.length ? list.map(esc).join(', ') : 'no source answered'}</p>`;
   const sec = (title, body, sources) => `<div class="full-sec"><h4>${title}</h4>${body}${src(sources)}</div>`;
   const p = f.project, o = f.owner, l = f.liquidity, t = f.tokenomics, r = f.risk, a = f.activity, vd = f.verdict;
   const isSol = 'mintAuthority' in o;
-  const socials = (p.socials || []).map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.type)}</a>`).join(' · ') || na;
+  const socials = (p.socials || []).map(x => `<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener nofollow">${esc(x.type)}</a>`).join(' · ') || na;
   const s1 = sec('1. Project & team', `
     <p><strong>${v(p.name)}</strong>${p.symbol ? ' (' + esc(p.symbol) + ')' : ''}${p.categories && p.categories.length ? ' · ' + p.categories.map(esc).join(', ') : ''}</p>
-    <p>Website: ${p.website ? `<a href="${esc(p.website)}" target="_blank" rel="noopener nofollow">${esc(p.website)}</a>` : na} · Socials: ${socials}</p>
+    <p>Website: ${p.website ? `<a href="${esc(safeUrl(p.website))}" target="_blank" rel="noopener nofollow">${esc(p.website)}</a>` : na} · Socials: ${socials}</p>
     <p>Origin: ${v(p.countryOrigin)} · Launched: ${v(p.genesisDate)}</p>
     ${p.description ? `<p class="note">${esc(p.description)}…</p>` : ''}
     <p class="note">${esc(p.teamNote)}</p>${p.xAccountAgeNote ? `<p class="note">${esc(p.xAccountAgeNote)}</p>` : ''}`, p.sources);
@@ -899,7 +901,7 @@ function renderFull(f) {
     <p>Owner: ${o.owner ? addr(o.owner, o.explorer) : na} · Renounced: ${yn(o.renounced)} · Creator: ${addr(o.creator, o.explorer)} (holds ${pct(o.creatorPercent)})</p>
     <p>Hidden owner: ${yn(o.hiddenOwner, true)} · Can take back ownership: ${yn(o.canTakeBackOwnership, true)} · Same creator made honeypots before: ${yn(o.sameCreatorHoneypots, true)}</p>`) + linked, o.sources);
   const hasLp = (l.pools || []).some(x => x.lpStatus);
-  const pools = (l.pools || []).map(x => `<tr><td>${esc(x.dex || '')}</td><td>${esc(x.pair || '')}</td><td>${usd(x.liquidityUsd)}</td><td>${usd(x.volume24hUsd)}</td>${hasLp ? `<td title="${esc(x.lpDetail || '')}">${esc(x.lpStatus || 'unknown')}</td>` : ''}<td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">view</a>` : ''}</td></tr>`).join('');
+  const pools = (l.pools || []).map(x => `<tr><td>${esc(x.dex || '')}</td><td>${esc(x.pair || '')}</td><td>${usd(x.liquidityUsd)}</td><td>${usd(x.volume24hUsd)}</td>${hasLp ? `<td title="${esc(x.lpDetail || '')}">${esc(x.lpStatus || 'unknown')}</td>` : ''}<td>${x.url ? `<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">view</a>` : ''}</td></tr>`).join('');
   const lpDetails = (l.pools || []).filter(x => x.lpDetail && x.lpStatus && x.lpStatus !== 'unknown').slice(0, 6).map(x => `<li>${esc(x.dex || '')} ${esc(x.pair || '')}: <strong>${esc(x.lpStatus)}</strong> — ${esc(x.lpDetail)}</li>`).join('');
   const solBurn = (l.solanaPoolBurn || []).filter(x => x.burnPercent !== null).slice(0, 6).map(x => `<li>${esc(x.dex)} pool ${addr(x.pool, 'https://solscan.io/account/')}: ${esc(String(x.burnPercent))}% of LP burned</li>`).join('');
   const s3 = sec('3. Liquidity', `
@@ -923,7 +925,7 @@ function renderFull(f) {
     <p>Mintable: ${yn(r.mintable, true)} · Blacklist: ${yn(r.blacklist, true)} · Proxy (upgradeable): ${yn(r.proxy, true)} · Pausable: ${yn(r.transferPausable, true)} · Self-destruct: ${yn(r.selfDestruct, true)} · Source verified: ${yn(r.openSource)}</p>`, r.sources);
   const gh = a.github;
   const s6 = sec('6. Promises vs delivery (activity signals)', `
-    <p>GitHub: ${gh ? `<a href="${esc(gh.url)}" target="_blank" rel="noopener">${esc(gh.repo)}</a> — last push ${esc(String(gh.lastPushDaysAgo))} days ago${gh.archived ? ' (archived)' : ''}` : esc(a.githubNote || 'not available')}${a.coingeckoDev ? ` · ${esc(String(a.coingeckoDev.commits4w))} commits in the last 4 weeks (CoinGecko)` : ''}</p>
+    <p>GitHub: ${gh ? `<a href="${esc(safeUrl(gh.url))}" target="_blank" rel="noopener">${esc(gh.repo)}</a> — last push ${esc(String(gh.lastPushDaysAgo))} days ago${gh.archived ? ' (archived)' : ''}` : esc(a.githubNote || 'not available')}${a.coingeckoDev ? ` · ${esc(String(a.coingeckoDev.commits4w))} commits in the last 4 weeks (CoinGecko)` : ''}</p>
     <p>Website: ${a.website ? (a.website.up ? '✅ online' : '⚠️ not reachable') + (a.website.status ? ' (HTTP ' + esc(String(a.website.status)) + ')' : '') + (a.website.note ? ' — ' + esc(a.website.note) : '') : na} · Traded in last 24h: ${yn(a.tradingActive24h)}</p>
     <p>Overall activity: <strong>${esc(a.status)}</strong></p>
     <p class="note">${esc(a.roadmapNote)}</p>`, a.sources);

@@ -1,14 +1,16 @@
 // Owner-only tools for problem payments. Protected by RC_ADMIN_SECRET (Production env only).
 // Constant-time secret check, failed-attempt rate limit, every action logged in KV. Never returns tokens.
 import crypto from 'crypto';
-import { kvCmd, loadSession, sessionSummary, adminGrant } from './_checkout.js';
-import { verifyManualTx, txKey, coinKey } from './_manual-pay.js';
+import { kvCmd, loadSession, sessionSummary, adminGrant, createSession, claimSession, makeCode, redeemCode } from './_checkout.js';
+import { verifyManualTx, txKey, coinKey, MSG } from './_manual-pay.js';
 import { normList, listKey, deepClaim } from './deep-report.js';
 
 const sha = (t) => crypto.createHash('sha256').update(String(t)).digest();
 const MAX_FAILS_PER_HOUR = 8;
 const kv = (a) => kvCmd(a);
-const iph = (req) => crypto.createHash('sha256').update(String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim()).digest('hex').slice(0, 24);
+const clientIp = (req) => String(req.headers?.['x-vercel-forwarded-for'] || req.headers?.['x-real-ip'] || req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+const iph = (req) => crypto.createHash('sha256').update(clientIp(req)).digest('hex').slice(0, 24);
+const MAX_FAILS_GLOBAL_HOUR = 50, FREEZE_SEC = 900;
 async function log(req, action, detail) {
   try { await kv(['LPUSH', 'rc:adminlog', JSON.stringify({ t: Math.floor(Date.now() / 1000), ip: iph(req), action, detail })]); await kv(['LTRIM', 'rc:adminlog', 0, 999]); } catch {}
 }
@@ -27,7 +29,7 @@ async function checkTx(tx) {
   const bound = await kv(['GET', `rc:paidtx:${encodeURIComponent(txKey(tx))}`]);
   const v = await verifyManualTx(tx, { price: 0, maxAgeSec: 3650 * 86400 });
   const pub = { paid: v.status === 'ok', amount: v.status === 'ok' ? v.amount : null, chain: v.chain || null, time: v.blockTime || null };
-  if (v.status === 'busy') return { status: 'busy', pub: { ...pub, status: 'busy', headline: 'The blockchain is busy. Try again in a minute.' } };
+  if (v.status === 'busy' || v.reason === MSG.confirming) return { status: 'busy', pub: { ...pub, status: 'busy', headline: v.reason === MSG.confirming ? 'Still confirming on-chain. Try again in a minute.' : 'The blockchain is busy. Try again in a minute.' } };
   if (v.status !== 'ok') return { status: 'not-ours', pub: { ...pub, status: 'not-ours', headline: 'Not a payment to us.', detail: v.reason || null } };
   let session = null, status;
   const b = String(bound || '');
@@ -50,10 +52,17 @@ export default async function handler(req, res) {
   let fails = 0;
   try { fails = Number(await kv(['GET', failKey])) || 0; } catch { return res.status(503).json({ success: false, message: 'Store unreachable.' }); }
   if (fails >= MAX_FAILS_PER_HOUR) return res.status(429).json({ success: false, message: 'Too many failed attempts. Try again later.' });
+  // Global limit across all IPs: too many failures anywhere -> admin frozen for 15 minutes.
+  try { if (await kv(['GET', 'rc:admfreeze'])) return res.status(429).json({ success: false, message: 'Admin is temporarily locked after many failed sign-ins. Try again in 15 minutes.' }); } catch {}
   const given = String(req.headers?.['x-rc-admin'] || '');
   if (!crypto.timingSafeEqual(sha(given), sha(secret))) {
     try { const n = await kv(['INCR', failKey]); if (n === 1) await kv(['EXPIRE', failKey, 3600]); } catch {}
-    await log(req, 'login-failed', null);
+    try {
+      const gk = `rc:admfail:all:${Math.floor(Date.now() / 3600000)}`; const g = await kv(['INCR', gk]); if (g === 1) await kv(['EXPIRE', gk, 3600]);
+      if (g >= MAX_FAILS_GLOBAL_HOUR) { await kv(['SET', 'rc:admfreeze', '1', 'EX', FREEZE_SEC]); await log(req, 'admin-frozen', { failsThisHour: g }); }
+    } catch {}
+    // Failed sign-ins go to their own list so they can never push real admin actions out of the log.
+    try { await kv(['LPUSH', 'rc:adminfails', JSON.stringify({ t: Math.floor(Date.now() / 1000), ip: iph(req) })]); await kv(['LTRIM', 'rc:adminfails', 0, 499]); } catch {}
     await new Promise(r => setTimeout(r, 400));
     return res.status(401).json({ success: false, message: 'Wrong admin secret.' });
   }
@@ -159,6 +168,30 @@ export default async function handler(req, res) {
     }
     await log(req, 'view-held', null);
     return res.status(200).json({ success: true, held: list });
+  }
+
+  if (action === 'selftest') {
+    // Checkout logic self-test on a private in-memory store (never writes to the live store or its counters).
+    const m = new Map();
+    const mem = async ([c, k, v, ...o]) => { if (c === 'GET') return m.get(k) ?? null; if (c === 'GETDEL') { const x = m.get(k) ?? null; m.delete(k); return x; } if (c === 'DEL') { m.delete(k); return 1; }
+      if (c === 'INCR') { const n = (m.get(k) || 0) + 1; m.set(k, n); return n; } if (c === 'SMEMBERS') return m.get(k) || []; if (c === 'SADD') { m.set(k, [...new Set([...(m.get(k) || []), v])]); return 1; }
+      if (c === 'SREM') { m.set(k, (m.get(k) || []).filter(x => x !== v)); return 1; } if (c === 'SET') { if (o.includes('NX') && m.has(k)) return null; if (o.includes('XX') && !m.has(k)) return null; m.set(k, v); return 'OK'; } return 1; };
+    const deps = { kv: mem };
+    const claim = 'deep:selftest', out = {};
+    try {
+      const a = await createSession({ claim, price: 1 }, deps), b2 = await createSession({ claim, price: 1 }, deps);
+      out.created = !!(a.ok && b2.ok); out.uniqueAmounts = a.micro !== b2.micro;
+      out.txWithoutTokenRejected = (await claimSession({ claim, txIds: ['x'] }, deps)).ok === false;
+      out.wrongTokenRejected = (await claimSession({ sessionId: a.sessionId, token: 'wrong', claim, txIds: ['x'] }, deps)).ok === false;
+      out.wrongCoinRejected = (await claimSession({ sessionId: a.sessionId, token: a.token, claim: claim + 'x', txIds: ['x'] }, deps)).ok === false;
+      const code = await makeCode('resume', { sessionId: a.sessionId, token: a.token, claim }, deps);
+      const r1 = await redeemCode(code.code, deps), r2 = await redeemCode(code.code, deps);
+      out.resumeCodeWorksOnce = !!(r1.ok && r1.token && r2.ok === false);
+      out.oldTokenInvalidAfterResume = (await claimSession({ sessionId: a.sessionId, token: a.token, claim, txIds: ['x'] }, deps)).ok === false;
+    } catch { out.error = true; }
+    try { out.storeReachable = (await kv(['PING'])) === 'PONG'; } catch { out.storeReachable = false; }
+    await log(req, 'selftest', out);
+    return res.status(200).json({ success: true, selfTest: out });
   }
 
   if (action === 'log') {

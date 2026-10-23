@@ -2,18 +2,14 @@
 // Free reports stay free forever. This is an extra, opt-in report.
 // Payment: Solana Pay transfer request (USDC). Non-custodial: the buyer's wallet
 // sends USDC straight to the Reality Check wallet; the server never holds funds or keys.
-// Each request gets a fresh random reference key, signed (HMAC) together with the
-// contract and an expiry, so a payment only unlocks the contract it was made for.
-// Env: RC_PAYMENT_WALLET (Solana wallet), SOLANA_RPC_URL, RC_REF_SECRET (required),
-// optional KV_REST_API_URL + KV_REST_API_TOKEN (Upstash / Vercel KV) for one-time-use references.
+// Payments are bound to a checkout session (token + unique amount, see _checkout.js); Solana Pay references are per session.
+// Env: SOLANA_RPC_URL (optional), KV_REST_API_URL + KV_REST_API_TOKEN (checkout store). Payments go to the hard-coded RC_SOL wallet.
 import crypto from 'crypto';
 import { coinKey, RC_SOL } from './_manual-pay.js';
-import { createSession, claimSession, sessionRef, claimByReference, makeCode } from './_checkout.js';
+import { createSession, claimSession, sessionRef, claimByReference, makeCode, rateLimited, LIMIT_MSG } from './_checkout.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
-const REF_TTL_SEC = 1800;
-const WALLET = process.env.RC_PAYMENT_WALLET || 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
 const RPCS = [process.env.SOLANA_RPC_URL, 'https://api.mainnet-beta.solana.com'].filter(Boolean);
 // Known Solana token lock / vesting programs
 const LOCK_PROGRAMS = {
@@ -31,8 +27,6 @@ function b58(buf) {
   return s;
 }
 const isSolAddr = a => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a || '');
-const sign = (ref, contract, exp) =>
-  crypto.createHmac('sha256', process.env.RC_REF_SECRET).update(`${ref}|${contract}|${exp}|${PRICE_USDC}|${WALLET}`).digest('hex');
 
 async function rpc(method, params) {
   let lastErr;
@@ -58,37 +52,6 @@ async function getJson(url) {
   const r = await fetch(url, { signal: AbortSignal.timeout(12000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
-}
-
-// One-time use of a reference (only when a KV store is configured)
-async function claimReference(ref, mint) {
-  const url = process.env.KV_REST_API_URL, token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return { enforced: false, ok: true };
-  // Reference is bound to one mint (also covered by the HMAC). Same mint may re-show; any other mint is refused.
-  const h = { headers: { Authorization: `Bearer ${token}` } };
-  const j = await (await fetch(`${url}/set/exitdoor:${ref}/${encodeURIComponent(mint)}/NX/EX/${REF_TTL_SEC * 2}`, h)).json();
-  if (j.result === 'OK') return { enforced: true, ok: true };
-  const g = await (await fetch(`${url}/get/exitdoor:${ref}`, h)).json();
-  return { enforced: true, ok: g.result === mint };
-}
-
-// ---- Payment verification (same checks as @solana/pay validateTransfer) ----
-async function findAndValidate(reference) {
-  const sigs = await rpc('getSignaturesForAddress', [reference, { limit: 10, commitment: 'confirmed' }]);
-  if (!sigs || !sigs.length) return { status: 'pending' };
-  for (const s of sigs) {
-    if (s.err) continue;
-    const tx = await rpc('getTransaction', [s.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
-    if (!tx || tx.meta?.err) continue;
-    const keys = tx.transaction.message.accountKeys.map(k => k.pubkey || k);
-    if (!keys.includes(reference)) continue;
-    const sum = list => (list || []).reduce((t, b) =>
-      (b.mint === USDC_MINT && b.owner === WALLET) ? t + BigInt(b.uiTokenAmount.amount) : t, 0n);
-    const received = sum(tx.meta.postTokenBalances) - sum(tx.meta.preTokenBalances);
-    if (received >= BigInt(PRICE_USDC * 1e6)) return { status: 'ok', signature: s.signature, amount: Number(received) / 1e6 };
-    return { status: 'invalid', reason: 'A transaction with this reference was found, but it did not send 1 USDC to the Reality Check wallet.' };
-  }
-  return { status: 'pending' };
 }
 
 // ---- Report pieces. Every piece returns null/"unavailable" rather than guessing. ----
@@ -228,11 +191,16 @@ async function buildReport(mint) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
-  if (!process.env.RC_REF_SECRET) return res.status(200).json({ success: false, message: 'Exit Door is not configured yet. Free reports are unaffected.' });
+  res.setHeader('Cache-Control', 'no-store'); // paid reports and tokens must never be cached
   const { action, contract, txSignature } = req.body || {};
   const mint = String(contract || '').trim();
   if (!isSolAddr(mint)) return res.status(200).json({ success: false, message: 'Enter a Solana token mint address.' });
 
+  {
+    const hasTx = !!(txSignature || req.body?.txSignatures);
+    const bucket = hasTx ? ['verify', 30, 5000] : (action === 'report' || action === 'resume-code') ? ['poll', 300, 30000] : null;
+    if (bucket && await rateLimited(req, ...bucket)) { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ success: false, rateLimited: true, message: LIMIT_MSG }); }
+  }
   const ses = { sessionId: req.body?.sessionId, token: req.body?.token, claim: 'exit:' + coinKey('solana', mint) };
   const fail = (c) => res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
   const RISK = 'Public on-chain data only (Solana RPC, Jupiter quotes). Anything we could not read is marked unavailable. Not financial advice.';
