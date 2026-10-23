@@ -1,6 +1,48 @@
 {
   "items": [
     {
+      "id": "rcn-20261022-france-wrench",
+      "date": "Oct 22, 2026",
+      "category": "warning",
+      "title": "Masked men tie up French couple in 3am crypto home invasion",
+      "what": "Three masked men broke into a home in Mont-de-Marsan, France, at 3am on Oct 22, tied up a couple in their 60s, and demanded crypto — targeting the family through their son's crypto job. It is unclear if any coins moved. France logged 77 crypto-related kidnapping/unlawful-detention cases in the first half of 2026.",
+      "sources": [
+        {
+          "name": "Crypto-Economy",
+          "url": "https://crypto-economy.com/french-authorities-search-for-three-suspects-after-couple-tied-up-in-crypto-robbery/"
+        }
+      ],
+      "take": "Your privacy IS your security. Nobody should know you hold crypto — not neighbors, not social media, not strangers. Wrench attacks don't hack your wallet; they come for you."
+    },
+    {
+      "id": "rcn-20261022-chenzhi",
+      "date": "Oct 22, 2026",
+      "category": "justice",
+      "title": "Cambodia extradites alleged $15B scam kingpin Chen Zhi to China",
+      "what": "Cambodia extradited Chen Zhi, the alleged head of the Prince Group scam syndicate that lured trafficked workers into forced-labor camps to run crypto fraud, to China. The FBI seized ~$15B in Bitcoin linked to him last year. China says arrest warrants for key syndicate members are coming. Prince Group has consistently denied involvement.",
+      "sources": [
+        {
+          "name": "Gamblerss",
+          "url": "https://gamblerss.com/cambodia-extradites-crypto-scam-kingpin-to-china-53591"
+        }
+      ],
+      "take": "The biggest scam networks in crypto are built on human trafficking — real people forced to steal from you. When the money looks too easy, ask who is being hurt to make it."
+    },
+    {
+      "id": "rcn-20261022-qubic-restart",
+      "date": "Oct 22, 2026",
+      "category": "exploit",
+      "title": "Qubic restarts blockchain, opens recovery claims after $1.4M wallet drain",
+      "what": "Qubic restarted its blockchain after a seed-generation flaw let an attacker drain ~$1.4M from 1,404 wallets. Claims are open until May 1, 2027; 87% of stolen funds were frozen and MEXC froze the rest. Wallets predating v4.26.4 should be treated as compromised.",
+      "sources": [
+        {
+          "name": "CoinTelegraph",
+          "url": "https://cointelegraph.com/news/qubic-restarts-blockchain-opens-recovery-claims-after-14m-hack"
+        }
+      ],
+      "take": "This is the honesty pattern: freezes and claims beat promises. But the real lesson — if your wallet version is old, don't wait for someone to tell you it's compromised. Make a new one, move funds, never reuse the old."
+    },
+    {
       "id": "rcn-20261022-xrp-scam",
       "date": "Oct 22, 2026",
       "category": "scam",
