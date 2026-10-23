@@ -1131,7 +1131,7 @@ async function payWithSolana() {
   const connection = new sw.Connection(location.origin + '/api/sol-rpc', 'confirmed');
   const USDC_MINT = new sw.PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
   const TOKEN_PROGRAM_ID = new sw.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-  const ASSOC_PROGRAM_ID = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8j');
+  const ASSOC_PROGRAM_ID = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
   const rcWallet = new sw.PublicKey('DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk');
   const [userATA] = await sw.PublicKey.findProgramAddress(
     [userWallet.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), USDC_MINT.toBuffer()], ASSOC_PROGRAM_ID);
@@ -1150,13 +1150,13 @@ async function payWithSolana() {
         { pubkey: sw.SystemProgram.programId, isSigner: false, isWritable: false },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }
       ],
-      data: Buffer.alloc(0)
+      data: new Uint8Array(0)
     }));
   }
-  const data = Buffer.alloc(9);
+  const data = new Uint8Array(9); // no Node Buffer in browsers
   data[0] = 3;
   if (!rcSess.deep || !rcSess.deep.micro) throw new Error('Checkout not ready — tap Unlock again.');
-  data.writeBigUInt64LE(BigInt(rcSess.deep.micro), 1); // exact checkout amount (6 decimals)
+  new DataView(data.buffer).setBigUint64(1, BigInt(rcSess.deep.micro), true); // exact checkout amount (6 decimals)
   tx.add(new sw.TransactionInstruction({
     programId: TOKEN_PROGRAM_ID,
     keys: [
@@ -1493,19 +1493,19 @@ document.getElementById('exitPhantom').addEventListener('click', async function 
     const connection = new sw.Connection(location.origin + '/api/sol-rpc', 'confirmed');
     const MINT = new sw.PublicKey(exitReq.usdcMint);
     const TOKEN = new sw.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-    const ASSOC = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8j');
+    const ASSOC = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
     const rc = new sw.PublicKey(exitReq.recipient);
     const [fromAta] = await sw.PublicKey.findProgramAddress([user.toBuffer(), TOKEN.toBuffer(), MINT.toBuffer()], ASSOC);
     const [toAta] = await sw.PublicKey.findProgramAddress([rc.toBuffer(), TOKEN.toBuffer(), MINT.toBuffer()], ASSOC);
     const tx = new sw.Transaction();
     if (!(await connection.getAccountInfo(toAta))) {
-      tx.add(new sw.TransactionInstruction({ programId: ASSOC, data: Buffer.alloc(0), keys: [
+      tx.add(new sw.TransactionInstruction({ programId: ASSOC, data: new Uint8Array(0), keys: [
         { pubkey: user, isSigner: true, isWritable: true }, { pubkey: toAta, isSigner: false, isWritable: true },
         { pubkey: rc, isSigner: false, isWritable: false }, { pubkey: MINT, isSigner: false, isWritable: false },
         { pubkey: sw.SystemProgram.programId, isSigner: false, isWritable: false }, { pubkey: TOKEN, isSigner: false, isWritable: false }] }));
     }
     // transferChecked (12) with the Solana Pay reference as an extra read-only key
-    const data = Buffer.alloc(10); data[0] = 12; data.writeBigUInt64LE(BigInt(Math.round(exitReq.amount * 1000000)), 1); data[9] = 6;
+    const data = new Uint8Array(10); data[0] = 12; new DataView(data.buffer).setBigUint64(1, BigInt(Math.round(exitReq.amount * 1000000)), true); data[9] = 6;
     tx.add(new sw.TransactionInstruction({ programId: TOKEN, data, keys: [
       { pubkey: fromAta, isSigner: false, isWritable: true }, { pubkey: MINT, isSigner: false, isWritable: false },
       { pubkey: toAta, isSigner: false, isWritable: true }, { pubkey: user, isSigner: true, isWritable: false },
