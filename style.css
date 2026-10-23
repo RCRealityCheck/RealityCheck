@@ -382,3 +382,10 @@ a { color: var(--blue); }
 .full-sec p { margin: 6px 0; line-height: 1.6; }
 .full-sec .src { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
 .full-sec .na { color: var(--muted); }
+
+/* ---------- Fee notice + underpayment top-up ---------- */
+.pay-warn { margin: 10px 0 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,190,60,0.6); background: rgba(255,170,0,0.12); color: var(--text, #fff); font-size: 0.9rem; line-height: 1.5; }
+.pay-warn strong { color: #ffc94d; }
+.rc-topup { margin: 10px 0 12px; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,120,120,0.55); background: rgba(255,80,80,0.08); }
+.rc-short { margin-top: 0; }
+.rc-topup textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.8rem; padding: 10px; border-radius: 8px; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.35); color: inherit; margin: 6px 0 8px; resize: vertical; word-break: break-all; }

@@ -168,6 +168,7 @@
     <button type="button" class="btn btn-ghost btn-full" id="bundleAdd">Add this coin to my list</button>
     <div id="bundleList"></div>
     <div id="bundlePay" style="display:none">
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Make sure the Reality Check wallet <strong>RECEIVES</strong> the full amount ($1 per coin, e.g. $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send, so send a little extra.</div>
       <p class="pay-note">Total: <strong id="bundleTotal">0</strong> USDC ($1 × <span id="bundleCount">0</span> coins), paid once.</p>
       <a id="bundleLink" class="btn btn-primary btn-full" href="#">Open in your wallet (Solana USDC)</a>
       <div class="exit-qr" id="bundleQr"></div>
@@ -181,6 +182,12 @@
       <div class="exit-qr rc-addr-qr" data-qr="0xa214852e96a6d263a14DdA188Fd90395a733b5eA"></div>
       <div class="wallet-copy"><code>0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code><button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button></div>
       <input type="text" id="bundleTx" placeholder="Paste the FULL transaction ID" autocomplete="off">
+      <div class="rc-topup" id="bundleTopup" style="display:none">
+        <p class="pay-note rc-short" id="bundleShort"></p>
+        <label for="bundleTopupIds">Additional transaction ID(s) — one per line</label>
+        <textarea id="bundleTopupIds" rows="3" placeholder="Paste the FULL ID of your extra payment" autocomplete="off"></textarea>
+        <button type="button" class="btn btn-ghost btn-full rc-topup-add" data-for="bundleTopupIds">+ Add another transaction ID</button>
+      </div>
       <button type="button" class="btn btn-ghost btn-full" id="bundleVerify">Verify payment & show all reports</button>
       <p class="note">One payment unlocks this exact list only. Payments are verified on-chain.</p>
     </div>
@@ -189,6 +196,7 @@
   <div id="payPanel" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC — your chain, your choice</h3>
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Make sure the Reality Check wallet <strong>RECEIVES</strong> the full amount ($1 per coin, e.g. $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send, so send a little extra.</div>
       <label for="payChain">Payment chain</label>
       <select id="payChain">
         <option value="solana">Solana (cheapest)</option>
@@ -217,6 +225,12 @@
       </div>
       <label for="txSig">Paid by copying the address? Paste your transaction ID</label>
       <input type="text" id="txSig" placeholder="Paste the FULL hash from your wallet" autocomplete="off">
+      <div class="rc-topup" id="deepTopup" style="display:none">
+        <p class="pay-note rc-short" id="deepShort"></p>
+        <label for="deepTopupIds">Additional transaction ID(s) — one per line</label>
+        <textarea id="deepTopupIds" rows="3" placeholder="Paste the FULL ID of your extra payment" autocomplete="off"></textarea>
+        <button type="button" class="btn btn-ghost btn-full rc-topup-add" data-for="deepTopupIds">+ Add another transaction ID</button>
+      </div>
       <button type="button" class="btn btn-ghost btn-full" id="verifyPay">Verify manually & reveal DNA</button>
       <p class="note">Payments are verified on-chain, must be recent, and each payment unlocks one report.</p>
     </div>
@@ -244,6 +258,7 @@
   <div id="exitPay" style="display:none">
     <div class="report-card pay-card">
       <h3>Pay 1 USDC with Solana Pay</h3>
+      <div class="pay-warn" role="note"><strong>Important — fees may apply, even when you pay from a wallet.</strong> Make sure the Reality Check wallet <strong>RECEIVES</strong> the full amount ($1 per coin, e.g. $5 for 5 coins). Exchanges like Binance deduct withdrawal fees from what you send, so send a little extra.</div>
       <button type="button" class="btn btn-primary btn-full" id="exitPhantom" style="display:none">Pay with Phantom (this browser)</button>
       <a id="exitDeepLink" class="btn btn-primary btn-full" href="#">Open in your wallet</a>
       <p class="note"><strong>$1 = one report for one coin.</strong> Each coin needs its own payment.</p>
@@ -260,6 +275,12 @@
       <div class="wallet-copy"><code>0xa214852e96a6d263a14DdA188Fd90395a733b5eA</code><button type="button" class="btn btn-ghost copy-any" data-t="0xa214852e96a6d263a14DdA188Fd90395a733b5eA">Copy</button></div>
       <label for="exitTxSig">Paid by copying the address? Paste your transaction ID</label>
       <input type="text" id="exitTxSig" placeholder="Paste the FULL transaction ID from your wallet or exchange" autocomplete="off">
+      <div class="rc-topup" id="exitTopup" style="display:none">
+        <p class="pay-note rc-short" id="exitShort"></p>
+        <label for="exitTopupIds">Additional transaction ID(s) — one per line</label>
+        <textarea id="exitTopupIds" rows="3" placeholder="Paste the FULL ID of your extra payment" autocomplete="off"></textarea>
+        <button type="button" class="btn btn-ghost btn-full rc-topup-add" data-for="exitTopupIds">+ Add another transaction ID</button>
+      </div>
       <button type="button" class="btn btn-ghost btn-full" id="exitVerifyManual">Verify my payment and open Exit Door</button>
       <p class="note">Send at least 1 USDC. Payments from any wallet or exchange are checked on-chain. Each payment unlocks one report.</p>
       <p class="note" id="exitStatus">Waiting for payment… this page unlocks the report automatically.</p>
@@ -965,6 +986,24 @@ function rcRenderAddrQrs() {
     });
   }).catch(() => {});
 }
+// ---------- Underpayment top-up: combine several transaction IDs ----------
+function rcTxIds(mainId, p) {
+  const box = document.getElementById(p + 'Topup');
+  const extra = box && box.style.display !== 'none' ? document.getElementById(p + 'TopupIds').value : '';
+  return (document.getElementById(mainId).value + '\n' + extra).split(/[\s,]+/).map(x => x.trim()).filter(Boolean);
+}
+function rcShowShort(p, sf) {
+  const box = document.getElementById(p + 'Topup'); if (!box) return;
+  if (!sf) return;
+  document.getElementById(p + 'Short').innerHTML = `<strong>Received:</strong> ${esc(String(sf.received))} USDC · <strong>Required:</strong> ${esc(String(sf.required))} USDC · <strong>Short:</strong> ${esc(String(sf.short))} USDC<br>Send at least the shortfall (plus a little extra for fees) to the same address, then paste that transaction ID below and verify again. All IDs are checked and counted together — each can only be used once.`;
+  box.style.display = 'block';
+}
+document.addEventListener('click', function (e) {
+  const b = e.target.closest && e.target.closest('.rc-topup-add'); if (!b) return;
+  const ta = document.getElementById(b.getAttribute('data-for'));
+  if (ta.value && !/\n$/.test(ta.value)) ta.value += '\n';
+  ta.rows = Math.min(8, (ta.value.match(/\n/g) || []).length + 2); ta.focus();
+});
 // ---------- One-click wallet pay (no copy-paste) ----------
 document.getElementById('payChain').addEventListener('change', function () {
   document.getElementById('oneClickPay').textContent = this.value === 'solana' ? 'Pay 1 USDC with Phantom' : 'Pay 1 USDC with wallet';
@@ -1095,7 +1134,7 @@ async function runDeepReport(autoDetect) {
     const res = await fetch(location.origin + '/api/deep-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contract, chain, payChain, txSignature })
+      body: JSON.stringify(Object.assign({ contract, chain, payChain, txSignature }, (() => { const ids = rcTxIds('txSig', 'deep'); return ids.length > 1 ? { txSignatures: ids } : {}; })()))
     });
     const data = await res.json();
     if (data.success) {
@@ -1134,6 +1173,7 @@ async function runDeepReport(autoDetect) {
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else {
       resultDiv.innerHTML = `<div class="report-card"><p>${esc(data.message || 'Could not unlock the deep report.')}</p></div>`;
+      rcShowShort('deep', data.shortfall);
     }
   } catch (err) {
     resultDiv.innerHTML = '<div class="report-card"><p>Error reaching the server. Please try again.</p></div>';
@@ -1193,12 +1233,12 @@ async function bundleRefresh() {
 async function bundleCheck(manual) {
   if (!bundleReq) return;
   const body = { action: 'bundle-report', coins: bundleCoins };
-  if (manual) { const tx = document.getElementById('bundleTx').value.trim(); if (!tx) return; body.txSignature = tx; }
+  if (manual) { const tx = document.getElementById('bundleTx').value.trim(); if (!tx) return; body.txSignature = tx; const ids = rcTxIds('bundleTx', 'bundle'); if (ids.length > 1) body.txSignatures = ids; }
   else Object.assign(body, { reference: bundleReq.reference, exp: bundleReq.exp, sig: bundleReq.sig });
   const out = document.getElementById('bundleResult');
   if (manual) out.innerHTML = '<div class="loader"><span class="spin"></span> Verifying your payment, then building every report...</div>';
   let d; try { d = await deepApi(body); } catch { return; }
-  if (!d.success) { if (manual || !d.pending) { if (manual) out.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; } return; }
+  if (!d.success) { if (manual || !d.pending) { if (manual) { out.innerHTML = `<p class="note">${esc(d.message || '')}</p>`; rcShowShort('bundle', d.shortfall); } } return; }
   if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; }
   document.getElementById('bundlePay').style.display = 'none';
   out.innerHTML = `<p class="note">Payment verified: ${esc(String(d.paid.amount))} USDC${d.paid.chain ? ' on ' + esc(d.paid.chain) : ''}. Thank you — this builds Reality Check.</p>` +
@@ -1349,10 +1389,11 @@ document.getElementById('exitVerifyManual').addEventListener('click', async func
   if (!tx) { status.textContent = 'Paste your transaction ID first.'; return; }
   const btn = this; btn.disabled = true; status.textContent = 'Checking your payment on-chain…';
   let d;
-  try { d = await exitApi({ action: 'manual', contract: mint, txSignature: tx }); }
+  const exitIds = rcTxIds('exitTxSig', 'exit');
+  try { d = await exitApi(Object.assign({ action: 'manual', contract: mint, txSignature: tx }, exitIds.length > 1 ? { txSignatures: exitIds } : {})); }
   catch { d = { success: false, message: 'Could not reach the server. Please try again in a minute.' }; }
   btn.disabled = false;
-  if (!d || !d.success) { status.textContent = (d && d.message) || 'Could not verify that payment. Please try again in a minute.'; return; }
+  if (!d || !d.success) { status.textContent = (d && d.message) || 'Could not verify that payment. Please try again in a minute.'; rcShowShort('exit', d && d.shortfall); return; }
   if (exitTimer) clearInterval(exitTimer);
   document.getElementById('exitPay').style.display = 'none';
   renderExitDoor(d);
