@@ -1,6 +1,48 @@
 {
   "items": [
     {
+      "id": "rcn-20261023-railway-breach",
+      "date": "Oct 23, 2026",
+      "category": "warning",
+      "title": "Railway breach linked to ~$371K crypto theft across 19 blockchains",
+      "what": "Cloud platform Railway suffered a security breach — a blockchain investigator says about $371,000 in crypto was drained across 19 blockchains via wallet sweeper scripts. Railway is urging users to reset credentials and says its investigation is ongoing.",
+      "sources": [
+        {
+          "name": "AltcoinDaily",
+          "url": "https://altcoindaily.co/railway-breach-linked-to-371000-crypto-theft-spanning-19-blockchains/"
+        }
+      ],
+      "take": "Never store wallet keys in cloud env vars. If your project uses Railway, check your keys now — not tomorrow."
+    },
+    {
+      "id": "rcn-20261023-michigan-arrest",
+      "date": "Oct 23, 2026",
+      "category": "justice",
+      "title": "Michigan police arrest man in alleged $665K Bitcoin scam",
+      "what": "Michigan police arrested a man accused of stealing $665,000 in a fake Bitcoin scheme. The victim handed him over $500,000 in cash at one meeting, then mailed $165,000 more. He faces up to 10 years.",
+      "sources": [
+        {
+          "name": "CryptoNews",
+          "url": "https://cryptonews.net/news/security/33632548/"
+        }
+      ],
+      "take": "Never hand cash to a stranger — no matter how convincing the story. Real Bitcoin deals don't happen in parking lots."
+    },
+    {
+      "id": "rcn-20261023-ngrave-hijack",
+      "date": "Oct 23, 2026",
+      "category": "scam",
+      "title": "Hackers hijack Ngrave's own alert system to steal $2.56M",
+      "what": "Hackers hijacked hardware wallet maker Ngrave's own alert system, sending fake 'Moscow login' warnings to users. Panicked customers typed their 24-word recovery phrases into a phishing site — about $2.56M drained from 70 wallets in minutes. The CEO admitted the company 'utterly failed.'",
+      "sources": [
+        {
+          "name": "TheBitGazette",
+          "url": "https://thebitgazette.com/hackers-hijacked-ngraves-own-alert-system-to-steal-2-56-million-from-70-wallets-and-the-ceo-says-the-company-utterly-failed/"
+        }
+      ],
+      "take": "No legitimate alert EVER asks for your seed phrase. Not from your wallet maker, not from anyone. Panic is the phisher's best tool."
+    },
+    {
       "id": "rcn-20261022-kimchi",
       "date": "Oct 22, 2026",
       "category": "rug-pull",
