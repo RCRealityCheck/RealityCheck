@@ -45,7 +45,7 @@ async function verifySol(sig, price, maxAge) {
   const received = sum(tx.meta?.postTokenBalances, true) - sum(tx.meta?.preTokenBalances, true);
   if (received <= 0n) return { status: 'invalid', reason: MSG.wrongAddress };
   if (received < BigInt(Math.round(price * 1e6))) return { status: 'invalid', reason: MSG.wrongAmount(price) };
-  return { status: 'ok', chain: 'Solana', amount: Number(received) / 1e6 };
+  return { status: 'ok', chain: 'Solana', amount: Number(received) / 1e6, micro: Number(received), blockTime: tx.blockTime };
 }
 
 async function evmRpc(cfg, method, params) {
@@ -77,7 +77,7 @@ async function verifyEvm(cfg, sig, price, maxAge) {
   if (total === 0n) return { status: 'invalid', reason: MSG.wrongAddress };
   const unit = 10n ** BigInt(decimals);
   if (total * 100n < BigInt(Math.round(price * 100)) * unit) return { status: 'invalid', reason: MSG.wrongAmount(price) };
-  return { status: 'ok', chain: cfg.label, amount: Number(total) / Number(unit) };
+  return { status: 'ok', chain: cfg.label, amount: Number(total) / Number(unit), micro: Number(total * 1000000n / unit), blockTime: bt };
 }
 
 export async function verifyManualTx(raw, { price = 1, maxAgeSec = manualMaxAge() } = {}) {
@@ -101,7 +101,7 @@ export function oneTimeEnforced() { return !!(process.env.KV_REST_API_URL && pro
 
 // $1 = one report for ONE coin. Each tx is stored with the coin it unlocked (e.g. "solana:<mint>").
 // Same tx + same coin -> may re-show that coin's report; same tx + any other coin -> blocked forever.
-const txKey = (raw) => { const id = String(raw).trim(); return /^0x/i.test(id) ? id.toLowerCase() : id; };
+export const txKey = (raw) => { const id = String(raw).trim(); return /^0x/i.test(id) ? id.toLowerCase() : id; };
 export const coinKey = (chain, contract) => { const c = String(contract || '').trim(); return `${String(chain || '').toLowerCase()}:${/^0x/i.test(c) ? c.toLowerCase() : c}`; };
 const kv = async (path) => { const r = await fetch(`${process.env.KV_REST_API_URL}/${path}`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) }); return r.json(); };
 

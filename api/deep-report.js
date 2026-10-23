@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { solDeep, deployerFacts } from './_sol-deep.js';
-import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG, parseTxList, combineAndClaim, measureShort, shortfallMsg } from './_manual-pay.js';
+import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
+import { createSession, claimSession } from './_checkout.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -35,6 +36,7 @@ async function fullOnly(res, address, chain, paidChainLabel, paidAmount, why) {
     riskNote: 'Public data only. Not financial advice. Never invest more than you can afford to lose.'
   });
 }
+const deepClaim = (chain, contract) => { let c = String(contract || '').trim(); if (chain !== 'solana-mainnet') { c = c.toLowerCase(); if (!c.startsWith('0x')) c = '0x' + c; } return 'deep:' + coinKey(chain, c); };
 const NOPAY = (why) => `We can't build a full report for this coin yet: ${why} No payment needed — try another coin.`;
 async function single(req, res, opts = {}) {
   const PRICE = opts.price || 1;
@@ -50,18 +52,18 @@ async function single(req, res, opts = {}) {
   let paidAmount = opts.pre ? 1 : 0;
   let paidChainLabel = opts.pre ? opts.pre.chain : '';
   if (!opts.pre) {
-  if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your USDC payment transaction hash to unlock the deep report.' });
   if (chain === 'solana-mainnet' && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(contract).trim())) {
     return res.status(200).json({ success: false, message: 'That does not look like a Solana mint address. Double-check it before paying — no payment was taken.' });
   }
-  const multiIds = parseTxList(req.body?.txSignatures);
-  if (multiIds.length > 1) {
-    // Top-up: several payments combined to reach the price (all verified, all claimed together or none).
-    const c = await combineAndClaim(multiIds, PRICE, opts.claim || coinKey(chain, contract));
-    if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, pending: !!c.pending });
+  if (!opts.trusted) {
+    // Manual / one-click payments: only a checkout session (token held by this browser) + exact amount can unlock.
+    const c = await claimSession({ sessionId: req.body?.sessionId, token: req.body?.token, claim: opts.claim || deepClaim(chain, contract), txIds: req.body?.txSignatures || txSignature });
+    if (!c.ok) return res.status(200).json({ success: false, message: c.message, shortfall: c.shortfall, overpaid: c.overpaid, needCheckout: !!c.needCheckout, pending: !!c.pending });
     paidAmount = c.amount; paidChainLabel = c.chain;
-    if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, amount: paidAmount, chain: paidChainLabel });
+    if (opts.verifyOnly) return res.status(200).json({ success: true, verified: true, reshow: !!c.reshow, amount: paidAmount, chain: paidChainLabel });
   } else {
+  // Trusted path: Solana Pay reference flow (bundle), already authorised by the HMAC-signed reference.
+  if (!txSignature) return res.status(200).json({ success: false, message: 'Paste your USDC payment transaction hash to unlock the deep report.' });
 
   const RC_SOL = 'DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk';
   const RC_EVM = '0xa214852e96a6d263a14DdA188Fd90395a733b5eA';
@@ -188,8 +190,6 @@ async function single(req, res, opts = {}) {
     v = { status: 'invalid', reason: "That doesn't look like a complete transaction hash. Copy the FULL hash from your wallet app — it's a long string (starts with 0x on EVM chains)." };
   }
   if (!v || v.status !== 'ok') {
-    const sf = await measureShort(sig, PRICE);
-    if (sf) return res.status(200).json({ success: false, shortfall: sf, message: shortfallMsg(sf) });
     return res.status(200).json({ success: false, message: v?.reason || 'Payment could not be verified.' });
   }
   paidAmount = v.amount;
@@ -524,9 +524,16 @@ async function bundle(req, res) {
     return res.status(200).json({ success: true, count: N, totalUsdc: N, reference: ref, exp: e, sig: bsign(ref, lk, e, N), recipient: RC_SOL_W, url: `solana:${RC_SOL_W}?${p.toString()}` });
   }
   if (action !== 'bundle-report') return res.status(400).json({ success: false, message: 'Unknown action' });
-  let paySig = txSignature ? String(txSignature).trim() : '';
+  if (req.body?.sessionId || txSignature) {
+    // Manual pay for a bundle: checkout session + exact amount (tx ID alone never unlocks).
+    const v = await call(single, { contract: list[0].contract, chain: list[0].chain, txSignature, txSignatures: req.body?.txSignatures, sessionId: req.body?.sessionId, token: req.body?.token }, { price: N, claim: 'deepbundle:' + lk, verifyOnly: true });
+    if (!v.success) return res.status(200).json(v);
+    const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
+    return res.status(200).json({ success: true, reshow: !!v.reshow, paid: { amount: v.amount, chain: v.chain }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
+  }
+  let paySig = '';
   let pc = payChain || 'auto';
-  if (!paySig) {
+  {
     if (!reference || !exp || !sig) return res.status(200).json({ success: false, message: 'Missing payment reference.' });
     const expected = bsign(String(reference), lk, Number(exp), N);
     if (String(sig).length !== expected.length || !crypto.timingSafeEqual(Buffer.from(String(sig)), Buffer.from(expected))) return res.status(200).json({ success: false, message: 'This payment request does not match this list of coins.' });
@@ -535,16 +542,33 @@ async function bundle(req, res) {
     if (!sigs || !sigs.length) return res.status(200).json({ success: false, pending: true, message: 'Waiting for your payment to confirm on Solana…' });
     paySig = sigs[sigs.length - 1].signature; pc = 'solana';
   }
-  const vb = { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig };
-  if (txSignature && req.body?.txSignatures) vb.txSignatures = req.body.txSignatures;
-  const v = await call(single, vb, { price: N, claim: lk, verifyOnly: true });
-  if (!v.success) return res.status(200).json({ success: false, shortfall: v.shortfall, pending: !!v.pending, message: (v.message || 'Payment could not be verified.') + (N > 1 && !v.shortfall && !vb.txSignatures ? ` This list needs ${N} USDC in one payment.` : '') });
+  const v = await call(single, { contract: list[0].contract, chain: list[0].chain, payChain: pc, txSignature: paySig }, { price: N, claim: lk, verifyOnly: true, trusted: true });
+  if (!v.success) return res.status(200).json({ success: false, message: (v.message || 'Payment could not be verified.') + (N > 1 ? ` This list needs ${N} USDC in one payment.` : '') });
   const reports = await Promise.all(list.map(c => call(single, { contract: c.contract, chain: c.chain }, { pre: { chain: v.chain } })));
   return res.status(200).json({ success: true, paid: { amount: v.amount, chain: v.chain, signature: paySig }, reports: reports.map((r, i) => ({ contract: list[i].contract, chain: list[i].chain, ...r })) });
+}
+async function checkout(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const b = req.body || {};
+  const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  let claim, price;
+  if (b.kind === 'bundle') {
+    const list = normList(b.coins);
+    if (!list) return res.status(200).json({ success: false, message: 'Add 1 to 5 different coins (address + chain) to your list.' });
+    claim = 'deepbundle:' + listKey(list); price = list.length;
+  } else {
+    const chain = String(b.chain || ''), c = String(b.contract || '').trim();
+    const okAddr = chain === 'solana-mainnet' ? /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(c) : /^(0x)?[a-fA-F0-9]{40}$/.test(c);
+    if (!chain || !okAddr) return res.status(200).json({ success: false, message: 'Enter a valid contract address first. No payment was taken.' });
+    claim = deepClaim(chain, c); price = 1;
+  }
+  const s = await createSession({ claim, price, ip, prevId: b.sessionId, prevToken: b.token });
+  return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, message: s.message });
 }
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
   const a = req.body?.action;
   if (a === 'bundle-precheck' || a === 'bundle-request' || a === 'bundle-report') return bundle(req, res);
+  if (a === 'checkout') return checkout(req, res);
   return single(req, res);
 }
