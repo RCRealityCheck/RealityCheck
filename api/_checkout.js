@@ -57,6 +57,8 @@ async function authed(kv, { sessionId, token, claim }) {
   if (!s) return { err: { ok: false, needCheckout: true, message: 'This checkout was not found or has expired. Start a new checkout on this page. If you already paid: ' + HELP } };
   if (!tokenOk(s, token)) return { err: { ok: false, message: 'This payment can only be verified from the browser that started this checkout. If you paid but lost that page or browser: ' + HELP } };
   if (s.claim !== claim) return { err: { ok: false, message: 'This checkout was opened for a different coin or list. Open the payment screen for this coin to get its own checkout.' } };
+  // Defence in depth: a bundle session must have been priced for exactly as many coins as its list holds.
+  if (String(claim).startsWith('deepbundle:') && Number(s.price) !== String(claim).slice('deepbundle:bundle:'.length).split(',').length) return { err: { ok: false, message: 'This checkout does not match this list of coins. Open the payment screen again for this list.' } };
   if (s.status === 'replaced') return { err: { ok: false, needCheckout: true, message: 'This checkout was replaced by a newer one in this browser. Reload the payment screen.' } };
   return { s };
 }
@@ -103,6 +105,7 @@ export async function createSession({ claim, price, ip, prevId, prevToken, meta 
     const s = { id, th: sha(token), claim, price, micro, created: t, since: prev ? Math.min(prev.since || prev.created, t) : t, exp: t + ttl, status: 'open', alt, ...(meta ? { meta } : {}) };
     await kv(['SET', `rc:sess:${id}`, JSON.stringify(s), 'EX', hold]);
     try { await kv(['SADD', `rc:claimidx:${claim}`, id]); await kv(['EXPIRE', `rc:claimidx:${claim}`, hold]); } catch {}
+    try { await kv(['SADD', 'rc:openall', id]); await kv(['EXPIRE', 'rc:openall', hold]); } catch {}
     return { ok: true, ...pub(s, token) };
   } catch { return { ok: false, busy: true, message: BUSY }; }
 }
@@ -147,18 +150,23 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
       if (owners.some(o => o != null && o !== s.id)) return { ok: false, message: 'That payment exactly matches a different checkout\'s amount, so it cannot unlock this one. Nothing was claimed. If it is yours: ' + HELP };
       // ... and must not be ambiguous: another open, unpaid checkout for the same report opened before the payment.
       const firstTx = Math.min(...vs.map(v => v.blockTime));
-      let others = []; try { others = (await kv(['SMEMBERS', `rc:claimidx:${s.claim}`])) || []; } catch {}
+      // H2: ANY other open checkout (any coin or product) opened before the payment makes it ambiguous -> hold.
+      // Only auto-unlock when this was the only open checkout. Store unreachable / too many to scan -> hold (safe).
+      let others = null; try { others = await kv(['SMEMBERS', 'rc:openall']); } catch {}
       const rivals = [];
-      for (const oid of others) {
+      if (!Array.isArray(others) || others.length > 300) rivals.push('unknown');
+      else for (const oid of others) {
         if (oid === s.id) continue;
         const o = await loadSession(kv, oid);
-        if (o && o.status === 'open' && t <= o.exp + CLAIM_GRACE && (o.since || o.created) - 30 <= firstTx) rivals.push(oid);
+        const live = o && o.status === 'open' && t <= o.exp + CLAIM_GRACE;
+        if (!live) { try { await kv(['SREM', 'rc:openall', oid]); } catch {} continue; }
+        if ((o.since || o.created) - 30 <= firstTx) rivals.push(oid);
       }
       if (rivals.length) {
         // Hold every tx so nobody (neither checkout) can claim it until the owner decides.
         for (const k of keys) { try { await kv(['SET', `rc:paidtx:${encodeURIComponent(k)}`, `held:${s.id}`, 'NX', 'EX', PAID_KEEP]); } catch {} }
         try { await kv(['LPUSH', 'rc:held', JSON.stringify({ t, txs: ids, claim: s.claim, meta: s.meta || null, amount: fmt(sum), chain: [...new Set(vs.map(v => v.chain))].join(' + '), claimedBy: s.id, rivals })]); await kv(['LTRIM', 'rc:held', 0, 499]); } catch {}
-        return { ok: false, held: true, message: `We received ${fmt(sum)} USDC, but another checkout for this same report was also open, so we can't tell automatically whose payment this is. It is held safely — nobody can use it. ${HELP} (Sending the exact suggested amount avoids this.)` };
+        return { ok: false, held: true, message: `We received ${fmt(sum)} USDC, but another checkout was also open at that time, so we can't tell automatically whose payment this is. It is held safely — nobody can use it. ${HELP} (Sending the exact suggested amount avoids this.)` };
       }
     }
     const done = [];
@@ -168,6 +176,7 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
       if ((await kv(['SET', `rc:sess:${s.id}`, JSON.stringify(paid), 'XX', 'EX', PAID_KEEP])) !== 'OK') throw new Error('sess');
       await releaseAmount(kv, s, 0);
       try { await kv(['SREM', `rc:claimidx:${s.claim}`, s.id]); } catch {}
+      try { await kv(['SREM', 'rc:openall', s.id]); } catch {}
       return { ok: true, amount: sum / 1e6, chain: paid.chain, ids, tagged };
     } catch (e) {
       for (const k of done) { try { if ((await kv(['GET', `rc:paidtx:${encodeURIComponent(k)}`])) === `sess:${s.id}`) await kv(['DEL', `rc:paidtx:${encodeURIComponent(k)}`]); } catch {} }
@@ -255,5 +264,18 @@ export async function adminGrant({ claim, price, meta, note, txIds }, deps = {})
   const code = crypto.randomBytes(18).toString('base64url');
   await kv(['SET', `rc:code:${code}`, JSON.stringify({ type: 'grant', id }), 'EX', GRANT_TTL]);
   return { ok: true, sessionId: id, code };
+}
+
+// Light rate limits for payment-check / token endpoints (per IP + global). Fails open if the store is down.
+export const LIMIT_MSG = 'Too many checks from this connection. Please wait a few minutes and try again. Nothing was charged.';
+export async function rateLimited(req, bucket, perIp, globalMax, winSec = 600, deps = {}) {
+  const { kv, enabled: on } = D(deps); if (!on) return false;
+  const ip = String(req?.headers?.['x-vercel-forwarded-for'] || req?.headers?.['x-real-ip'] || req?.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  const w = Math.floor(Date.now() / 1000 / winSec);
+  const hit = async (k, max) => { const n = await kv(['INCR', k]); if (n === 1) await kv(['EXPIRE', k, winSec + 5]); return n > max; };
+  try {
+    if (await hit(`rc:rl:${bucket}:all:${w}`, globalMax)) return true;
+    return await hit(`rc:rl:${bucket}:${crypto.createHash('sha256').update(ip).digest('hex').slice(0, 20)}:${w}`, perIp);
+  } catch { return false; }
 }
 export const sessionSummary = (s) => s && ({ sessionId: s.id, claim: s.claim, meta: s.meta || null, status: s.status, amount: fmt(s.micro), minimum: s.price, tagged: s.tagged ?? null, created: s.created, exp: s.exp, paidAt: s.paidAt || null, paid: s.paidMicro ? fmt(s.paidMicro) : null, chain: s.chain || null, txs: s.txs || [], granted: !!s.granted, note: s.note || '', hasReference: !!s.ref, replacedBy: s.replacedBy || null });

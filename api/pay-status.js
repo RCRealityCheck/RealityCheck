@@ -1,36 +1,10 @@
-// Read-only health check for one-time-use payments. Never returns secret values.
-import crypto from 'crypto';
-import { claimTx, oneTimeEnforced, manualMaxAge } from './_manual-pay.js';
-import { createSession, claimSession, makeCode, redeemCode } from './_checkout.js';
+// Public read-only health ping. No writes, no secrets. (Full self-tests run only from the admin page.)
+import { oneTimeEnforced, manualMaxAge } from './_manual-pay.js';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const out = { oneTimeEnforced: oneTimeEnforced(), manualMaxAgeSec: manualMaxAge(), storeReachable: false, selfTest: null };
-  if (!out.oneTimeEnforced) return res.status(200).json(out);
-  const kv = async (p) => (await fetch(`${process.env.KV_REST_API_URL}/${p}`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) })).json();
-  try { out.storeReachable = (await kv('ping')).result === 'PONG'; } catch {}
-  if (out.storeReachable) {
-    const id = 'selftest-' + crypto.randomBytes(8).toString('hex');
-    try {
-      const a1 = await claimTx(id, 'test:coinA'), a2 = await claimTx(id, 'test:coinA'), b = await claimTx(id, 'test:coinB');
-      out.selfTest = { firstUseAllowed: a1.ok === true, sameCoinReshow: a2.ok === true && a2.reshow === true, otherCoinBlocked: b.ok === false };
-    } catch { out.selfTest = { error: true }; }
-    try { await kv(`del/rc:paidtx:${id}`); } catch {}
-    // Checkout sessions: unique amount reserved, tx ID without token rejected, wrong token rejected.
-    let ck = null;
-    try {
-      const claim = 'selftest:' + id;
-      const a = await createSession({ claim, price: 9 }), b = await createSession({ claim, price: 9 });
-      const noTok = await claimSession({ claim, txIds: ['x'] });
-      const badTok = a.ok ? await claimSession({ sessionId: a.sessionId, token: 'wrong', claim, txIds: ['x'] }) : { ok: true };
-      const wrongCoin = a.ok ? await claimSession({ sessionId: a.sessionId, token: a.token, claim: claim + 'x', txIds: ['x'] }) : { ok: true };
-      ck = { created: !!(a.ok && b.ok), uniqueAmounts: !!(a.ok && b.ok && a.micro !== b.micro), txWithoutTokenRejected: noTok.ok === false, wrongTokenRejected: badTok.ok === false, wrongCoinRejected: wrongCoin.ok === false };
-      const code = a.ok ? await makeCode('resume', { sessionId: a.sessionId, token: a.token, claim }) : { ok: false };
-      const r1 = code.ok ? await redeemCode(code.code) : { ok: false }, r2 = code.ok ? await redeemCode(code.code) : { ok: true };
-      const oldTok = a.ok ? await claimSession({ sessionId: a.sessionId, token: a.token, claim, txIds: ['x'] }) : { ok: true };
-      Object.assign(ck, { resumeCodeWorksOnce: !!(r1.ok && r1.token && r2.ok === false), oldTokenInvalidAfterResume: oldTok.ok === false && /browser/.test(oldTok.message || '') });
-      for (const x of [a, b]) if (x.ok) { try { await kv(`del/rc:sess:${x.sessionId}`); await kv(`del/rc:amt:${x.micro}`); } catch {} }
-    } catch { ck = { error: true }; }
-    out.checkoutSelfTest = ck;
+  const out = { oneTimeEnforced: oneTimeEnforced(), manualMaxAgeSec: manualMaxAge(), storeReachable: false };
+  if (out.oneTimeEnforced) {
+    try { out.storeReachable = (await (await fetch(`${process.env.KV_REST_API_URL}/ping`, { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }, signal: AbortSignal.timeout(8000) })).json()).result === 'PONG'; } catch {}
   }
   return res.status(200).json(out);
 }

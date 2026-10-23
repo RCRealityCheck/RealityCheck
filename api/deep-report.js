@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { solDeep, deployerFacts } from './_sol-deep.js';
-import { claimTx, isTxUsed, coinKey, manualMaxAge, MSG } from './_manual-pay.js';
-import { createSession, claimSession, sessionRef, claimByReference, redeemCode } from './_checkout.js';
+import { coinKey, manualMaxAge, MSG } from './_manual-pay.js';
+import { createSession, claimSession, sessionRef, claimByReference, redeemCode, rateLimited, LIMIT_MSG } from './_checkout.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -351,19 +351,21 @@ const call = (fn, body, opts) => new Promise((resolve) => {
   const r = { status() { return r; }, json(j) { resolve(j); return r; }, send(x) { resolve({ success: false, message: String(x) }); return r; } };
   Promise.resolve(fn({ method: 'POST', body }, r, opts)).catch(() => resolve({ success: false, message: 'This report failed to load (data provider error).' }));
 });
+export const DEEP_CHAINS = ['solana-mainnet', 'eth-mainnet', 'bsc-mainnet', 'avalanche-mainnet', 'base-mainnet', 'polygon-mainnet', 'arbitrum-mainnet'];
 export function normList(coins) {
   if (!Array.isArray(coins) || coins.length < 1 || coins.length > 5) return null;
   const out = []; const seen = new Set();
   for (const c of coins) {
+    // Strict: allow-listed chain + a real address only (no separators can be smuggled into the list key).
     const chain = String(c?.chain || ''); let contract = String(c?.contract || '').trim();
-    if (!chain || !contract) return null;
-    if (chain !== 'solana-mainnet') contract = contract.toLowerCase();
+    if (!DEEP_CHAINS.includes(chain)) return null;
+    if (chain === 'solana-mainnet') { if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(contract)) return null; }
+    else { if (!/^(0x)?[a-fA-F0-9]{40}$/.test(contract)) return null; contract = '0x' + contract.replace(/^0x/i, '').toLowerCase(); }
     const k = coinKey(chain, contract); if (seen.has(k)) return null; seen.add(k); out.push({ chain, contract, k });
   }
   return out;
 }
 export const listKey = (list) => 'bundle:' + list.map(x => x.k).sort().join(',');
-const bsign = (ref, lk, exp, n) => crypto.createHmac('sha256', process.env.RC_REF_SECRET).update(`deepbundle|${ref}|${lk}|${exp}|${n}|${RC_SOL_W}`).digest('hex');
 async function precheckOne(host, c) {
   if (c.chain === 'solana-mainnet') return call(single, { contract: c.contract, chain: c.chain, precheck: true });
   try {
@@ -378,7 +380,7 @@ async function bundle(req, res) {
   if (!list) return res.status(200).json({ success: false, message: 'Add 1 to 5 different coins (address + chain) to your list.' });
   const N = list.length, lk = listKey(list);
   const ses = { sessionId: req.body?.sessionId, token: req.body?.token, claim: 'deepbundle:' + lk };
-  const host = req.headers?.host || 'www.realitycheckglobal.trade';
+  const host = 'www.realitycheckglobal.trade'; // fixed: never trust the Host header for server-side fetches
   if (action === 'bundle-precheck' || action === 'bundle-request') {
     const results = await Promise.all(list.map(c => precheckOne(host, c)));
     const failed = results.map((r, i) => r.success ? null : { index: i, contract: list[i].contract, chain: list[i].chain, message: r.message || NOPAY('no data.') }).filter(Boolean);
@@ -428,7 +430,12 @@ async function checkout(req, res) {
 }
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Use POST' });
+  res.setHeader('Cache-Control', 'no-store'); // paid reports and tokens must never be cached
   const a = req.body?.action;
+  // Light rate limits: tx checks, payment polls and code redemptions (generous enough for normal polling).
+  const hasTx = !!(req.body?.txSignature || req.body?.txSignatures);
+  const bucket = a === 'redeem' ? ['redeem', 20, 2000] : hasTx ? ['verify', 30, 5000] : (a === 'bundle-report' || a === 'bundle-request') ? ['poll', 300, 30000] : null;
+  if (bucket && await rateLimited(req, ...bucket)) { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ success: false, rateLimited: true, message: LIMIT_MSG }); }
   if (a === 'bundle-precheck' || a === 'bundle-request' || a === 'bundle-report') return bundle(req, res);
   if (a === 'checkout') return checkout(req, res);
   if (a === 'redeem') {
