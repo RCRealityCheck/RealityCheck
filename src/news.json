@@ -1,6 +1,48 @@
 {
   "items": [
     {
+      "id": "rcn-20261022-kimchi",
+      "date": "Oct 22, 2026",
+      "category": "rug-pull",
+      "title": "Copycat 'kimchi' memecoin crashes $15M to $150K within an hour",
+      "what": "A new token linked to influencer Kimchi surged to a ~$15M market cap overnight, then crashed to ~$150K within minutes. Kimchi deleted his promo post (it had a QR code) and Pump.fun founder alon pulled his retweet. Kimchi's own token fell 49% in 24h.",
+      "sources": [
+        {
+          "name": "KuCoin News",
+          "url": "https://www.kucoin.com/news/flash/kimchi-token-plummets-49-amid-rug-pull-of-new-clone-project"
+        }
+      ],
+      "take": "If the promoter deletes the post, that IS the signal. When the hype man goes quiet, the exit already happened."
+    },
+    {
+      "id": "rcn-20261022-liquid",
+      "date": "Oct 22, 2026",
+      "category": "victory",
+      "title": "Liquid Network back online — recovery from $320M hack enters final phase",
+      "what": "Liquid Network says its recovery from September's ~$320M exploit is in its final stages — the network is running again and LBTC-to-bitcoin swaps are fully restored. ~600 BTC (~$50M) remains with the attackers, who kept a 10% bounty; whether holders face a haircut is unresolved.",
+      "sources": [
+        {
+          "name": "CryptoWatchDaily",
+          "url": "https://cryptowatchdaily.com/news/liquid-network-hack-recovery-final-stages/"
+        }
+      ],
+      "take": "Progress, not perfection. A network that rebuilds in public earns more trust than one that pretends nothing happened."
+    },
+    {
+      "id": "rcn-20261022-hnut",
+      "date": "Oct 22, 2026",
+      "category": "rug-pull",
+      "title": "Solana memecoin HNUT loses 99%+ after hitting $71M market cap",
+      "what": "HNUT was briefly the third most traded token on Solana after a 700% surge to a $70.94M market cap. Then the price fell from $0.07 to below $0.0003 — over 99% gone. On-chain trackers flagged abnormal liquidity movements as it happened.",
+      "sources": [
+        {
+          "name": "BitRSS",
+          "url": "https://bitrss.com/beware-major-rug-pull-scam-alert-on-an-altcoin-price-plummets-to-nearly-zero-167809"
+        }
+      ],
+      "take": "Volume hype is the product being sold. Reality check first, wallet later."
+    },
+    {
       "id": "rcn-20261022-france-wrench",
       "date": "Oct 22, 2026",
       "category": "warning",
