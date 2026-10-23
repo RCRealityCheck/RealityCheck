@@ -37,7 +37,14 @@ async function post(url, method, params) {
 async function verifySol(sig, price, maxAge) {
   let tx = null, reached = false;
   for (const u of SOL_RPCS) {
-    try { const j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]); if (!j.error) { reached = true; if (j.result) { tx = j.result; break; } } } catch {}
+    try {
+      let j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
+      // newer transaction versions: retry allowing them instead of reporting "busy"
+      if (j.error && j.error.code === -32015) j = await post(u, 'getTransaction', [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 1, commitment: 'confirmed' }]);
+      // malformed signature: the node answered, the tx simply doesn't exist
+      if (j.error && j.error.code === -32602) { reached = true; continue; }
+      if (!j.error) { reached = true; if (j.result) { tx = j.result; break; } }
+    } catch {}
   }
   if (!tx) return { status: reached ? 'invalid' : 'busy', reason: reached ? MSG.notFound : MSG.busy, pending: reached };
   if (tx.meta && tx.meta.err) return { status: 'invalid', reason: MSG.failed };
