@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { buildFull } from './_deep-full.js';
 import { solDeep, deployerFacts } from './_sol-deep.js';
 import { coinKey, manualMaxAge, MSG } from './_manual-pay.js';
-import { createSession, claimSession, sessionRef, claimByReference, redeemCode, rateLimited, LIMIT_MSG } from './_checkout.js';
+import { createSession, releaseSession, clientIp, claimSession, sessionRef, claimByReference, redeemCode, rateLimited, LIMIT_MSG } from './_checkout.js';
 // Premium Deep Report ("Wallet DNA") — $1 USDC per report, any chain.
 // AJ's wallets: Solana = DYkdqhQNLQyikuPaNHJczSwcGPYVuGuBafqzXm8wqAvk (Phantom),
 // EVM (Eth/BNB/Base/Polygon/Arbitrum) = 0xa214852e96a6d263a14DdA188Fd90395a733b5eA.
@@ -413,7 +413,7 @@ async function bundle(req, res) {
 async function checkout(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const b = req.body || {};
-  const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  const ip = clientIp(req);
   let claim, price, meta;
   if (b.kind === 'bundle') {
     const list = normList(b.coins);
@@ -425,6 +425,7 @@ async function checkout(req, res) {
     if (!chain || !okAddr) return res.status(200).json({ success: false, message: 'Enter a valid contract address first. No payment was taken.' });
     claim = deepClaim(chain, c); price = 1; meta = { kind: 'deep', chain, contract: c };
   }
+  if (b.release) { const r = await releaseSession({ sessionId: b.sessionId, token: b.token, claim }); return res.status(200).json(r.ok ? { success: true, released: !!r.released } : { success: false, message: r.message }); }
   const s = await createSession({ claim, price, ip, prevId: b.sessionId, prevToken: b.token, meta });
   return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, busy: !!s.busy, message: s.message });
 }

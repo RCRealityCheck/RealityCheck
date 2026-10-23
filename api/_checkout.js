@@ -12,9 +12,15 @@ const REPLACED_HOLD = 2 * 3600;            // amount of a replaced checkout stay
 const PAID_KEEP = 7 * 86400;               // paid sessions kept 7 days so the same browser can re-show
 export const SUGGEST = 1.11;               // suggested $1.11 per coin (covers fees); minimum that must ARRIVE is $1 per coin
 const TAG_MAIN = [1, 99];                  // tag 0.0001 .. 0.0099 -> e.g. 1.1101 .. 1.1199
-const TAG_EXT = [100, 399];                // if those run out: 0.0100 .. 0.0399 -> e.g. 1.1200 .. 1.1499
+const TAG_EXT = [100, 899];                // if those run out: 0.0100 .. 0.0899 -> e.g. 1.1200 .. 1.1999 (L4: 899 slots per price)
 const MAX_CHECKOUTS_PER_IP_HOUR = 40;
 const MAX_CHECKOUTS_GLOBAL_HOUR = 2000;
+const MAX_OPEN_PER_IP = 6;                  // L4: unpaid checkouts one connection may hold open at once
+const MAX_SAME_PRODUCT_PER_IP_HOUR = 8;     // new checkouts per connection per coin/list per hour
+// Clock tolerance between our server clock and the chain's block time (both directions). Was 30s; block times
+// on Solana/EVM are within a few seconds of real time, so 10s keeps honest buyers safe and shrinks the window in
+// which someone can open a checkout AFTER seeing a payment on-chain (that only ever causes a hold, never a theft).
+export const CLOCK_SKEW = 10;
 export const RESUME_TTL = 600;             // Phantom hand-off code: 10 minutes, single use
 export const GRANT_TTL = 86400;            // admin unlock link: 24h, single use
 export const CONTACT = 'Reality Check on X (@RC_Reality_ — https://x.com/RC_Reality_)';
@@ -81,10 +87,25 @@ export async function createSession({ claim, price, ip, prevId, prevToken, meta 
     const hour = Math.floor(t / 3600);
     const g = await kv(['INCR', `rc:ckall:${hour}`]); if (g === 1) await kv(['EXPIRE', `rc:ckall:${hour}`, 7200]);
     if (g > MAX_CHECKOUTS_GLOBAL_HOUR) return { ok: false, busy: true, message: BUSY };
+    let iph = null;
     if (ip) {
-      const k = `rc:ckip:${sha(ip).slice(0, 32)}`;
+      iph = sha(ip).slice(0, 32);
+      const k = `rc:ckip:${iph}`;
       const n = await kv(['INCR', k]); if (n === 1) await kv(['EXPIRE', k, 3600]);
       if (n > MAX_CHECKOUTS_PER_IP_HOUR) return { ok: false, busy: true, message: 'Too many checkouts from this connection in the last hour. Please try again later. No payment was taken.' };
+      const kp = `rc:ckipp:${iph}:${sha(claim).slice(0, 16)}:${hour}`;
+      const np = await kv(['INCR', kp]); if (np === 1) await kv(['EXPIRE', kp, 7200]);
+      if (np > MAX_SAME_PRODUCT_PER_IP_HOUR) return { ok: false, busy: true, message: 'Too many checkouts for this coin from this connection in the last hour. Please use the checkout you already have, or try again later. No payment was taken.' };
+      // Cap unpaid checkouts held open by one connection (prunes paid / expired / released ones first).
+      const ko = `rc:ipopen:${iph}`;
+      const mine = await kv(['SMEMBERS', ko]);
+      let live = 0;
+      for (const oid of (Array.isArray(mine) ? mine : [])) {
+        if (prev && oid === prev.id) { try { await kv(['SREM', ko, oid]); } catch {} continue; }
+        const o = await loadSession(kv, oid);
+        if (o && o.status === 'open' && !o.released && t <= o.exp) live++; else { try { await kv(['SREM', ko, oid]); } catch {} }
+      }
+      if (live >= MAX_OPEN_PER_IP) return { ok: false, busy: true, message: 'You already have several unpaid checkouts open from this connection. Finish or wait for one of those, or try again later. No payment was taken.' };
     }
     const id = crypto.randomBytes(16).toString('hex'), token = crypto.randomBytes(32).toString('base64url');
     const ttl = SESSION_TTL, hold = ttl + 2 * CLAIM_GRACE;
@@ -102,10 +123,11 @@ export async function createSession({ claim, price, ip, prevId, prevToken, meta 
       await releaseAmount(kv, prev, REPLACED_HOLD);
       try { await save(kv, { ...prev, status: 'replaced', replacedBy: id }); } catch {}
     }
-    const s = { id, th: sha(token), claim, price, micro, created: t, since: prev ? Math.min(prev.since || prev.created, t) : t, exp: t + ttl, status: 'open', alt, ...(meta ? { meta } : {}) };
+    const s = { id, th: sha(token), claim, price, micro, created: t, since: prev ? Math.min(prev.since || prev.created, t) : t, exp: t + ttl, status: 'open', alt, ...(iph ? { iph } : {}), ...(meta ? { meta } : {}) };
     await kv(['SET', `rc:sess:${id}`, JSON.stringify(s), 'EX', hold]);
     try { await kv(['SADD', `rc:claimidx:${claim}`, id]); await kv(['EXPIRE', `rc:claimidx:${claim}`, hold]); } catch {}
     try { await kv(['SADD', 'rc:openall', id]); await kv(['EXPIRE', 'rc:openall', hold]); } catch {}
+    if (iph) { try { await kv(['SADD', `rc:ipopen:${iph}`, id]); await kv(['EXPIRE', `rc:ipopen:${iph}`, ttl]); } catch {} }
     return { ok: true, ...pub(s, token) };
   } catch { return { ok: false, busy: true, message: BUSY }; }
 }
@@ -135,11 +157,11 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
     const bad = vs.findIndex(v => v.status !== 'ok' || !(v.micro > 0));
     if (bad >= 0) return { ok: false, pending: !!vs[bad].pending, message: `Transaction ${bad + 1}: ${vs[bad].reason || MSG.notFound} Nothing was claimed.` };
     const since = s.since || s.created;
-    const early = vs.findIndex(v => !v.blockTime || v.blockTime < since - 30);
+    const early = vs.findIndex(v => !v.blockTime || v.blockTime < since - CLOCK_SKEW);
     if (early >= 0) return { ok: false, message: `Transaction ${early + 1} was sent before this checkout started, so it cannot pay for it. Nothing was claimed. If you paid first and opened the page after: ${HELP}` };
     const sum = vs.reduce((x, v) => x + v.micro, 0);
     const minMicro = Math.round(s.price * 1e6);
-    const targets = [s.micro, ...(s.alt || []).filter(x => x.until > t).map(x => x.micro)];
+    const targets = [...(s.released ? [] : [s.micro]), ...(s.alt || []).filter(x => x.until > t).map(x => x.micro)];
     const tagged = targets.some(m => Math.abs(sum - m) <= 1);
     if (!tagged) {
       // (c) under the minimum -> top-up
@@ -160,7 +182,7 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
         const o = await loadSession(kv, oid);
         const live = o && o.status === 'open' && t <= o.exp + CLAIM_GRACE;
         if (!live) { try { await kv(['SREM', 'rc:openall', oid]); } catch {} continue; }
-        if ((o.since || o.created) - 30 <= firstTx) rivals.push(oid);
+        if (!o.released && (o.since || o.created) - CLOCK_SKEW <= firstTx) rivals.push(oid);
       }
       if (rivals.length) {
         // Hold every tx so nobody (neither checkout) can claim it until the owner decides.
@@ -177,11 +199,29 @@ export async function claimSession({ sessionId, token, claim, txIds }, deps = {}
       await releaseAmount(kv, s, 0);
       try { await kv(['SREM', `rc:claimidx:${s.claim}`, s.id]); } catch {}
       try { await kv(['SREM', 'rc:openall', s.id]); } catch {}
+      if (s.iph) { try { await kv(['SREM', `rc:ipopen:${s.iph}`, s.id]); } catch {} }
       return { ok: true, amount: sum / 1e6, chain: paid.chain, ids, tagged };
     } catch (e) {
       for (const k of done) { try { if ((await kv(['GET', `rc:paidtx:${encodeURIComponent(k)}`])) === `sess:${s.id}`) await kv(['DEL', `rc:paidtx:${encodeURIComponent(k)}`]); } catch {} }
       return { ok: false, message: e.message === 'taken' ? 'One of these transactions was just used for another report. Nothing was claimed.' : MSG.busy };
     }
+  } catch { return { ok: false, message: MSG.busy }; }
+}
+
+// L4: the buyer's own browser can give up an unpaid checkout so its exact amount is freed at once.
+// The session stays claimable (a payment already sent is never lost) but is treated as UNTAGGED from then on,
+// so it can't take a payment that now belongs to a newer checkout and it no longer blocks anyone else.
+export async function releaseSession({ sessionId, token, claim }, deps = {}) {
+  const { kv } = D(deps);
+  try {
+    const a = await authed(kv, { sessionId, token, claim }); if (a.err) return a.err;
+    const s = a.s;
+    if (s.status !== 'open' || s.released) return { ok: true, released: !!s.released, status: s.status };
+    if ((await save(kv, { ...s, released: true, alt: [] })) !== 'OK') return { ok: false, message: MSG.busy };
+    await releaseAmount(kv, s, 0);
+    try { await kv(['SREM', 'rc:openall', s.id]); } catch {}
+    if (s.iph) { try { await kv(['SREM', `rc:ipopen:${s.iph}`, s.id]); } catch {} }
+    return { ok: true, released: true };
   } catch { return { ok: false, message: MSG.busy }; }
 }
 
@@ -268,9 +308,11 @@ export async function adminGrant({ claim, price, meta, note, txIds }, deps = {})
 
 // Light rate limits for payment-check / token endpoints (per IP + global). Fails open if the store is down.
 export const LIMIT_MSG = 'Too many checks from this connection. Please wait a few minutes and try again. Nothing was charged.';
+// Vercel sets x-vercel-forwarded-for itself (clients can't forge it); fall back for local tests.
+export const clientIp = (req) => String(req?.headers?.['x-vercel-forwarded-for'] || req?.headers?.['x-real-ip'] || req?.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
 export async function rateLimited(req, bucket, perIp, globalMax, winSec = 600, deps = {}) {
   const { kv, enabled: on } = D(deps); if (!on) return false;
-  const ip = String(req?.headers?.['x-vercel-forwarded-for'] || req?.headers?.['x-real-ip'] || req?.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  const ip = clientIp(req);
   const w = Math.floor(Date.now() / 1000 / winSec);
   const hit = async (k, max) => { const n = await kv(['INCR', k]); if (n === 1) await kv(['EXPIRE', k, winSec + 5]); return n > max; };
   try {

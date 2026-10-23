@@ -439,6 +439,8 @@ function formatSupply(n) {
 }
 // Only http(s) links from external data (blocks javascript:, data: etc.).
 const safeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '#';
+// L5: numbers from the API are forced to real numbers before they touch HTML (anything else shows a dash).
+function num(x, dflt = '—') { const v = Number(x); return (x === null || x === undefined || x === '' || !Number.isFinite(v)) ? dflt : String(v); }
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&#38;','<':'&#60;','>':'&#62;','"':'&#34;',"'":'&#39;'}[c]));
 }
@@ -510,7 +512,7 @@ async function loadCoinDetails(id) {
       <div class="report-card">
         <h3>${esc(d.name)} <span class="coin-sym">(${esc(d.symbol)})</span></h3>
         <div class="stat-grid">
-          <div class="stat"><span class="stat-label">Rank</span><span class="stat-val">#${d.rank || '—'}</span></div>
+          <div class="stat"><span class="stat-label">Rank</span><span class="stat-val">#${d.rank ? num(d.rank) : '—'}</span></div>
           <div class="stat"><span class="stat-label">Price</span><span class="stat-val">${formatNum(d.price)}</span></div>
           <div class="stat"><span class="stat-label">Market Cap</span><span class="stat-val">${formatNum(d.market_cap)}</span></div>
           <div class="stat"><span class="stat-label">24h Volume</span><span class="stat-val">${formatNum(d.volume_24h)}</span></div>
@@ -731,7 +733,7 @@ document.getElementById('checkForm').addEventListener('submit', async function (
       const fullName = data.symbol ? `${esc(data.name)} (${esc(data.symbol)})` : (esc(data.name) || 'Token');
       const holdersHtml = (data.topHolders || []).map(h => {
         const a = esc(h.address || '');
-        return `<li><span class="holder-addr">${a.slice(0, 6)}...${a.slice(-4)}</span> <span class="holder-pct">${esc(h.percentage || '')}</span></li>`;
+        return `<li><span class="holder-addr">${esc(a.slice(0, 6))}...${esc(a.slice(-4))}</span> <span class="holder-pct">${esc(h.percentage || '')}</span></li>`;
       }).join('') || '<li>No holder data available right now</li>';
       resultDiv.innerHTML = `
         <div class="report-card">
@@ -795,14 +797,14 @@ document.getElementById('riskForm').addEventListener('submit', async function (e
           <p class="scen-impact">Your <strong>$${Number(data.position).toLocaleString()}</strong> becomes <strong class="scen-val">$${Number(s.yourValue).toLocaleString()}</strong></p>
           <p class="scen-drop">(~${esc(String(s.priceDrop))}% price drop in this scenario)</p>
         </div>`).join('');
-      const shareText = encodeURIComponent(`Reality Check (RC): ${fullName} scores ${data.score}/100. My $${Number(data.position).toLocaleString()} — see the real supply power before you buy. Free forever. https://realitycheckglobal.trade`);
+      const shareText = encodeURIComponent(`Reality Check (RC): ${fullName} scores ${num(data.score)}/100. My $${Number(data.position).toLocaleString()} — see the real supply power before you buy. Free forever. https://realitycheckglobal.trade`);
       const mapTitle = data.legacyMode
         ? 'Top 5 wallets (type check unavailable on this chain right now)'
         : `Reality map — top 5 wallets (🔒 locked: ${esc(data.lockedPct || '0%')}, 👤 sellable: ${esc(data.sellableTop10 || '0%')} of top 10)`;
       resultDiv.innerHTML = `
         <div class="report-card risk-card">
           <h3>${fullName} — your $${Number(data.position).toLocaleString()}</h3>
-          <div class="score-band"><span class="score-badge ${scoreCls}">${data.score}<small>/100</small></span><span class="score-word">${esc(data.healthWord)}</span></div>
+          <div class="score-band"><span class="score-badge ${scoreCls}">${num(data.score)}<small>/100</small></span><span class="score-word">${esc(data.healthWord)}</span></div>
           <h4 class="scen-title">${mapTitle}</h4>
           <div class="wallet-map">${walletHtml}</div>
           <div class="flags-grid">
@@ -931,7 +933,7 @@ function renderFull(f) {
     <p>Origin: ${v(p.countryOrigin)} · Launched: ${v(p.genesisDate)}</p>
     ${p.description ? `<p class="note">${esc(p.description)}…</p>` : ''}
     <p class="note">${esc(p.teamNote)}</p>${p.xAccountAgeNote ? `<p class="note">${esc(p.xAccountAgeNote)}</p>` : ''}`, p.sources);
-  const linked = `<p>Funding-linked top wallets: ${o.linkedWallets && o.linkedWallets.length ? o.linkedWallets.map(c => `${c.members.length} wallets share funder ${addr(c.funder, o.explorer)} (${esc(String(c.combinedPct))}%)`).join('; ') : 'none found among the traced top wallets'}</p>`;
+  const linked = `<p>Funding-linked top wallets: ${o.linkedWallets && o.linkedWallets.length ? o.linkedWallets.map(c => `${num(c.members.length)} wallets share funder ${addr(c.funder, o.explorer)} (${esc(String(c.combinedPct))}%)`).join('; ') : 'none found among the traced top wallets'}</p>`;
   const s2 = sec('2. Deployer, owner & linked wallets', (isSol ? `
     <p>Creator: ${addr(o.creator, o.explorer)} · Mint authority: ${auth(o.mintAuthority, o.explorer, o.renounced !== null)} · Freeze authority: ${auth(o.freezeAuthority, o.explorer, o.renounced !== null)}</p>
     <p>Metadata changeable: ${yn(o.metadataMutable, true)}</p>
@@ -1254,8 +1256,8 @@ async function runDeepReport(autoDetect) {
       const clusterHtml = (data.clusters || []).map(c => `
         <div class="cluster-card">
           <h5>🚨 Shared funder: <code>${esc(String(c.funder).slice(0, 14))}…</code></h5>
-          <p>${c.members.length} wallets, combined <strong>${esc(String(c.combinedPct))}%</strong> — one entity wearing ${c.members.length} masks:</p>
-          <ul>${c.members.map(m => `<li>Wallet #${m.rank} — ${esc(String(m.address).slice(0, 10))}… (${esc(String(m.pct))}%)</li>`).join('')}</ul>
+          <p>${num(c.members.length)} wallets, combined <strong>${esc(String(c.combinedPct))}%</strong> — one entity wearing ${num(c.members.length)} masks:</p>
+          <ul>${c.members.map(m => `<li>Wallet #${num(m.rank)} — ${esc(String(m.address).slice(0, 10))}… (${esc(String(m.pct))}%)</li>`).join('')}</ul>
         </div>`).join('');
       resultDiv.innerHTML = `
         <div class="report-card risk-card">
@@ -1292,8 +1294,8 @@ function deepCardHtml(data) {
       ${flags ? `<ul class="dna-flags">${flags}</ul>` : ''}</div>`;
   }).join('');
   const clusterHtml = (data.clusters || []).map(c => `<div class="cluster-card"><h5>🚨 Shared funder: <code>${esc(String(c.funder).slice(0, 14))}…</code></h5>
-    <p>${c.members.length} wallets, combined <strong>${esc(String(c.combinedPct))}%</strong> — one entity wearing ${c.members.length} masks:</p>
-    <ul>${c.members.map(m => `<li>Wallet #${m.rank} — ${esc(String(m.address).slice(0, 10))}… (${esc(String(m.pct))}%)</li>`).join('')}</ul></div>`).join('');
+    <p>${num(c.members.length)} wallets, combined <strong>${esc(String(c.combinedPct))}%</strong> — one entity wearing ${num(c.members.length)} masks:</p>
+    <ul>${c.members.map(m => `<li>Wallet #${num(m.rank)} — ${esc(String(m.address).slice(0, 10))}… (${esc(String(m.pct))}%)</li>`).join('')}</ul></div>`).join('');
   return `<div class="report-card risk-card"><h3>🧬 Wallet DNA — ${fullName}</h3>${clusterHtml}<div class="dna-grid">${dnaHtml}</div>
     <div class="verdict-box"><strong>Deep verdict:</strong> ${esc(data.deepVerdict || '')}</div>${renderFull(data.full)}
     <p class="method">${esc(data.methodNote || '')}</p><p class="note">${esc(data.riskNote || '')}</p></div>`;
@@ -1346,7 +1348,7 @@ async function bundleCheck(manual) {
   if (bundleTimer) { clearInterval(bundleTimer); bundleTimer = null; }
   document.getElementById('bundlePay').style.display = 'none';
   out.innerHTML = `<p class="note">Payment verified: ${esc(String(d.paid.amount))} USDC${d.paid.chain ? ' on ' + esc(d.paid.chain) : ''}. Thank you — this builds Reality Check.</p>` +
-    d.reports.map((r, i) => `<h3 style="margin-top:18px">Coin ${i + 1} of ${d.reports.length}: <code>${esc(r.contract.slice(0, 8))}…</code> · ${esc(chainName(r.chain))}</h3>` +
+    d.reports.map((r, i) => `<h3 style="margin-top:18px">Coin ${i + 1} of ${num(d.reports.length)}: <code>${esc(r.contract.slice(0, 8))}…</code> · ${esc(chainName(r.chain))}</h3>` +
       (r.success ? deepCardHtml(r) : `<div class="report-card"><p>${esc(r.message || 'This report failed to load. Your payment still counts — contact us.')}</p></div>`)).join('');
   out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1547,26 +1549,26 @@ async function checkExitPayment() {
 function renderExitDoor(d) {
   const r = d.report;
   const sells = (r.exitLiquidity.sells || []).map(s => s.available
-    ? `<tr><td>$${s.usd.toLocaleString()}</td><td>$${s.receiveUsd.toLocaleString()}</td><td class="${s.lossPct > 10 ? 'neg' : s.lossPct > 3 ? '' : 'pos'}">${s.lossPct}%</td><td>${esc(s.route || '—')}</td></tr>`
-    : `<tr><td>$${s.usd.toLocaleString()}</td><td colspan="3">${esc(s.reason || 'Not available right now')}</td></tr>`).join('');
-  const clusters = r.clusters.length ? r.clusters.map(c => `<div class="cluster-card"><h5>🚨 Shared funder ${exitShort(c.funder)}</h5><p>${c.members.length} top wallets, combined <strong>${c.combinedPct}%</strong> of supply.</p></div>`).join('')
+    ? `<tr><td>$${esc(Number(s.usd).toLocaleString())}</td><td>$${esc(Number(s.receiveUsd).toLocaleString())}</td><td class="${s.lossPct > 10 ? 'neg' : s.lossPct > 3 ? '' : 'pos'}">${num(s.lossPct)}%</td><td>${esc(s.route || '—')}</td></tr>`
+    : `<tr><td>$${esc(Number(s.usd).toLocaleString())}</td><td colspan="3">${esc(s.reason || 'Not available right now')}</td></tr>`).join('');
+  const clusters = r.clusters.length ? r.clusters.map(c => `<div class="cluster-card"><h5>🚨 Shared funder ${exitShort(c.funder)}</h5><p>${num(c.members.length)} top wallets, combined <strong>${num(c.combinedPct)}%</strong> of supply.</p></div>`).join('')
     : `<p>${r.holdersAvailable ? 'No shared funders found among traced holders.' : 'Holder data unavailable.'} <span class="note">(${esc(r.clusterCoverage)})</span></p>`;
-  const holders = r.holders.map((h, i) => `<li>#${i + 1} ${exitShort(h.owner)} — ${h.pct ?? '?'}%${h.lockedBy ? ' 🔒 ' + esc(h.lockedBy) : h.isProgramOwned ? ' (program / pool)' : ''}${h.funder ? ' · funded by ' + exitShort(h.funder) : ''}</li>`).join('');
+  const holders = r.holders.map((h, i) => `<li>#${i + 1} ${exitShort(h.owner)} — ${num(h.pct, '?')}%${h.lockedBy ? ' 🔒 ' + esc(h.lockedBy) : h.isProgramOwned ? ' (program / pool)' : ''}${h.funder ? ' · funded by ' + exitShort(h.funder) : ''}</li>`).join('');
   const dep = r.deployer;
-  const lockList = r.vesting.lockedHolders.map(l => `<li>${exitShort(l.owner)} — ${l.pct}% in ${esc(l.program)}</li>`).join('');
+  const lockList = r.vesting.lockedHolders.map(l => `<li>${exitShort(l.owner)} — ${num(l.pct)}% in ${esc(l.program)}</li>`).join('');
   document.getElementById('exitResult').innerHTML = `
     <div class="report-card risk-card">
       <h3>🚪 Exit Door — ${exitShort(r.mint)}</h3>
       <p class="note">Payment verified on-chain (${esc(String(d.paid.amount))} USDC). Thank you for supporting Reality Check.</p>
       <h4>Exit-liquidity simulator</h4>
-      <p class="note">Price: ${r.exitLiquidity.price ? '$' + r.exitLiquidity.price.toPrecision(4) : 'data unavailable'} · live Jupiter sell quotes into USDC</p>
+      <p class="note">Price: ${r.exitLiquidity.price ? '$' + Number(r.exitLiquidity.price).toPrecision(4) : 'data unavailable'} · live Jupiter sell quotes into USDC</p>
       <table class="exit-table"><tr><th>You sell</th><th>You get</th><th>Lost to slippage</th><th>Route</th></tr>${sells}</table>
       <h4>Linked wallets</h4>${clusters}${holders ? `<ul class="exit-holders">${holders}</ul>` : ''}
       <h4>Deployer history</h4>
       <p>Deployer: ${exitShort(dep.address)} · token created ${exitDate(dep.createdAt)} · deployer wallet first seen ${exitDate(dep.walletFirstSeen)} · ${dep.walletTxCount === null ? 'tx count unavailable' : dep.walletTxCount + (dep.countComplete ? '' : '+') + ' transactions'}</p>
       <p>Mint authority: ${r.authorities.mintAuthority ? '⚠️ active — more tokens can be printed' : '✅ revoked'} · Freeze authority: ${r.authorities.freezeAuthority ? '⚠️ active — wallets can be frozen' : '✅ revoked'}</p>
       <h4>Unlock / vesting calendar</h4>
-      ${lockList ? `<ul>${lockList}</ul><p>Locked in top 10: <strong>${r.vesting.lockedPct}%</strong></p>` : ''}
+      ${lockList ? `<ul>${lockList}</ul><p>Locked in top 10: <strong>${num(r.vesting.lockedPct)}%</strong></p>` : ''}
       <p class="note">${esc(r.vesting.note)}</p>
       <p class="note">${esc(d.riskNote)}</p>
     </div>`;

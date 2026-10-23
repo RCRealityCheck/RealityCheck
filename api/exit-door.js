@@ -6,7 +6,7 @@
 // Env: SOLANA_RPC_URL (optional), KV_REST_API_URL + KV_REST_API_TOKEN (checkout store). Payments go to the hard-coded RC_SOL wallet.
 import crypto from 'crypto';
 import { coinKey, RC_SOL } from './_manual-pay.js';
-import { createSession, claimSession, sessionRef, claimByReference, makeCode, rateLimited, LIMIT_MSG } from './_checkout.js';
+import { createSession, releaseSession, clientIp, claimSession, sessionRef, claimByReference, makeCode, rateLimited, LIMIT_MSG } from './_checkout.js';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const PRICE_USDC = 1;
@@ -228,9 +228,16 @@ export default async function handler(req, res) {
 
   if (action === 'checkout') {
     res.setHeader('Cache-Control', 'no-store');
-    const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+    const ip = clientIp(req);
     const s = await createSession({ claim: ses.claim, price: PRICE_USDC, ip, prevId: ses.sessionId, prevToken: ses.token, meta: { kind: 'exit', mint } });
     return res.status(200).json(s.ok ? { success: true, ...s } : { success: false, busy: !!s.busy, message: s.message });
+  }
+
+  if (action === 'release') {
+    // L4: this browser gives up its unpaid checkout so the exact amount is freed at once.
+    res.setHeader('Cache-Control', 'no-store');
+    const r = await releaseSession(ses);
+    return res.status(200).json(r.ok ? { success: true, released: !!r.released } : { success: false, message: r.message });
   }
 
   if (action === 'resume-code') {
