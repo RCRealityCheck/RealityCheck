@@ -1128,7 +1128,7 @@ async function payWithSolana() {
   const provider = window.solana;
   await provider.connect();
   const userWallet = provider.publicKey;
-  const connection = new sw.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+  const connection = new sw.Connection(location.origin + '/api/sol-rpc', 'confirmed');
   const USDC_MINT = new sw.PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
   const TOKEN_PROGRAM_ID = new sw.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   const ASSOC_PROGRAM_ID = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8j');
@@ -1490,7 +1490,7 @@ document.getElementById('exitPhantom').addEventListener('click', async function 
     const provider = exitProvider();
     await provider.connect();
     const user = provider.publicKey;
-    const connection = new sw.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+    const connection = new sw.Connection(location.origin + '/api/sol-rpc', 'confirmed');
     const MINT = new sw.PublicKey(exitReq.usdcMint);
     const TOKEN = new sw.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
     const ASSOC = new sw.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8j');
