@@ -1,18 +1,58 @@
 {
   "items": [
     {
-      "id": "rcn-20261023-railway-breach",
-      "date": "Oct 23, 2026",
-      "category": "warning",
-      "title": "Railway breach linked to ~$371K crypto theft across 19 blockchains",
-      "what": "Cloud platform Railway suffered a security breach — a blockchain investigator says about $371,000 in crypto was drained across 19 blockchains via wallet sweeper scripts. Railway is urging users to reset credentials and says its investigation is ongoing.",
+      "id": "rcn-20261024-x100",
+      "date": "Oct 24, 2026",
+      "category": "exploit",
+      "title": "X100 governance hijacked in a single transaction — about $4.85M drained",
+      "what": "On Oct. 24 at 10:11 AM ET, an attacker used a flash loan to buy two of the three seats on X100's governing \"Senate\" on Ethereum, then used that majority to force the treasury to sell 400,000 X tokens for roughly $36. Security firm Blockaid puts the total loss at about $4.85M in USDT, and the X token fell about 96% within a day. The exploit worked because Senate seats could be bought instantly with no minimum holding period, voting power was not snapshotted in advance, and proposals could be created, voted on, and executed in the same transaction with no timelock. As of Oct. 25, no statement, fund freeze, or bounty offer from the X100 team had been reported.",
       "sources": [
         {
-          "name": "AltcoinDaily",
-          "url": "https://altcoindaily.co/railway-breach-linked-to-371000-crypto-theft-spanning-19-blockchains/"
+          "name": "CoinLab",
+          "url": "https://coinlab.info/en/articles/x100-hack-explained/"
+        },
+        {
+          "name": "Crypto Times",
+          "url": "https://www.cryptotimes.io/2026/10/24/x100-hack-attackers-hijack-governance-drain-4-85m-as-x-token-crashes-96/"
         }
       ],
-      "take": "Never store wallet keys in cloud env vars. If your project uses Railway, check your keys now — not tomorrow."
+      "take": "This was not a mystery bug — it was governance with no speed bumps. When voting power can be rented for a few seconds and a vote takes effect instantly, a stranger can legally \"win\" the vote and empty the treasury in one move. The lesson for normal people: before trusting any project, ask whether its big decisions have a delay and a real holding requirement — if not, your money is one borrowed vote away from gone."
+    },
+    {
+      "id": "rcn-20261023-initia",
+      "date": "Oct 23, 2026",
+      "category": "dispute",
+      "title": "Initia exploit: about $2.7M taken, but what was actually minted is disputed",
+      "what": "The Initia blockchain halted its Layer 1 and rollups on Oct. 23, 2026, after an attack that Initia co-founder Ezaan Mangalji described as a previously unknown bug in the link between Initia's MoveVM and its Cosmos SDK network, allowing the attacker to mint tokens and bridge out about $2.7M worth of AUSD, ETH, and USDC. Stablecoin issuer Agora disputed part of the story, saying its AUSD contract is not deployed on Initia and no AUSD was minted there; Ethereum records show 1.4 million existing AUSD moved from a bridge adapter to an attacker's address and were swapped for about 581.56 ETH. Agora pledged to freeze AUSD at hacker-related addresses, though the swap had already happened.",
+      "sources": [
+        {
+          "name": "ForkLog",
+          "url": "https://forklog.com/en/hacker-steals-2-7-million-from-initia-blockchain/"
+        },
+        {
+          "name": "The Cryptonomist",
+          "url": "https://en.cryptonomist.ch/2026/10/24/initia-exploit-ausd-stablecoin/"
+        }
+      ],
+      "take": "Two sides are telling different versions of the same event, and that disagreement itself is the warning. When even the project and the token issuer cannot agree on where the money came from, nobody holding the token can judge the risk honestly. Wait for the on-chain facts and a full post-mortem before believing either side's first version — and never treat a paused chain as proof your funds are safe."
+    },
+    {
+      "id": "rcn-20261023-zheng-zhao",
+      "date": "Oct 23, 2026",
+      "category": "arrest",
+      "title": "$36.9M pig-butchering scam suspect extradited to the U.S.",
+      "what": "Zheng Zhao, a 44-year-old Chinese national, was extradited from the Netherlands and arraigned in Los Angeles federal court on Oct. 23, 2026, on a charge of conspiracy to commit money laundering carrying up to 20 years in prison. Prosecutors allege he was part of a Cambodia-based scam network that used social media and dating apps to steer at least 174 identified American victims to fake crypto trading sites showing fabricated gains, taking a combined $36.9M. The funds were allegedly routed through U.S. shell companies to a Deltec Bank account in the Bahamas, converted to Tether (USDT), and sent to wallets in Cambodia. Eight co-conspirators have already pleaded guilty, with sentences including 46 and 51 months.",
+      "sources": [
+        {
+          "name": "Crypto Briefing",
+          "url": "https://cryptobriefing.com/chinese-national-extradited-cambodian-crypto-scam/"
+        },
+        {
+          "name": "Security Online",
+          "url": "https://securityonline.info/cambodia-crypto-scam-extradition-doj/"
+        }
+      ],
+      "take": "This is real progress, and it took more than a year of cross-border work to get one man into a courtroom. But notice the pattern that caught 174 people: a stranger online, a slow-building friendship, then a trading site you have never heard of showing profits that look too good. If a new friend steers you to an unknown platform, that is the scam — walk away before the first deposit, not after."
     },
     {
       "id": "rcn-20261023-michigan-arrest",
@@ -283,5 +323,5 @@
       "what": "UNCX Network (formerly UniCrypt) — whose entire business is locking tokens so insiders can't sell early — lost ~$86,000 from its shared vesting pool on Ethereum. Per security firm Blockaid, the attacker opened several vesting positions, released one large position, topped up the pool, then cancelled a position in a way that left a tiny leftover slot able to withdraw OTHER users' tokens. Ten tokens across four chains were affected. UNCX paused new positions, raised fees, and says its liquidity lockers are unaffected. Funds remain missing."
     }
   ],
-  "updated": "2026-10-22"
+  "updated": "2026-10-25"
 }
