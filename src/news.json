@@ -1,6 +1,70 @@
 {
   "items": [
     {
+      "id": "rcn-20261026-near-intents",
+      "date": "Oct 26, 2026",
+      "category": "exploit",
+      "title": "NEAR Intents hit by $3.8M exploit — team says it identified the attacker and gave a 48-hour return window",
+      "what": "NEAR Intents said a bug in how its Omni deposit and withdrawal infrastructure interacts with its smart contract was exploited for approximately $3.8 million, isolated to USDT on BNB Smart Chain. NEAR co-founder Illia Polosukhin said the platform's SHIELD security layer flagged the outlier behaviour and triggered a pause, the contract vulnerability was patched within an hour of detection, and services were largely restored. Intents general manager Alex Shevchenko said the attacker has been identified and gave a 48-hour window to return the funds, and the platform says affected users will be compensated in full and the incident has been reported to law enforcement.",
+      "sources": [
+        {
+          "name": "BitRss (via CryptoPotato)",
+          "url": "https://bitrss.com/near-intents-identifies-3-8m-hacker-gives-them-48-hours-to-return-funds-257077"
+        }
+      ],
+      "take": "The fast patch and the full-compensation promise are the good parts — but notice what the story really rests on: a single bug where two systems meet. Bridges and cross-chain plumbing are where the money moves, so they are where the breaks happen. And a public \"we know who you are\" is a negotiation tactic, not a recovery — until funds actually come back, treat it as an open loss, not a solved one."
+    },
+    {
+      "id": "rcn-20261026-bloom-trading",
+      "date": "Oct 26, 2026",
+      "category": "exploit",
+      "title": "Bloom Trading bot drained of about $954,000 in SOL — nine users affected, full reimbursement promised",
+      "what": "On Oct. 26, 2026, an attacker drained 9,408 SOL, worth approximately $954,000, from 49 wallet addresses belonging to nine users of Bloom Trading, a Telegram-based trading bot for Solana and EVM networks. The largest single wallet loss was 1,636 SOL, about $166,000. Bloom attributed the breach to an exploited third-party module vulnerability enabling remote code execution, said no private keys were compromised and unaffected wallets are safe, and promised to fully reimburse all affected users to new secure wallets of their choosing — though it has not said when reimbursements will be completed.",
+      "sources": [
+        {
+          "name": "AMBCrypto",
+          "url": "https://ambcrypto.com/bloom-trading-hit-by-947k-breach-due-to-third-party-module-promises-100-reimbursement/"
+        },
+        {
+          "name": "CoinFomania",
+          "url": "https://coinfomania.com/hackers-exploit-vulnerability-to-steal-9408-sol-from-users/"
+        }
+      ],
+      "take": "This is the quiet risk of trading bots: you hand a tool permission to move your money, and its weakest borrowed part becomes your weakest part. No private keys were stolen, yet the money still left — because access, not just keys, is the prize. If a bot or app can move funds for you, keep only what you can afford to lose in it, and treat a reimbursement promise as a promise, not a refund in hand."
+    },
+    {
+      "id": "rcn-20261026-foundation-passport",
+      "date": "Oct 26, 2026",
+      "category": "warning",
+      "title": "Fake \"Passport recall\" phishing emails reached Foundation customers from the company's own domains",
+      "what": "On Sunday, Oct. 25, 2026, phishing emails posing as an urgent recall of Foundation's Passport Bitcoin hardware wallet reached customers, claiming a supplier had modified a display module and attackers were draining affected devices. The emails linked to foundation.support, a fake site mimicking Foundation's Envoy companion app, showing an empty wallet with a deposit button apparently designed to lure victims into sending Bitcoin. Foundation responded on Oct. 26, 2026, saying attackers abused compromised Cloudflare API keys, that it has revoked every key and taken down the malicious domain, and that Passport devices and funds are safe. The company has not said whether its customer database was breached, while recipients reported the messages included their full names and home addresses, including for a wallet bought two years ago.",
+      "sources": [
+        {
+          "name": "BeInCrypto",
+          "url": "https://beincrypto.com/bitcoin-wallet-phishing-foundation-home-addresses/"
+        },
+        {
+          "name": "Coinotag",
+          "url": "https://en.coinotag.com/foundation-revokes-cloudflare-api-keys-passport-phishing"
+        }
+      ],
+      "take": "The scariest line here is not the fake website — it is that the email came from the real domain and knew real names and addresses. A sender address you recognise is no longer proof of anything, and personal details in a message are no longer proof either. Judge every urgent message by what it asks you to do: if it wants you to click, download, or move coins somewhere \"safe,\" stop, go to the company's site yourself, and check there. And if your home address is tied to a crypto purchase, take the physical-security side seriously too."
+    },
+    {
+      "id": "rcn-20261026-electrum",
+      "date": "Oct 26, 2026",
+      "category": "exploit",
+      "title": "Electrum wallet bug let rogue servers swap in fake payments — patch 4.8.3 released Oct. 24",
+      "what": "Electrum, one of Bitcoin's oldest software wallets, disclosed a flaw in which malicious servers could substitute a fake pending transaction for a user's real one, because the wallet trusted servers to report unconfirmed transactions without verifying their signatures. If the user then used Replace-by-Fee to speed up the payment, Electrum could sign a valid replacement sending the coins to an attacker-controlled address. Developers received two reports in October: an Oct. 11 report involving a multisignature wallet where no funds were reported lost, and an Oct. 18 report from a user who lost funds after raising the fee on a substituted transaction; the amount stolen has not been disclosed. Electrum released version 4.8.3 on Oct. 24, 2026, adding signature checks for unconfirmed transactions, and says users connected only to trusted servers, including their own, were not exposed.",
+      "sources": [
+        {
+          "name": "CoinDesk",
+          "url": "https://www.coindesk.com/tech/2026/10/26/bitcoin-wallet-bug-let-rogue-servers-steal-funds-when-users-tried-to-speed-up-payments"
+        }
+      ],
+      "take": "This one breaks a comforting assumption: that the danger is always someone stealing your keys. Here, the wallet simply believed a lying server, and an everyday action — speeding up a stuck payment — did the rest. The fix exists, so the lesson is boring and practical: update the wallet, check the full receiving address and amount before you sign anything, and never rush a transaction that suddenly looks different from the one you sent."
+    },
+    {
       "id": "rcn-20261024-x100",
       "date": "Oct 24, 2026",
       "category": "exploit",
@@ -322,6 +386,5 @@
       "title": "The token-LOCKING platform gets drained: $86K exploit hits UNCX vesting pool",
       "what": "UNCX Network (formerly UniCrypt) — whose entire business is locking tokens so insiders can't sell early — lost ~$86,000 from its shared vesting pool on Ethereum. Per security firm Blockaid, the attacker opened several vesting positions, released one large position, topped up the pool, then cancelled a position in a way that left a tiny leftover slot able to withdraw OTHER users' tokens. Ten tokens across four chains were affected. UNCX paused new positions, raised fees, and says its liquidity lockers are unaffected. Funds remain missing."
     }
-  ],
-  "updated": "2026-10-25"
+  ]
 }
