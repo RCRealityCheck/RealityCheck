@@ -1,6 +1,42 @@
 {
   "items": [
     {
+      "id": "rcn-20261028-apestr",
+      "date": "Oct 28, 2026",
+      "category": "exploit",
+      "title": "ApeSTR flaw exploited: 21 Bored Apes swapped for packs, about $14,000 taken — and the 21 Apes are now stuck in the contract",
+      "what": "A known flaw in the ApeSTR contract was exploited. Someone swapped 21 Bored Apes into the contract to claim the Mudwater packs tied to them — about $14,000 in value — and the 21 Apes they used are now stuck inside the contract. A Yuga Labs VP flagged the exploit publicly, and the project's founder says six other original Strategy coins carry the same flaw. The original contracts cannot be upgraded, so there is no patch coming for the design itself.",
+      "sources": [
+        {
+          "name": "KuCoin",
+          "url": "https://www.kucoin.com/news/flash/yuga-labs-vp-reveals-apestr-exploit-leads-to-14-000-profit"
+        },
+        {
+          "name": "The Bored Ape Gazette",
+          "url": "https://www.theboredapegazette.com/post/trick-or-trapped-a-tokenworks-exploit-leaves-21-bayc-nfts-stuck-inside-the-apestr-contract"
+        }
+      ],
+      "take": "The dollar amount is small. The pattern is not. The flaw was known, the contract cannot be changed, and now real assets sit trapped inside it. Code that can never be fixed turns one bad day into a permanent loss. Reality: before you park anything valuable in a contract, ask one question — if something goes wrong, can anyone fix it? If the answer is no, the risk never expires."
+    },
+    {
+      "id": "rcn-20261027-tranche-vault",
+      "date": "Oct 27, 2026",
+      "category": "exploit",
+      "title": "Tranche Vault on Avalanche drained of about $1.01M USDC in a flash-loan attack",
+      "what": "Blockaid flagged an attack in progress on a Tranche Vault on Avalanche tied to Fence Finance and Valinor Digital. The attacker used flash loans to mint inflated tranche shares, then redeemed the vault's remaining USDC — about $1.01 million gone in roughly two transactions. A balance check found no USDC left in the identified contract. No pause, patch, or recovery has been announced.",
+      "sources": [
+        {
+          "name": "PANews",
+          "url": "https://www.panews.io/articles/01a1800f-8f09-75f5-aed7-7620b7c00c96"
+        },
+        {
+          "name": "KuCoin",
+          "url": "https://www.kucoin.com/news/flash/hackers-steal-1-01m-from-tranche-vault-on-avalanche"
+        }
+      ],
+      "take": "Nobody picked a lock here. The vault's own share math was the door: borrow big for one moment, mint shares at a fake price, hand them back for real money. Reality: when one trade can move a vault's share price, one trade can empty the vault. Before you deposit, ask how the shares are priced — that answer is the whole security model."
+    },
+    {
       "id": "rcn-20261026-near-intents",
       "date": "Oct 26, 2026",
       "category": "exploit",
