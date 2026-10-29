@@ -98,7 +98,7 @@
   </div>
   <form id="checkForm" class="card-form">
     <label for="contract">Contract Address</label>
-    <input type="text" id="contract" placeholder="0x..." required autocomplete="off">
+    <input type="text" id="contract" placeholder="0x... or Solana mint address" required autocomplete="off">
     <label for="chain">Chain</label>
     <select id="chain">
       <option value="eth-mainnet">Ethereum</option>
@@ -107,7 +107,7 @@
       <option value="base-mainnet">Base</option>
       <option value="polygon-mainnet">Polygon</option>
       <option value="arbitrum-mainnet">Arbitrum</option>
-      <option value="solana-mainnet">Solana (limited)</option>
+      <option value="solana-mainnet">Solana</option>
     </select>
     <button type="submit" class="btn btn-primary btn-full">Reveal the reality</button>
   </form>
@@ -1111,6 +1111,8 @@ function loadSolanaWeb3() {
     if (window.solanaWeb3) return resolve(window.solanaWeb3);
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.98.2/lib/index.iife.min.js';
+    s.integrity = 'sha384-0tcrqtc8yxzSMgKhUDdb/MAzeqFoklPUoKLnQMQ66d8vHNbZ3oqnZmfyKLDljnwf'; // exact npm file, pinned 1.98.2
+    s.crossOrigin = 'anonymous';
     s.onload = () => resolve(window.solanaWeb3);
     s.onerror = () => reject(new Error('Could not load Solana library'));
     document.head.appendChild(s);
@@ -1375,7 +1377,9 @@ function loadQrLib() {
   return new Promise((resolve, reject) => {
     if (window.qrcode) return resolve(window.qrcode);
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+    s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'; // original npm file (the .min is CDN-generated and can change)
+    s.integrity = 'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k';
+    s.crossOrigin = 'anonymous';
     s.onload = () => resolve(window.qrcode);
     s.onerror = () => reject(new Error('QR library failed'));
     document.head.appendChild(s);
