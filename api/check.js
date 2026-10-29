@@ -106,7 +106,9 @@ export default async function handler(req, res) {
     // The provider's order is not guaranteed. If the page came back unranked AND more pages exist,
     // the true biggest wallets may be on a page we did not read, so we refuse to guess.
     const ranked = raw.every((h, i) => i === 0 || bal(raw[i - 1]) >= bal(h));
-    const hasMore = !!j?.data?.pagination?.has_more;
+    // "Partial" = provider says more pages exist, reports more holders than it sent, or sent a full page (1000).
+    const pg = j?.data?.pagination || {};
+    const hasMore = !!pg.has_more || Number(pg.total_count || 0) > raw.length || raw.length >= 1000;
     if (!ranked && hasMore) return partial('Our holder data provider returned an unranked, partial holder list for this token, so we will not guess who the biggest wallets are. Here is what we could verify from live market data instead.');
     const items = raw.slice().sort((a, b) => { const x = bal(a), y = bal(b); return x > y ? -1 : x < y ? 1 : 0; });
     const first = items[0];
