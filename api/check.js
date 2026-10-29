@@ -20,12 +20,15 @@ async function solanaCheck(req, res, mint) {
   if (await rateLimited(req, 'freesol', 20, 3000)) return res.status(200).json({ success: false, rateLimited: true, message: LIMIT_MSG });
   let supply = null;
   const rpc = async (method, params) => {
-    for (const u of SOL_RPC_LIST) {
-      try {
-        const r = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(12000) });
-        const j = await r.json();
-        if (!j.error && j.result !== undefined && j.result !== null) { if (method === 'getTokenSupply' && params[0] === mint) supply = j.result; return j.result; }
-      } catch {}
+    for (let round = 0; round < 2; round++) { // heavy calls (largest accounts) sometimes fail once; one retry
+      if (round) await new Promise(r => setTimeout(r, 700));
+      for (const u of SOL_RPC_LIST) {
+        try {
+          const r = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(12000) });
+          const j = await r.json();
+          if (!j.error && j.result !== undefined && j.result !== null) { if (method === 'getTokenSupply' && params[0] === mint) supply = j.result; return j.result; }
+        } catch {}
+      }
     }
     return null;
   };
@@ -108,11 +111,14 @@ export default async function handler(req, res) {
     const ranked = raw.every((h, i) => i === 0 || bal(raw[i - 1]) >= bal(h));
     // "Partial" = provider says more pages exist, reports more holders than it sent, or sent a full page (1000).
     const pg = j?.data?.pagination || {};
-    const hasMore = !!pg.has_more || Number(pg.total_count || 0) > raw.length || raw.length >= 1000;
+    let total = 0n; try { total = BigInt(raw[0].total_supply || '0'); } catch {}
+    const fetched = raw.reduce((s, h) => s + bal(h), 0n);
+    // Unranked lists are only trusted if they clearly contain (almost) every token: >= 95% of supply.
+    const covers = total > 0n && fetched * 100n >= total * 95n;
+    const hasMore = !!pg.has_more || Number(pg.total_count || 0) > raw.length || raw.length === 100 || raw.length >= 1000 || !covers;
     if (!ranked && hasMore) return partial('Our holder data provider returned an unranked, partial holder list for this token, so we will not guess who the biggest wallets are. Here is what we could verify from live market data instead.');
     const items = raw.slice().sort((a, b) => { const x = bal(a), y = bal(b); return x > y ? -1 : x < y ? 1 : 0; });
     const first = items[0];
-    let total = 0n; try { total = BigInt(first.total_supply || '0'); } catch {}
     const decimals = Number.isInteger(first.contract_decimals) ? first.contract_decimals : 18;
     const pctOf = (b) => total > 0n ? Number(b * 1000000n / total) / 10000 : 0;
     const top = items.slice(0, 10).map(h => ({ address: h.address, pct: pctOf(bal(h)), pos: bal(h) > 0n }));
