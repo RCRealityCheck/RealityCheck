@@ -116,6 +116,9 @@ export default async function handler(req, res) {
     // Unranked lists are only trusted if they clearly contain (almost) every token: >= 95% of supply.
     const covers = total > 0n && fetched * 100n >= total * 95n;
     const hasMore = !!pg.has_more || Number(pg.total_count || 0) > raw.length || raw.length === 100 || raw.length >= 1000 || !covers;
+    // Even a ranked list is broken if all the holders it lists add up to under 10% of supply (seen: GMX on Arbitrum,
+    // ~0.02%). The real top holders of any token hold far more than that, so we refuse to score it.
+    if (total > 0n && fetched * 10n < total) return partial('Our holder data provider’s list for this token adds up to less than 10% of its supply, so it is incomplete or out of date and we will not score it. Here is what we could verify from live market data instead.');
     if (!ranked && hasMore) return partial('Our holder data provider returned an unranked, partial holder list for this token, so we will not guess who the biggest wallets are. Here is what we could verify from live market data instead.');
     const items = raw.slice().sort((a, b) => { const x = bal(a), y = bal(b); return x > y ? -1 : x < y ? 1 : 0; });
     const first = items[0];
