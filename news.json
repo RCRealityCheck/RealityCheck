@@ -1,6 +1,70 @@
 {
   "items": [
     {
+      "id": "rcn-20261102-madagascar-scam-farms",
+      "date": "Nov 2, 2026",
+      "category": "victory",
+      "title": "Madagascar dismantles 13 scam farms and freezes nearly $52 million",
+      "what": "Malagasy law enforcement and the U.S. Department of Justice dismantled 13 online scam complexes in Madagascar after two months of joint operations, according to Agence France-Presse reporting. Investigators blocked nearly $52 million in cryptocurrencies in a single day and seized over 3,200 electronic devices, and 148 Chinese nationals convicted of online fraud have been transferred to China to serve their sentences. The complexes ran romance scams, fake investments and crypto fraud — the \"pig butchering\" model, in which victims are groomed for weeks through a trusting relationship before being directed to a fake platform and drained.",
+      "sources": [
+        {
+          "name": "WEEX",
+          "url": "https://www.weex.com/news/detail/crypto-52-million-dollars-seized-in-madagascar-13-scam-farms-dismantled-munnnu1sjzosheyw4bd4pgqv"
+        },
+        {
+          "name": "KuCoin",
+          "url": "https://www.kucoin.com/news/flash/madagascar-repatriates-148-chinese-citizens-involved-in-crypto-fraud"
+        }
+      ],
+      "take": "This is genuine good news, and it shows the other side of crypto's transparency: the same public ledgers scammers use to move money are what let investigators freeze $52 million in a day. It is also a reminder that these operations are moving — from Southeast Asia into Africa — so a scam can come from anywhere, not just the places in last year's headlines. If a new online friend or \"mentor\" steers you toward an investment platform, that warmth is the setup, not a reason to trust it."
+    },
+    {
+      "id": "rcn-20261102-sec-bg-wealth",
+      "date": "Nov 2, 2026",
+      "category": "scam",
+      "title": "SEC charges two entities over alleged $130 million crypto fraud",
+      "what": "The U.S. Securities and Exchange Commission charged BG Wealth Sharing Ltd and DSJ Exchange Pty Ltd over an alleged $130 million investment fraud, saying the scheme targeted tens of thousands of retail investors across more than 40 U.S. states between October 2025 and June 2026. The complaint alleges the entities promised risk-free returns from AI-generated crypto trading signals, submitted false Form ADV and Form D filings, and displayed fake certificates bearing the SEC's seal to present themselves as registered or approved. The SEC is seeking permanent injunctions, repayment of allegedly misappropriated funds and civil penalties; the charges are allegations, not a court finding.",
+      "sources": [
+        {
+          "name": "Grafa",
+          "url": "https://grafa.com/en/news/crypto/sec-charges-two-entities-over-130-million-crypto-fraud"
+        }
+      ],
+      "take": "A regulator's seal on a website is not proof of anything — in this case, the SEC says the seal itself was faked and the filings were used as props. \"Risk-free returns\" should end the conversation on its own: no real trading signal can promise that, AI or not. Before trusting any platform, check the regulator's own records yourself, not a certificate the platform shows you."
+    },
+    {
+      "id": "rcn-20261101-btcpay-hot-wallet",
+      "date": "Nov 1, 2026",
+      "category": "hack",
+      "title": "BTCPay Server urges shutdown after hot wallets drained on older versions",
+      "what": "Late on Nov 1, 2026, BTCPay Server warned operators that hot wallets on self-hosted payment servers were being swept by unauthorized attackers, and urged them to shut down their servers while it investigated. Founder Nicolas Dorier said an attacker logged in as an administrator on affected servers, and the team identified version 2.4.1, released July 23, 2026, and older versions as in scope. In a Nov 2, 2026 update, the team said it had no credible reports of hot wallet drains from version 2.4.7, the latest release, but it has not disclosed total losses or how attackers obtained administrator access.",
+      "sources": [
+        {
+          "name": "The Bit Journal",
+          "url": "https://thebitjournal.com/btcpay-server-hack-investigation/"
+        },
+        {
+          "name": "CryptoPulseDaily",
+          "url": "https://cryptopulsedaily.com/bitcoin-payment-processor-btcpay-hit-by-hot-wallet-theft-reports/"
+        }
+      ],
+      "take": "Self-hosting is supposed to remove the middleman, but it also makes you the security team — and a hot wallet means the keys sit on the very server an attacker just logged into. The honest part of this story is what is still unknown: no loss total, no entry method, only a version range to act on. If you run a payment server, that is enough to act now: update, keep only spending money in a hot wallet, and treat \"we will explain later\" as a reason to be cautious, not to wait."
+    },
+    {
+      "id": "rcn-20261101-zachxbt-106m",
+      "date": "Nov 1, 2026",
+      "category": "dispute",
+      "title": "ZachXBT flags suspected $106 million theft from a European entity",
+      "what": "On-chain investigator ZachXBT issued a community alert based on his personal assessment, suggesting that a European entity was attacked on Nov 1, 2026, with funds stolen from multiple centralized exchange accounts and losses exceeding $106 million. He said the attacker withdrew the funds as USDC and USDT, then swapped USDC for ETH over the past 24 hours and moved funds through instant exchange platforms and cross-chain bridges into Monero (XMR). ZachXBT disclosed 11 involved addresses and urged monitoring of the fund movements, but no victim has been publicly named or confirmed the theft in the reporting so far.",
+      "sources": [
+        {
+          "name": "KuCoin",
+          "url": "https://www.kucoin.com/news/flash/eu-entity-suspected-of-106m-theft-attackers-using-cross-chain-and-privacy-coins"
+        }
+      ],
+      "take": "Treat this one as an allegation with a paper trail, not a confirmed theft — the on-chain movements are visible, but the victim and the break-in itself are not yet confirmed. That gap matters, because the laundering pattern it describes is real and familiar: stablecoins to ETH, then bridges and a privacy coin to break the trail. The lesson holds either way: once stolen funds reach Monero, tracing mostly ends, which is why freezing has to happen in the first hours, not after the story breaks."
+    },
+    {
       "id": "rcn-20261101-fbi-tradertraitor",
       "date": "Nov 1, 2026",
       "category": "hack",
