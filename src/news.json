@@ -1,6 +1,92 @@
 {
   "items": [
     {
+      "title": "Keplr social-login wallets drained in Web3Auth breach — and part of the $6 million may be rescue, not theft",
+      "sources": [
+        {
+          "name": "Crypto.news",
+          "url": "https://crypto.news/keplr-wallet-hack-web3auth-google-apple-login/"
+        },
+        {
+          "name": "Crypto Briefing",
+          "url": "https://cryptobriefing.com/web3auth-disputes-keplr-theft-estimate/"
+        }
+      ],
+      "date": "Nov 8, 2026",
+      "category": "dispute",
+      "what": "Keplr confirmed on November 7 that some wallets created with a Google or Apple login had unauthorized transactions, traced to a security flaw at Web3Auth, the login provider owned by Consensys. Blockchain firm Bitquery counted about $6.01 million moved out of roughly 44,700 wallets across Cosmos networks between November 6 and 7, including 1.96 million staked ATOM moved without the usual 21-day unbonding wait. Keplr co-founder Josh Lee said roughly 20% of the platform's social-login accounts could be affected, though only a fraction had been exploited. Web3Auth confirmed the flaw on November 6 and paused its embedded wallet service. Then on November 8, Web3Auth said some of the transfers Bitquery counted were its own whitehat recoveries — funds moved to verified recovery wallets to protect them before the attacker could take them — and published a list of those addresses covering eleven Cosmos networks and eight EVM chains. Neither company has said how much the attacker actually took, or whether affected users will be reimbursed. Wallets backed by a written-down recovery phrase or a hardware device were not affected.",
+      "take": "Two things are true at once here, and the confusion is the point. A real breach exposed real people's wallets — that part is confirmed — but the $6 million figure mixes stolen money with rescue money, and nobody has yet said how much is which. The lesson is one Reality Check keeps repeating: a login that feels easy — sign in with Google, no seed phrase to write down — means someone else holds the keys to your money. If you use a social-login wallet, move your funds to a wallet where you hold the recovery phrase, and never trust a stranger offering to \"recover\" your assets for you.",
+      "id": "rcn-20261108-keplr-social-login-wallets-drained"
+    },
+    {
+      "title": "Former Holograph employee sentenced to five years over $14 million token mint",
+      "sources": [
+        {
+          "name": "CryptoNews",
+          "url": "https://cryptonews.net/news/legal/33720010/"
+        },
+        {
+          "name": "PANews",
+          "url": "https://www.panews.io/articles/01a1b893-5cc2-725c-b9e2-e0068200443b"
+        }
+      ],
+      "date": "Nov 6, 2026",
+      "category": "victory",
+      "what": "A Paris criminal court sentenced a former Holograph Foundation employee, identified as Vitaliy K., to five years in prison — two of them to be served — plus a €600,000 fine, for illegally changing the minting rules for HLG tokens between May and August 2024 and creating and stealing 1 billion tokens worth about $14 million at the time. He was found guilty of unauthorized access to an automated data processing system, organized fraud, money laundering, and membership in a criminal association. Two accomplices were also convicted and received lighter sentences. The court dismissed the foundation's claim for compensation over the fall in HLG's price, finding the token had already dropped sharply before the fraud took place. The case began with arrests in Italy in September 2024. The foundation has stalled its business operations and is preparing for liquidation.",
+      "take": "Justice in crypto is slow — this crime happened in 2024 and the sentence landed more than two years later — but it does arrive, and it reaches insiders, not just outside hackers. The uncomfortable part of this case is that no audit would have stopped it: the thief already had legitimate access and quietly rewrote the rules. For anyone holding a token, that is the question worth asking — who can mint more of it, and who watches them? A project where one employee can print a billion tokens is a project with a single point of failure wearing a name badge.",
+      "id": "rcn-20261106-former-holograph-employee-sentenced-to"
+    },
+    {
+      "title": "French bank theft: $126 million traced, $37 million still sitting on Ethereum",
+      "sources": [
+        {
+          "name": "Bitquery",
+          "url": "https://www.bitquery.io/investigations/eu-106m-crypto-theft"
+        },
+        {
+          "name": "CoinDesk",
+          "url": "https://www.coindesk.com/business/2026/11/04/zachxbt-names-french-bank-credit-mutuel-arkea-as-suspected-victim-of-usd133-million-crypto-theft"
+        }
+      ],
+      "date": "Nov 5, 2026",
+      "category": "hack",
+      "what": "Blockchain analytics firm Bitquery traced $126.04 million in USDC withdrawn from Kraken, Crypto.com and OKX accounts on November 1–2, in a theft first flagged by investigator ZachXBT. The victim, French banking group Crédit Mutuel Arkéa, has confirmed a cyberattack, saying intruders got in through a supplier's platform and used the bank's own account to wire money to other banks before it was turned into crypto; the bank says no customer lost money and put its first estimate at about €100 million. As of 08:47 UTC on November 5, $37.26 million still sat in Ethereum addresses tied to the thief, mostly as ETH, after the thief swapped about $63 million of stablecoins into ETH within hours — a move that matters because ETH cannot be frozen by an issuer. Tether has frozen $1.14 million of the thief's USDT; Circle has frozen none of the $1.71 million USDC the thief still holds. The Paris prosecutor's office has opened an inquiry. The totals still disagree — ZachXBT counts more than $133 million, Bitquery $126 million, the bank about €100 million — and Bitquery says it cannot yet explain either gap.",
+      "take": "This is the follow-up to the theft we covered on November 4, and the new numbers tell a sharper story than the first reports did. Twelve of the seventeen wallets had been receiving payouts from the same exchanges since May, which means this was patient setup, not a smash-and-grab — the thieves built the plumbing months before they turned the tap on. The other lesson is about the freeze button: after the Binance hack, Tether and Circle froze more than $2 billion within hours, but here the thief swapped into ETH for four hours with no freeze at all, and Circle still has not frozen a dollar. A safety switch only protects you if someone presses it in time, so never treat \"it can be frozen\" as \"it will be frozen.\"",
+      "id": "rcn-20261105-french-bank-theft-126-million"
+    },
+    {
+      "title": "Fake Trust Wallet site trastwallet.cam is a wallet drainer in waiting",
+      "sources": [
+        {
+          "name": "Crypto Briefing",
+          "url": "https://cryptobriefing.com/trust-wallet-phishing-site-trastwallet-cam/"
+        },
+        {
+          "name": "CoinStats",
+          "url": "https://coinstats.app/news/a6908487aa33eae14a1e1c2994715ed423ce5f6c8c3bf5edda6c84b1dc3ad9b5_Trust-Wallet-Phishing-Fake-cam-Site-Also-Targets-Phantom-and-OKX-Wallet/"
+        }
+      ],
+      "date": "Nov 5, 2026",
+      "category": "warning",
+      "what": "Researchers identified a fake Trust Wallet website at trastwallet.cam on November 4, 2026, and Binance co-founder Changpeng Zhao publicly warned about it on November 5. The site asks visitors to connect their wallet to \"review transfers,\" then scans the connected wallet's balances and prepares transfers to addresses the scammers control; it supports Trust Wallet, Phantom and OKX Wallet connections. The real Trust Wallet domain is trustwallet.com — the impostor swaps the \"u\" in trust for an \"a\" and \".com\" for \".cam.\" At the time of the report, transaction signing was switched off on the site, so the prepared transfers could not go through, and no confirmed losses tied directly to trastwallet.cam have been reported. Security platform Phishunt.io has documented at least nine active suspicious sites associated with Trust Wallet as of early November, and Zürich police warned about Trust Wallet phishing emails on October 30.",
+      "take": "Two letters is the whole scam — trustwallet.com versus trastwallet.cam — and that is how thin the safety margin is when you click a link instead of typing an address. The important part is that nobody has lost money to this site yet, and that is exactly the moment to learn from it: connecting your wallet is not harmless, because it lets a site see everything you hold and stage the transfers, and the only thing standing between \"staged\" and \"gone\" is a signing switch the scammers can flip whenever they like. Bookmark the real site, never connect a wallet to \"review\" anything, and read every signing request as if it were a stranger asking for your keys — because it is.",
+      "id": "rcn-20261105-fake-trust-wallet-site-trastwallet"
+    },
+    {
+      "title": "Binance explains how a fake recruiter and poisoned installer led to the $6.34 billion theft",
+      "sources": [
+        {
+          "name": "CybrSec Media",
+          "url": "https://www.cybrsecmedia.com/lessons-learned-fake-recruiters-poisoned-pyenv-and-a-634b-binance-loss/"
+        }
+      ],
+      "date": "Nov 5, 2026",
+      "category": "hack",
+      "what": "Binance detailed this week how the October 29 theft of $6.34 billion in cryptocurrency unfolded. In June, a wallet DevOps engineer searching for an AI coding tool clicked a search-engine ad and installed a tampered copy of Homebrew, a Mac package manager; Binance caught that intrusion, replaced the device and rotated credentials, but the attackers had learned who worked on wallet infrastructure. In September, a second engineer was contacted on a job-hunting platform by someone posing as a recruiter, and was told to download an interview assignment that replaced a component of pyenv, a Python version tool, with malware that evaded endpoint protection. The attackers then used that machine and an internal AI tool as a springboard to reach two more engineers, one of whose computer held a container-deployment token. On October 29, between 17:15 and 19:56 UTC, they used that token to reach Binance's internal wallet-signing service and drain hot wallets; the last unauthorized transfer completed at 23:56 UTC. Binance says about $2.85 billion has been frozen or intercepted and 98% of affected token assets had been replenished by October 31, and relays the FBI's finding that North Korea was responsible.",
+      "take": "The biggest crypto theft in history did not start with a broken blockchain — it started with a Google ad and a fake job interview, four months apart. Binance caught the first intrusion and did everything the playbook says, and it still was not enough, because the attackers kept their map of the organisation and came back through a different door. That is the pattern worth remembering: catching one break-in does not mean the burglar is gone. The encouraging half of this story is the recovery — $2.85 billion frozen or intercepted and nearly all affected assets replenished within two days — which shows that even at this scale, fast tracing and fast freezing can claw most of it back.",
+      "id": "rcn-20261105-binance-explains-how-a-fake"
+    },
+    {
       "id": "rcn-20261102-madagascar-scam-farms",
       "date": "Nov 2, 2026",
       "category": "victory",
