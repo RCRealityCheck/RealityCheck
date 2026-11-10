@@ -1,814 +1,878 @@
 {
-  "items": [
+ "items": [
+  {
+   "title": "Former FBI agent pleads guilty to stealing $2.47 million in crypto from cases he was investigating",
+   "sources": [
     {
-      "title": "Keplr social-login wallets drained in Web3Auth breach — and part of the $6 million may be rescue, not theft",
-      "sources": [
-        {
-          "name": "Crypto.news",
-          "url": "https://crypto.news/keplr-wallet-hack-web3auth-google-apple-login/"
-        },
-        {
-          "name": "Crypto Briefing",
-          "url": "https://cryptobriefing.com/web3auth-disputes-keplr-theft-estimate/"
-        }
-      ],
-      "date": "Nov 8, 2026",
-      "category": "dispute",
-      "what": "Keplr confirmed on November 7 that some wallets created with a Google or Apple login had unauthorized transactions, traced to a security flaw at Web3Auth, the login provider owned by Consensys. Blockchain firm Bitquery counted about $6.01 million moved out of roughly 44,700 wallets across Cosmos networks between November 6 and 7, including 1.96 million staked ATOM moved without the usual 21-day unbonding wait. Keplr co-founder Josh Lee said roughly 20% of the platform's social-login accounts could be affected, though only a fraction had been exploited. Web3Auth confirmed the flaw on November 6 and paused its embedded wallet service. Then on November 8, Web3Auth said some of the transfers Bitquery counted were its own whitehat recoveries — funds moved to verified recovery wallets to protect them before the attacker could take them — and published a list of those addresses covering eleven Cosmos networks and eight EVM chains. Neither company has said how much the attacker actually took, or whether affected users will be reimbursed. Wallets backed by a written-down recovery phrase or a hardware device were not affected.",
-      "take": "Two things are true at once here, and the confusion is the point. A real breach exposed real people's wallets — that part is confirmed — but the $6 million figure mixes stolen money with rescue money, and nobody has yet said how much is which. The lesson is one Reality Check keeps repeating: a login that feels easy — sign in with Google, no seed phrase to write down — means someone else holds the keys to your money. If you use a social-login wallet, move your funds to a wallet where you hold the recovery phrase, and never trust a stranger offering to \"recover\" your assets for you.",
-      "id": "rcn-20261108-keplr-social-login-wallets-drained"
+     "name": "Unchained",
+     "url": "https://unchainedcrypto.com/ex-fbi-agents-plea-puts-crypto-theft-at-2-47-million-over-twice-what-he-first-told-the-fbi/"
     },
     {
-      "title": "Former Holograph employee sentenced to five years over $14 million token mint",
-      "sources": [
-        {
-          "name": "CryptoNews",
-          "url": "https://cryptonews.net/news/legal/33720010/"
-        },
-        {
-          "name": "PANews",
-          "url": "https://www.panews.io/articles/01a1b893-5cc2-725c-b9e2-e0068200443b"
-        }
-      ],
-      "date": "Nov 6, 2026",
-      "category": "victory",
-      "what": "A Paris criminal court sentenced a former Holograph Foundation employee, identified as Vitaliy K., to five years in prison — two of them to be served — plus a €600,000 fine, for illegally changing the minting rules for HLG tokens between May and August 2024 and creating and stealing 1 billion tokens worth about $14 million at the time. He was found guilty of unauthorized access to an automated data processing system, organized fraud, money laundering, and membership in a criminal association. Two accomplices were also convicted and received lighter sentences. The court dismissed the foundation's claim for compensation over the fall in HLG's price, finding the token had already dropped sharply before the fraud took place. The case began with arrests in Italy in September 2024. The foundation has stalled its business operations and is preparing for liquidation.",
-      "take": "Justice in crypto is slow — this crime happened in 2024 and the sentence landed more than two years later — but it does arrive, and it reaches insiders, not just outside hackers. The uncomfortable part of this case is that no audit would have stopped it: the thief already had legitimate access and quietly rewrote the rules. For anyone holding a token, that is the question worth asking — who can mint more of it, and who watches them? A project where one employee can print a billion tokens is a project with a single point of failure wearing a name badge.",
-      "id": "rcn-20261106-former-holograph-employee-sentenced-to"
-    },
-    {
-      "title": "French bank theft: $126 million traced, $37 million still sitting on Ethereum",
-      "sources": [
-        {
-          "name": "Bitquery",
-          "url": "https://www.bitquery.io/investigations/eu-106m-crypto-theft"
-        },
-        {
-          "name": "CoinDesk",
-          "url": "https://www.coindesk.com/business/2026/11/04/zachxbt-names-french-bank-credit-mutuel-arkea-as-suspected-victim-of-usd133-million-crypto-theft"
-        }
-      ],
-      "date": "Nov 5, 2026",
-      "category": "hack",
-      "what": "Blockchain analytics firm Bitquery traced $126.04 million in USDC withdrawn from Kraken, Crypto.com and OKX accounts on November 1–2, in a theft first flagged by investigator ZachXBT. The victim, French banking group Crédit Mutuel Arkéa, has confirmed a cyberattack, saying intruders got in through a supplier's platform and used the bank's own account to wire money to other banks before it was turned into crypto; the bank says no customer lost money and put its first estimate at about €100 million. As of 08:47 UTC on November 5, $37.26 million still sat in Ethereum addresses tied to the thief, mostly as ETH, after the thief swapped about $63 million of stablecoins into ETH within hours — a move that matters because ETH cannot be frozen by an issuer. Tether has frozen $1.14 million of the thief's USDT; Circle has frozen none of the $1.71 million USDC the thief still holds. The Paris prosecutor's office has opened an inquiry. The totals still disagree — ZachXBT counts more than $133 million, Bitquery $126 million, the bank about €100 million — and Bitquery says it cannot yet explain either gap.",
-      "take": "This is the follow-up to the theft we covered on November 4, and the new numbers tell a sharper story than the first reports did. Twelve of the seventeen wallets had been receiving payouts from the same exchanges since May, which means this was patient setup, not a smash-and-grab — the thieves built the plumbing months before they turned the tap on. The other lesson is about the freeze button: after the Binance hack, Tether and Circle froze more than $2 billion within hours, but here the thief swapped into ETH for four hours with no freeze at all, and Circle still has not frozen a dollar. A safety switch only protects you if someone presses it in time, so never treat \"it can be frozen\" as \"it will be frozen.\"",
-      "id": "rcn-20261105-french-bank-theft-126-million"
-    },
-    {
-      "title": "Fake Trust Wallet site trastwallet.cam is a wallet drainer in waiting",
-      "sources": [
-        {
-          "name": "Crypto Briefing",
-          "url": "https://cryptobriefing.com/trust-wallet-phishing-site-trastwallet-cam/"
-        },
-        {
-          "name": "CoinStats",
-          "url": "https://coinstats.app/news/a6908487aa33eae14a1e1c2994715ed423ce5f6c8c3bf5edda6c84b1dc3ad9b5_Trust-Wallet-Phishing-Fake-cam-Site-Also-Targets-Phantom-and-OKX-Wallet/"
-        }
-      ],
-      "date": "Nov 5, 2026",
-      "category": "warning",
-      "what": "Researchers identified a fake Trust Wallet website at trastwallet.cam on November 4, 2026, and Binance co-founder Changpeng Zhao publicly warned about it on November 5. The site asks visitors to connect their wallet to \"review transfers,\" then scans the connected wallet's balances and prepares transfers to addresses the scammers control; it supports Trust Wallet, Phantom and OKX Wallet connections. The real Trust Wallet domain is trustwallet.com — the impostor swaps the \"u\" in trust for an \"a\" and \".com\" for \".cam.\" At the time of the report, transaction signing was switched off on the site, so the prepared transfers could not go through, and no confirmed losses tied directly to trastwallet.cam have been reported. Security platform Phishunt.io has documented at least nine active suspicious sites associated with Trust Wallet as of early November, and Zürich police warned about Trust Wallet phishing emails on October 30.",
-      "take": "Two letters is the whole scam — trustwallet.com versus trastwallet.cam — and that is how thin the safety margin is when you click a link instead of typing an address. The important part is that nobody has lost money to this site yet, and that is exactly the moment to learn from it: connecting your wallet is not harmless, because it lets a site see everything you hold and stage the transfers, and the only thing standing between \"staged\" and \"gone\" is a signing switch the scammers can flip whenever they like. Bookmark the real site, never connect a wallet to \"review\" anything, and read every signing request as if it were a stranger asking for your keys — because it is.",
-      "id": "rcn-20261105-fake-trust-wallet-site-trastwallet"
-    },
-    {
-      "title": "Binance explains how a fake recruiter and poisoned installer led to the $6.34 billion theft",
-      "sources": [
-        {
-          "name": "CybrSec Media",
-          "url": "https://www.cybrsecmedia.com/lessons-learned-fake-recruiters-poisoned-pyenv-and-a-634b-binance-loss/"
-        }
-      ],
-      "date": "Nov 5, 2026",
-      "category": "hack",
-      "what": "Binance detailed this week how the October 29 theft of $6.34 billion in cryptocurrency unfolded. In June, a wallet DevOps engineer searching for an AI coding tool clicked a search-engine ad and installed a tampered copy of Homebrew, a Mac package manager; Binance caught that intrusion, replaced the device and rotated credentials, but the attackers had learned who worked on wallet infrastructure. In September, a second engineer was contacted on a job-hunting platform by someone posing as a recruiter, and was told to download an interview assignment that replaced a component of pyenv, a Python version tool, with malware that evaded endpoint protection. The attackers then used that machine and an internal AI tool as a springboard to reach two more engineers, one of whose computer held a container-deployment token. On October 29, between 17:15 and 19:56 UTC, they used that token to reach Binance's internal wallet-signing service and drain hot wallets; the last unauthorized transfer completed at 23:56 UTC. Binance says about $2.85 billion has been frozen or intercepted and 98% of affected token assets had been replenished by October 31, and relays the FBI's finding that North Korea was responsible.",
-      "take": "The biggest crypto theft in history did not start with a broken blockchain — it started with a Google ad and a fake job interview, four months apart. Binance caught the first intrusion and did everything the playbook says, and it still was not enough, because the attackers kept their map of the organisation and came back through a different door. That is the pattern worth remembering: catching one break-in does not mean the burglar is gone. The encouraging half of this story is the recovery — $2.85 billion frozen or intercepted and nearly all affected assets replenished within two days — which shows that even at this scale, fast tracing and fast freezing can claw most of it back.",
-      "id": "rcn-20261105-binance-explains-how-a-fake"
-    },
-    {
-      "id": "rcn-20261102-madagascar-scam-farms",
-      "date": "Nov 2, 2026",
-      "category": "victory",
-      "title": "Madagascar dismantles 13 scam farms and freezes nearly $52 million",
-      "what": "Malagasy law enforcement and the U.S. Department of Justice dismantled 13 online scam complexes in Madagascar after two months of joint operations, according to Agence France-Presse reporting. Investigators blocked nearly $52 million in cryptocurrencies in a single day and seized over 3,200 electronic devices, and 148 Chinese nationals convicted of online fraud have been transferred to China to serve their sentences. The complexes ran romance scams, fake investments and crypto fraud — the \"pig butchering\" model, in which victims are groomed for weeks through a trusting relationship before being directed to a fake platform and drained.",
-      "sources": [
-        {
-          "name": "WEEX",
-          "url": "https://www.weex.com/news/detail/crypto-52-million-dollars-seized-in-madagascar-13-scam-farms-dismantled-munnnu1sjzosheyw4bd4pgqv"
-        },
-        {
-          "name": "KuCoin",
-          "url": "https://www.kucoin.com/news/flash/madagascar-repatriates-148-chinese-citizens-involved-in-crypto-fraud"
-        }
-      ],
-      "take": "This is genuine good news, and it shows the other side of crypto's transparency: the same public ledgers scammers use to move money are what let investigators freeze $52 million in a day. It is also a reminder that these operations are moving — from Southeast Asia into Africa — so a scam can come from anywhere, not just the places in last year's headlines. If a new online friend or \"mentor\" steers you toward an investment platform, that warmth is the setup, not a reason to trust it."
-    },
-    {
-      "id": "rcn-20261102-sec-bg-wealth",
-      "date": "Nov 2, 2026",
-      "category": "scam",
-      "title": "SEC charges two entities over alleged $130 million crypto fraud",
-      "what": "The U.S. Securities and Exchange Commission charged BG Wealth Sharing Ltd and DSJ Exchange Pty Ltd over an alleged $130 million investment fraud, saying the scheme targeted tens of thousands of retail investors across more than 40 U.S. states between October 2025 and June 2026. The complaint alleges the entities promised risk-free returns from AI-generated crypto trading signals, submitted false Form ADV and Form D filings, and displayed fake certificates bearing the SEC's seal to present themselves as registered or approved. The SEC is seeking permanent injunctions, repayment of allegedly misappropriated funds and civil penalties; the charges are allegations, not a court finding.",
-      "sources": [
-        {
-          "name": "Grafa",
-          "url": "https://grafa.com/en/news/crypto/sec-charges-two-entities-over-130-million-crypto-fraud"
-        }
-      ],
-      "take": "A regulator's seal on a website is not proof of anything — in this case, the SEC says the seal itself was faked and the filings were used as props. \"Risk-free returns\" should end the conversation on its own: no real trading signal can promise that, AI or not. Before trusting any platform, check the regulator's own records yourself, not a certificate the platform shows you."
-    },
-    {
-      "id": "rcn-20261101-btcpay-hot-wallet",
-      "date": "Nov 1, 2026",
-      "category": "hack",
-      "title": "BTCPay Server urges shutdown after hot wallets drained on older versions",
-      "what": "Late on Nov 1, 2026, BTCPay Server warned operators that hot wallets on self-hosted payment servers were being swept by unauthorized attackers, and urged them to shut down their servers while it investigated. Founder Nicolas Dorier said an attacker logged in as an administrator on affected servers, and the team identified version 2.4.1, released July 23, 2026, and older versions as in scope. In a Nov 2, 2026 update, the team said it had no credible reports of hot wallet drains from version 2.4.7, the latest release, but it has not disclosed total losses or how attackers obtained administrator access.",
-      "sources": [
-        {
-          "name": "The Bit Journal",
-          "url": "https://thebitjournal.com/btcpay-server-hack-investigation/"
-        },
-        {
-          "name": "CryptoPulseDaily",
-          "url": "https://cryptopulsedaily.com/bitcoin-payment-processor-btcpay-hit-by-hot-wallet-theft-reports/"
-        }
-      ],
-      "take": "Self-hosting is supposed to remove the middleman, but it also makes you the security team — and a hot wallet means the keys sit on the very server an attacker just logged into. The honest part of this story is what is still unknown: no loss total, no entry method, only a version range to act on. If you run a payment server, that is enough to act now: update, keep only spending money in a hot wallet, and treat \"we will explain later\" as a reason to be cautious, not to wait."
-    },
-    {
-      "id": "rcn-20261101-zachxbt-106m",
-      "date": "Nov 1, 2026",
-      "category": "dispute",
-      "title": "ZachXBT flags suspected $106 million theft from a European entity",
-      "what": "On-chain investigator ZachXBT issued a community alert based on his personal assessment, suggesting that a European entity was attacked on Nov 1, 2026, with funds stolen from multiple centralized exchange accounts and losses exceeding $106 million. He said the attacker withdrew the funds as USDC and USDT, then swapped USDC for ETH over the past 24 hours and moved funds through instant exchange platforms and cross-chain bridges into Monero (XMR). ZachXBT disclosed 11 involved addresses and urged monitoring of the fund movements, but no victim has been publicly named or confirmed the theft in the reporting so far.",
-      "sources": [
-        {
-          "name": "KuCoin",
-          "url": "https://www.kucoin.com/news/flash/eu-entity-suspected-of-106m-theft-attackers-using-cross-chain-and-privacy-coins"
-        }
-      ],
-      "take": "Treat this one as an allegation with a paper trail, not a confirmed theft — the on-chain movements are visible, but the victim and the break-in itself are not yet confirmed. That gap matters, because the laundering pattern it describes is real and familiar: stablecoins to ETH, then bridges and a privacy coin to break the trail. The lesson holds either way: once stolen funds reach Monero, tracing mostly ends, which is why freezing has to happen in the first hours, not after the story breaks."
-    },
-    {
-      "id": "rcn-20261101-fbi-tradertraitor",
-      "date": "Nov 1, 2026",
-      "category": "hack",
-      "title": "FBI names North Korea's TraderTraitor in the Binance theft as withdrawals start to reopen",
-      "what": "On Oct 31, 2026, the FBI attributed the theft of more than $6 billion in virtual assets from Binance, which took place on or about Oct 29, 2026, to North Korean actors it labels TraderTraitor, saying the stolen assets were being converted primarily into Ethereum and asking exchanges, DeFi services, node operators and analytics firms to block associated addresses. Binance's own Oct 31 update said roughly 90 percent of the affected assets had been replenished, up from about 80 percent the day before, with more than $6.34 billion in company funds set aside to cover losses. On Nov 1, 2026, Binance began reopening Bitcoin withdrawals, with reports putting replenishment at roughly 95 percent of impacted assets and the remainder in less-liquid tokens still being secured.",
-      "sources": [
-        {
-          "name": "CoinCourier",
-          "url": "https://coincourier.io/fbi-attributes-binance-theft-north-korea-tradertraitor/"
-        },
-        {
-          "name": "Basis Desk",
-          "url": "https://basisdesk.news/news/binance-reopens-bitcoin-withdrawals-after-exploit"
-        }
-      ],
-      "take": "Attribution is progress, not recovery — naming the group helps exchanges block the money, but it does not put a single coin back in a user's wallet. The part that actually helps ordinary people is the reopening of withdrawals, and even that is phased, not finished. Keep the two ideas separate: a government statement tells you who is blamed, while only your own successful withdrawal tells you your funds are truly accessible again."
-    },
-    {
-      "id": "rcn-20261101-canadian-scammer",
-      "date": "Nov 1, 2026",
-      "category": "victory",
-      "title": "Canadian scammer sentenced to 25 months over $13 million Bitcoin theft",
-      "what": "A 20-year-old Canadian, Johnston, was sentenced to 25 months in prison after pleading guilty to one count of conspiracy to commit money laundering, less than the 51 to 63 months prosecutors had recommended, with a separate wire fraud conspiracy charge dropped. Prosecutors attributed at least $13.04 million in stolen funds to him, including about 185 BTC worth close to $13 million taken on March 13 from a California victim who was tricked by people posing as Google employees and Trezor representatives; Johnston surrendered about $3.8 million in Bitcoin and Ether after his arrest. The court also noted his substantial assistance in investigating and prosecuting other suspects, and he is expected to be handed to U.S. Immigration and Customs Enforcement for deportation to Canada.",
-      "sources": [
-        {
-          "name": "CryptoPulseDaily",
-          "url": "https://cryptopulsedaily.com/canadian-crypto-scammer-gets-25-months-for-13m-bitcoin-theft/"
-        }
-      ],
-      "take": "A conviction is worth marking, even when the sentence feels light and most of the money is still gone — only about $3.8 million of the $13 million was surrendered, and nothing has been recovered from the 185 BTC theft itself. The real warning is in how it started: no company, and no real support team, will ever ask you to move your life savings because your email or wallet \"is compromised.\" That phone call or message is the crime, and the moment you pause and verify through a channel you trust, the whole trick falls apart."
-    },
-    {
-      "id": "rcn-20261101-certik-record",
-      "date": "Nov 1, 2026",
-      "category": "warning",
-      "title": "CertiK puts 2026 crypto losses at a record $9.2 billion",
-      "what": "Crypto security firm CertiK reported about $6.5 billion lost to exploits and phishing in October 2026, pushing its 2026 tally to roughly $9.2 billion, which it called the highest losses on record. The headline figure is gross losses: CertiK's dashboard, updated Oct 31, lists 89 October incidents and $3.03 billion in frozen or returned funds, leaving $3.47 billion in adjusted October losses. Binance's roughly $6.3 billion breach was the main driver of the October total, and October's gross losses alone exceed CertiK's roughly $3.35 billion total for all of 2025.",
-      "sources": [
-        {
-          "name": "CryptoNews",
-          "url": "https://cryptonews.net/news/security/33681955/"
-        }
-      ],
-      "take": "A record year is not a reason to panic, and it is not a reason to shrug either — it is a measure of how much trust is still being placed in systems that have not earned it. Notice the second number hiding inside the headline: $3.03 billion frozen or returned in a single month shows that tracing and freezing stolen funds is working far better than it used to. The takeaway for a normal person stays the same: keep most of your crypto somewhere only you control, connect only what you need, and treat any platform promising easy returns as a risk to check before you trust it."
-    },
-    {
-      "id": "rcn-20261031-stepdrainer",
-      "date": "Oct 31, 2026",
-      "category": "exploit",
-      "title": "StepDrainer malware hits at least 12 crypto sites in a coordinated frontend attack",
-      "what": "A coordinated wave of frontend attacks hit at least 12 cryptocurrency websites on Oct 31, 2026, with malicious code steering visitors toward wallet-draining pages after attackers seized control of domain infrastructure, according to blockchain security firm Blockaid. Blockaid tied the incidents to StepDrainer, a malware toolkit sold as a service that tricks visitors into fraudulent wallet connections and transaction approvals — frequently an unlimited token allowance or an off-chain Permit2-style signature — which can let an attacker move assets without a seed phrase or private key. The affected sites include Flap (flap.sh, which moved to flap.cool), Kintsu (kintsu.xyz), StonkFun (stonkfun.xyz), and nine others: pickle.finance, echelon.market, origami.finance, fluxbeam.xyz, stakepoint.app, supswap.xyz, longbow.cash, shprd.finance and apexdefi.xyz. StonkFun said only its website was affected, that its smart contracts were not broken and no private keys were stolen, and that it knew of no affected users at the time; Kintsu said its domain was compromised at the registrar level and advised anyone who connected a wallet or signed after 00:00 UTC on Oct 31 to revoke suspicious approvals and move exposed assets. Investigators have not confirmed a total financial loss or identified the attackers, and Blockaid's investigation is ongoing.",
-      "sources": [
-        {
-          "name": "BigGo Finance",
-          "url": "https://finance.biggo.com/news/1ac397c0-7010-4cf5-a1f6-0483d68edc74"
-        }
-      ],
-      "take": "This is the attack that breaks the usual safety advice, and that is exactly why it matters: nobody's password or seed phrase was stolen, and typing a familiar web address correctly still led to a trap. A hijacked website can ask your wallet for an \"unlimited approval\" that looks routine and quietly hands over the keys to your tokens. The defence is boring but real: never approve an unlimited allowance you do not need, check what a signature actually permits before you sign it, and if you touched any of these sites during the window, revoke the approvals and move your funds — do not wait to see whether anything goes missing first."
-    },
-    {
-      "id": "rcn-20261031-dubai-arrest",
-      "date": "Oct 31, 2026",
-      "category": "arrest",
-      "title": "Dubai Police arrest six over alleged fake crypto deal and recover AED 2.6 million",
-      "what": "Dubai Police have arrested six people suspected of defrauding a victim out of AED 2.6 million through a fake cryptocurrency trading deal, recovering both the stolen cash and digital assets. The scheme centred on an unlicensed currency exchange: the victim, seeking to buy digital currencies with a large sum of cash, agreed to a deal with members of the ring, transferred his virtual assets into decentralised wallets designed to obscure ownership, and the suspects then took the cash and fled. Dubai Police said investigators ran field operations alongside blockchain analysis tracing how the assets moved between wallets, and traced and secured the stolen virtual assets before they could be transferred further or liquidated. Police warned the public against cash-based deals with unverified intermediaries and against services promising outsized returns quickly, and urged residents to deal only with officially licensed virtual asset service providers. The suspects are accused, not convicted, and the case is under investigation.",
-      "sources": [
-        {
-          "name": "Lana Time",
-          "url": "https://en.lanatime.com/news/dubai-police-bust-crypto-fraud-ring-recover-aed-2-6mn-2026-10-31/"
-        }
-      ],
-      "take": "The gang bet that wallet-hopping would hide them, and it did not — that is the good news, and it is worth celebrating plainly. But the deeper lesson is about the deal itself, not the chase: a big cash handover to an unlicensed \"exchange\" is exactly the moment a victim has the most leverage and uses it least. No legitimate trade needs you to meet strangers with cash and send crypto into wallets built to obscure ownership. If a deal cannot happen through a licensed provider, in the open, with a paper trail, that is not an opportunity — it is the setup."
-    },
-    {
-      "id": "rcn-20261031-b14g",
-      "date": "Oct 31, 2026",
-      "category": "exploit",
-      "title": "One transaction drains about 97 million CORE from Bitcoin staking app b14g",
-      "what": "At 09:29 UTC on Oct 31, 2026, a single transaction to b14g, a staking service on the Core blockchain, withdrew about 97 million CORE staked through the service and sent it to attacker-controlled addresses, covering 99 staking positions in one instruction. At CORE's price of about $0.0151 just before the drain, that is worth about $1.47 million — an estimate, since neither b14g nor Core DAO has given a dollar value, and headlines calling it \"$97M\" are counting tokens, not dollars. b14g said it paused the affected contracts, that exchanges had frozen about 9 million CORE, and that users' bitcoin, which remains time-locked on Bitcoin, was not affected; by the morning of Nov 1, about 63.6 million CORE still sat in the attacker's second wallet. b14g has not yet said whether the cause was a missing permission check, a stolen key or something else, and has promised a detailed post-mortem.",
-      "sources": [
-        {
-          "name": "CryptoMediaZone",
-          "url": "https://cryptomediazone.com/hack-database/b14g-core-staking-exploit/"
-        }
-      ],
-      "take": "This is the quiet danger of chasing a higher yield: b14g paired CORE stakers with bitcoin stakers for a boosted rate, and the extra layer is exactly where the money sat when one instruction emptied 99 positions at once. A big token number can mislead in both directions — $1.47 million is still real people's savings, even if it is not $97 million. Until the post-mortem lands, the honest lesson is simple: if you cannot explain where your coins actually sit and who can move them, the advertised return is not worth the risk."
-    },
-    {
-      "id": "rcn-20261030-binance-fake-recovery",
-      "date": "Oct 30, 2026",
-      "category": "warning",
-      "title": "Fake \"recovery\" scams surfaced within an hour of the Binance hack",
-      "what": "An analysis by Brandefense of 668 Telegram posts and 2,255 X posts from the evening of Oct 29 to the morning of Oct 30, 2026 found that scam offers appeared almost immediately after the Binance hack. About an hour after the main sweep, Telegram channels offered \"stolen Binance funds\" for a fraction of their face value — terms matching a common advance-fee scam — and three X accounts presented themselves as fund recovery services. One post with 77,000 views told users a \"Grok bot\" could act for them if they connected an exchange API key with withdrawal rights, and seven token contracts were promoted under a $TRADERTRAITOR ticker that neither Binance nor the analytics firms have linked to the attackers. CoinMarketCap, which Binance owns, warned users it \"will never DM you asking for wallet details.\"",
-      "sources": [
-        {
-          "name": "Brandefense",
-          "url": "https://brandefense.io/blog/binance-hack-telegram-x-analysis/"
-        }
-      ],
-      "take": "Every big hack breeds a second crime, and this one took about an hour. The scammers do not need to break anything — they just need you frightened, in a hurry, and willing to trust a stranger who arrived first with \"help.\" No real recovery service will ever ask you to connect an API key with withdrawal rights, hand over a seed phrase, or pay a fee to release \"your\" funds. When the news is loudest, that is exactly when to slow down, check only the official app or a web address you typed yourself, and ignore every refund offer that finds you first."
-    },
-    {
-      "id": "rcn-20261030-binance-cover",
-      "date": "Oct 30, 2026",
-      "category": "hack",
-      "title": "Binance sets aside $6.34 billion to cover the hack and targets a phased withdrawal restart",
-      "what": "In its second security update on the record $6.3 billion hack of Oct 29, 2026, Binance said it has set aside more than $6.34 billion in company funds — drawn from its Secure Asset Fund for Users (SAFU) and corporate treasury — to absorb the losses, with about $5 billion already held in the exact tokens that were stolen and the rest being bought through market and over-the-counter channels. The exchange said about $3 billion of the stolen assets has been frozen with the help of partners, and that it plans to begin resuming withdrawals in phases within approximately 34 hours of the update, subject to security checks, with an updated proof-of-reserves result due by Monday, Nov 2. Binance's preliminary investigation suggested a company software engineer's laptop may have been compromised, but the second update says investigators have since uncovered additional points of breach; the exchange says it has found no evidence that wallet private keys were leaked, and it has not named an attacker, though TRM Labs and Chainalysis have linked the theft to North Korea's TraderTraitor group with high confidence.",
-      "sources": [
-        {
-          "name": "Forbes Africa",
-          "url": "https://www.forbesafrica.com/current-affairs/2026/10/31/binance-says-it-plans-to-resume-withdrawals-this-weekend-after-6-3-billion-hack"
-        },
-        {
-          "name": "CryptoNews",
-          "url": "https://cryptonews.net/news/market/33680437/"
-        }
-      ],
-      "take": "This is the follow-up that matters more than the first apology: real numbers, a real timetable, and a promise users can check against the clock. Setting aside more than was stolen is a strong signal, but notice what it does not prove — the proof-of-reserves snapshot shows assets, not that the security hole is closed, and the post-mortem is still to come. The lesson for a normal person is the same one this week keeps teaching: an exchange that covers its losses is good news, but it is not a reason to treat any exchange as a vault — keep only what you need to trade on one, and hold the rest yourself."
-    },
-    {
-      "id": "rcn-20261030-polymarket-refunds",
-      "date": "Oct 30, 2026",
-      "category": "exploit",
-      "title": "Polymarket refunds most hacked wallets after third-party breach drained about $2.7 million",
-      "what": "Prediction market Polymarket said hundreds of accounts on its international exchange were compromised on Oct 29, 2026, after one of its third-party providers was breached, forcing the platform to halt trading for about an hour. Reporting linked the compromised provider to DebugBear, a UK-based website performance-monitoring service whose code was embedded in the platform, and to malicious JavaScript that hijacked authenticated user sessions; Polymarket itself has not publicly named the provider. Bloomberg reported about $2.7 million was lost, and Polymarket said 726 wallets were affected, that 689 of them had been refunded in full, that the remaining 37 were being paid as each is verified, and that a further $1.19 million would go to 5,500 wallets belonging to traders who lost money during the trading pause or whose positions were taken. Polymarket referred the matter to law enforcement and said affected traders would be made whole; its US platform was not reported to be affected.",
-      "sources": [
-        {
-          "name": "PokerStrategy",
-          "url": "https://www.pokerstrategy.com/news/world-of-poker/this-week-in-prediction-markets-polymarket-hacked-lawsuits-fly-utah/"
-        },
-        {
-          "name": "SC Media",
-          "url": "https://www.scworld.com/brief/polymarket-trading-suspended-following-third-party-supply-chain-attack"
-        }
-      ],
-      "take": "Here is the same lesson as the StepDrainer wave, one level up: the weakest link was not Polymarket's own code but a vendor's script running inside it, and hundreds of ordinary traders paid for that trust. The encouraging part is the response — a fast halt, refunds already landing for most affected wallets, and cover for traders hurt by the pause itself, not just the theft. But refunds are a promise until they arrive in your wallet, so if you were affected, follow the platform's own status updates only, and treat any \"refund helper\" that contacts you first as a scam."
-    },
-    {
-      "id": "rcn-20261029-binance-hack",
-      "date": "Oct 29, 2026",
-      "category": "hack",
-      "title": "Binance hit in record $6.3 billion hack — most of it drained in about 20 minutes",
-      "what": "Hackers stole an estimated $6.3 billion from Binance, the world's largest cryptocurrency exchange, in what is described as the biggest crypto theft on record — far above the $1.5 billion Bybit theft of February 2025. According to Reuters, most of the theft happened in about 20 minutes starting late on Oct 29, 2026, draining Binance hot wallets across 10 blockchains, including about $3.74 billion on Ethereum and 18,270.2 BTC worth about $1.47 billion. Binance said a hacked laptop belonging to a DevOps engineer may have been the entry point, and said it found no evidence that hot or cold wallet private keys were directly leaked. The exchange halted withdrawals and expects to restart them within 48 hours, says it has located about $3 billion of the stolen funds with industry partners — Tether froze nearly $1.57 billion and Circle more than $800 million — and co-CEO Richard Teng said the company will cover every loss. TRM Labs and Chainalysis said they are highly confident North Korea's TraderTraitor group was responsible; Binance has not named an attacker and no government confirmation of that attribution was reported.",
-      "sources": [
-        {
-          "name": "PYMNTS",
-          "url": "https://www.pymnts.com/cybersecurity/2026/hackers-steal-6-3-billion-from-binance-in-record-crypto-heist/"
-        },
-        {
-          "name": "AMBCrypto",
-          "url": "https://ambcrypto.com/binance-to-resume-withdrawals-within-48-hours-after-6-3b-hack/"
-        }
-      ],
-      "take": "This is the pattern at its largest scale: one compromised endpoint inside a giant company, and wallets emptied in minutes before anyone could react. Your password was never the weak point here — the exchange's own internal security was. The lesson for a normal person is simple and unglamorous: an exchange account is not a vault, so do not leave more on one than you need to trade with, and keep the rest somewhere you control. At the same time, notice what worked: issuers froze roughly half the haul within hours, and Binance has pledged to cover the losses — coordination and accountability matter, and they are worth demanding from every platform that holds your money."
-    },
-    {
-      "id": "rcn-20261028-zklink-nova",
-      "date": "Oct 28, 2026",
-      "category": "exploit",
-      "title": "zkLink Nova bridge drained of about $780,000 in forged batch-root exploit",
-      "what": "Attackers drained about $780,000 from zkLink Nova's Ethereum-side bridge contracts in a single transaction late on Oct 28, 2026, according to blockchain security firm Blockaid, with estimates from Blockaid and SlowMist ranging from roughly $779,000 to $786,000 depending on valuation timing. The attacker used a publicly accessible relayer to inject a forged batch root — the cryptographic summary the bridge uses to verify withdrawals — so the contracts treated unauthorized withdrawals as valid. The transaction moved 22.43 ETH and 11 types of ERC-20 tokens, mostly 245.74 pufETH worth about $615,000, to a single attacker-controlled address. Blockaid described the attack as ongoing and said the main escrow contract had not been paused, and zkLink had not published a statement, confirmed a pause, or announced a recovery plan at the time of reporting.",
-      "sources": [
-        {
-          "name": "The Crypto Times",
-          "url": "https://www.cryptotimes.io/2026/10/29/zklink-nova-bridge-exploited-for-786k-as-forged-batch-root-drains-ethereum-escrow/"
-        },
-        {
-          "name": "Hokanews",
-          "url": "https://www.hokanews.com/2026/10/zklink-nova-bridge-exploit-drains.html"
-        }
-      ],
-      "take": "Bridges keep failing at the same place: the check that is supposed to prove a withdrawal is real. Here the attacker did not break the lock — they wrote their own permission slip and the system accepted it. For a normal person, the lesson is not technical at all: every bridge is a pile of other people's money guarded by one verification step, and when that step is fooled, everything in the pile can leave in one transaction. If you must bridge, move only what you need, and never treat a bridge as a place to park funds."
-    },
-    {
-      "id": "rcn-20261028-singapore-ledger",
-      "date": "Oct 28, 2026",
-      "category": "warning",
-      "title": "Singapore police warn of tampered Ledger wallets sold locally, about $2.7M stolen",
-      "what": "Singapore police warned on Oct 28, 2026 that some Ledger hardware wallets sold through local retailers contained malicious hardware implants capable of stealing users' recovery phrases or private keys. At least two cases reported since Sept 10, 2026 have resulted in combined losses of about S$3.5 million (about $2.7 million). Police have not publicly established how the devices were modified or how they entered the retail supply chain, and Ledger is reviewing the incidents while investigations continue. The warning concerns certain devices bought through local retailers, not a finding that all Ledger devices are compromised.",
-      "sources": [
-        {
-          "name": "KuCoin",
-          "url": "https://www.kucoin.com/news/flash/singapore-police-warn-of-malicious-ledger-wallets-sold-locally-2-7m-stolen"
-        }
-      ],
-      "take": "A hardware wallet is only as safe as the hands it passed through before it reached yours — and this is the second time in a week that lesson has arrived with a price tag. The device itself can be perfect and still be the trap, if someone tampered with it on the way to the shelf. Buy only from the maker or an authorized seller, check the seal and the setup carefully, and if anything about the device looks even slightly off, stop before you put a single coin on it. A bargain or a convenient shop is never worth your recovery phrase."
-    },
-    {
-      "id": "rcn-20261028-coinbase-vendor",
-      "date": "Oct 28, 2026",
-      "category": "dispute",
-      "title": "Coinbase vendor incident exposes some customer contact data — scale disputed",
-      "what": "Coinbase said on Oct 28, 2026 that a security incident at its third-party analytics provider, Amplitude, exposed contact data belonging to a small subset of its customers. Coinbase said it found no evidence of unauthorized access to its own systems, that customer funds were not affected, and that affected customers and regulators were being notified. A claim circulating online that more than 70,000 users were affected has not been confirmed by Coinbase, which has reportedly disputed the figure, and the company has not initially published a definitive number of affected users or a complete list of exposed fields.",
-      "sources": [
-        {
-          "name": "Bitrue",
-          "url": "https://www.bitrue.com/blog/coinbase-data-breach-2026"
-        },
-        {
-          "name": "CoinDesk",
-          "url": "https://www.coindesk.com/tech/2026/10/28/coinbase-says-customer-funds-are-safe-after-third-party-vendor-exposes-customer-contact-info"
-        }
-      ],
-      "take": "This is the dispute to hold carefully: a real vendor incident, and an unproven number running ahead of it. Do not repeat the 70,000 figure as fact, and do not dismiss the incident either — because contact details alone are enough for the next attack. A scammer who knows you use Coinbase and can name a real incident can write a message that feels official, then ask for the one thing that finishes the job: your password, your code, or a transfer. No real support team will ever ask for those, no matter how real the incident they mention sounds."
-    },
-    {
-      "id": "rcn-20261028-catfi",
-      "date": "Oct 28, 2026",
-      "category": "arrest",
-      "title": "South Korea charges five over alleged CatFi rug pull — a first under its investor-protection law",
-      "what": "South Korea's Seoul Southern District Prosecutors' Office charged five people over the Solana-based meme coin CatFi, launched in early 2025 through Pump.fun, in what is reported as the first prosecution of a rug pull under the country's Virtual Asset User Protection Act and the first known prosecution of a crypto crime carried out through a decentralized exchange. Prosecutors allege the group built a misleading promotional ecosystem: one suspect posed online as an independent crypto influencer, follower numbers were artificially inflated, announcements claimed fake token lock-up arrangements, and wash trading disguised the group's control of supply. CatFi's price reportedly surged roughly 1,001 times within 26 hours of launch, drawing about 6,000 buyers; 256 investors later reported combined losses of around 900 million won (roughly $600,000), while the suspects allegedly secured profits exceeding 400 million won. Two main suspects are in custody and three others were indicted without detention. The charges are allegations and have not been proven in court.",
-      "sources": [
-        {
-          "name": "BitRss",
-          "url": "https://bitrss.com/south-korea-cracks-down-on-catfi-rugpull-first-ever-crypto-fraud-case-under-new-investor-protection-216063"
-        }
-      ],
-      "take": "Read the CatFi playbook and you have read half the meme-coin scams in crypto: a friendly influencer who is not independent at all, follower counts pumped up to look like a crowd, \"locked\" tokens that were never locked, and wash trading to fake demand. A price jumping a thousand times in a day is not an opportunity you almost missed — it is the trap working as designed. The hopeful part is real too: prosecutors reached a decentralized-exchange scheme that once sat outside the law's reach. Charges are not convictions and the victims' money is not back yet, but the days when a rug pull could hide behind \"it's just a DEX\" are getting shorter."
-    },
-    {
-      "id": "rcn-20261027-madagascar-scam",
-      "date": "Oct 27, 2026",
-      "category": "arrest",
-      "title": "Six charged over alleged Madagascar romance scam targeting about 800 Americans",
-      "what": "The U.S. Department of Justice announced on Oct 27, 2026 that six individuals have been charged over an alleged cryptocurrency romance scam run from Madagascar, with alleged links to criminal groups in China and Malaysia. Prosecutors say the group posed as women on dating websites, built romantic relationships with victims, then persuaded them to connect their wallets to fraudulent NFT investment platforms and deposit funds, which were allegedly withdrawn without the victims' knowledge. Investigators identified about 74 cryptocurrency wallets associated with around 800 victims across the United States who reported losses. The charges are allegations and have not been proven in court, and the DOJ has called on Madagascar to cooperate with extradition.",
-      "sources": [
-        {
-          "name": "The Crypto Times",
-          "url": "https://www.cryptotimes.io/2026/10/28/doj-charges-six-in-alleged-nft-fraud-as-crypto-scam-crackdown-widens/"
-        },
-        {
-          "name": "The Eastleigh Voice",
-          "url": "https://eastleighvoice.co.ke/news/417137/kenyan-among-six-charged-over-nft-investment-scam-targeting-800-americans"
-        }
-      ],
-      "take": "This is the good-news side of the cruellest scam in crypto: it starts with loneliness, not greed, and the people running it reportedly kept scripts calling it an \"emotional scam.\" Charges are not convictions, and the victims' money is not yet back — but an operation that moved countries to stay out of reach is now named in a U.S. courtroom. If a new romance online ever steers you toward an investment platform or asks you to connect your wallet, that is the moment to stop. Real love never needs your wallet connected."
-    },
-    {
-      "id": "rcn-20261028-apestr",
-      "date": "Oct 28, 2026",
-      "category": "exploit",
-      "title": "ApeSTR flaw exploited: 21 Bored Apes swapped for packs, about $14,000 taken — and the 21 Apes are now stuck in the contract",
-      "what": "A known flaw in the ApeSTR contract was exploited. Someone swapped 21 Bored Apes into the contract to claim the Mudwater packs tied to them — about $14,000 in value — and the 21 Apes they used are now stuck inside the contract. A Yuga Labs VP flagged the exploit publicly, and the project's founder says six other original Strategy coins carry the same flaw. The original contracts cannot be upgraded, so there is no patch coming for the design itself.",
-      "sources": [
-        {
-          "name": "KuCoin",
-          "url": "https://www.kucoin.com/news/flash/yuga-labs-vp-reveals-apestr-exploit-leads-to-14-000-profit"
-        },
-        {
-          "name": "The Bored Ape Gazette",
-          "url": "https://www.theboredapegazette.com/post/trick-or-trapped-a-tokenworks-exploit-leaves-21-bayc-nfts-stuck-inside-the-apestr-contract"
-        }
-      ],
-      "take": "The dollar amount is small. The pattern is not. The flaw was known, the contract cannot be changed, and now real assets sit trapped inside it. Code that can never be fixed turns one bad day into a permanent loss. Reality: before you park anything valuable in a contract, ask one question — if something goes wrong, can anyone fix it? If the answer is no, the risk never expires."
-    },
-    {
-      "id": "rcn-20261027-tranche-vault",
-      "date": "Oct 27, 2026",
-      "category": "exploit",
-      "title": "Tranche Vault on Avalanche drained of about $1.01M USDC in a flash-loan attack",
-      "what": "Blockaid flagged an attack in progress on a Tranche Vault on Avalanche tied to Fence Finance and Valinor Digital. The attacker used flash loans to mint inflated tranche shares, then redeemed the vault's remaining USDC — about $1.01 million gone in roughly two transactions. A balance check found no USDC left in the identified contract. No pause, patch, or recovery has been announced.",
-      "sources": [
-        {
-          "name": "PANews",
-          "url": "https://www.panews.io/articles/01a1800f-8f09-75f5-aed7-7620b7c00c96"
-        },
-        {
-          "name": "KuCoin",
-          "url": "https://www.kucoin.com/news/flash/hackers-steal-1-01m-from-tranche-vault-on-avalanche"
-        }
-      ],
-      "take": "Nobody picked a lock here. The vault's own share math was the door: borrow big for one moment, mint shares at a fake price, hand them back for real money. Reality: when one trade can move a vault's share price, one trade can empty the vault. Before you deposit, ask how the shares are priced — that answer is the whole security model."
-    },
-    {
-      "id": "rcn-20261026-near-intents",
-      "date": "Oct 26, 2026",
-      "category": "exploit",
-      "title": "NEAR Intents hit by $3.8M exploit — team says it identified the attacker and gave a 48-hour return window",
-      "what": "NEAR Intents said a bug in how its Omni deposit and withdrawal infrastructure interacts with its smart contract was exploited for approximately $3.8 million, isolated to USDT on BNB Smart Chain. NEAR co-founder Illia Polosukhin said the platform's SHIELD security layer flagged the outlier behaviour and triggered a pause, the contract vulnerability was patched within an hour of detection, and services were largely restored. Intents general manager Alex Shevchenko said the attacker has been identified and gave a 48-hour window to return the funds, and the platform says affected users will be compensated in full and the incident has been reported to law enforcement.",
-      "sources": [
-        {
-          "name": "BitRss (via CryptoPotato)",
-          "url": "https://bitrss.com/near-intents-identifies-3-8m-hacker-gives-them-48-hours-to-return-funds-257077"
-        }
-      ],
-      "take": "The fast patch and the full-compensation promise are the good parts — but notice what the story really rests on: a single bug where two systems meet. Bridges and cross-chain plumbing are where the money moves, so they are where the breaks happen. And a public \"we know who you are\" is a negotiation tactic, not a recovery — until funds actually come back, treat it as an open loss, not a solved one."
-    },
-    {
-      "id": "rcn-20261026-bloom-trading",
-      "date": "Oct 26, 2026",
-      "category": "exploit",
-      "title": "Bloom Trading bot drained of about $954,000 in SOL — nine users affected, full reimbursement promised",
-      "what": "On Oct. 26, 2026, an attacker drained 9,408 SOL, worth approximately $954,000, from 49 wallet addresses belonging to nine users of Bloom Trading, a Telegram-based trading bot for Solana and EVM networks. The largest single wallet loss was 1,636 SOL, about $166,000. Bloom attributed the breach to an exploited third-party module vulnerability enabling remote code execution, said no private keys were compromised and unaffected wallets are safe, and promised to fully reimburse all affected users to new secure wallets of their choosing — though it has not said when reimbursements will be completed.",
-      "sources": [
-        {
-          "name": "AMBCrypto",
-          "url": "https://ambcrypto.com/bloom-trading-hit-by-947k-breach-due-to-third-party-module-promises-100-reimbursement/"
-        },
-        {
-          "name": "CoinFomania",
-          "url": "https://coinfomania.com/hackers-exploit-vulnerability-to-steal-9408-sol-from-users/"
-        }
-      ],
-      "take": "This is the quiet risk of trading bots: you hand a tool permission to move your money, and its weakest borrowed part becomes your weakest part. No private keys were stolen, yet the money still left — because access, not just keys, is the prize. If a bot or app can move funds for you, keep only what you can afford to lose in it, and treat a reimbursement promise as a promise, not a refund in hand."
-    },
-    {
-      "id": "rcn-20261026-foundation-passport",
-      "date": "Oct 26, 2026",
-      "category": "warning",
-      "title": "Fake \"Passport recall\" phishing emails reached Foundation customers from the company's own domains",
-      "what": "On Sunday, Oct. 25, 2026, phishing emails posing as an urgent recall of Foundation's Passport Bitcoin hardware wallet reached customers, claiming a supplier had modified a display module and attackers were draining affected devices. The emails linked to foundation.support, a fake site mimicking Foundation's Envoy companion app, showing an empty wallet with a deposit button apparently designed to lure victims into sending Bitcoin. Foundation responded on Oct. 26, 2026, saying attackers abused compromised Cloudflare API keys, that it has revoked every key and taken down the malicious domain, and that Passport devices and funds are safe. The company has not said whether its customer database was breached, while recipients reported the messages included their full names and home addresses, including for a wallet bought two years ago.",
-      "sources": [
-        {
-          "name": "BeInCrypto",
-          "url": "https://beincrypto.com/bitcoin-wallet-phishing-foundation-home-addresses/"
-        },
-        {
-          "name": "Coinotag",
-          "url": "https://en.coinotag.com/foundation-revokes-cloudflare-api-keys-passport-phishing"
-        }
-      ],
-      "take": "The scariest line here is not the fake website — it is that the email came from the real domain and knew real names and addresses. A sender address you recognise is no longer proof of anything, and personal details in a message are no longer proof either. Judge every urgent message by what it asks you to do: if it wants you to click, download, or move coins somewhere \"safe,\" stop, go to the company's site yourself, and check there. And if your home address is tied to a crypto purchase, take the physical-security side seriously too."
-    },
-    {
-      "id": "rcn-20261026-electrum",
-      "date": "Oct 26, 2026",
-      "category": "exploit",
-      "title": "Electrum wallet bug let rogue servers swap in fake payments — patch 4.8.3 released Oct. 24",
-      "what": "Electrum, one of Bitcoin's oldest software wallets, disclosed a flaw in which malicious servers could substitute a fake pending transaction for a user's real one, because the wallet trusted servers to report unconfirmed transactions without verifying their signatures. If the user then used Replace-by-Fee to speed up the payment, Electrum could sign a valid replacement sending the coins to an attacker-controlled address. Developers received two reports in October: an Oct. 11 report involving a multisignature wallet where no funds were reported lost, and an Oct. 18 report from a user who lost funds after raising the fee on a substituted transaction; the amount stolen has not been disclosed. Electrum released version 4.8.3 on Oct. 24, 2026, adding signature checks for unconfirmed transactions, and says users connected only to trusted servers, including their own, were not exposed.",
-      "sources": [
-        {
-          "name": "CoinDesk",
-          "url": "https://www.coindesk.com/tech/2026/10/26/bitcoin-wallet-bug-let-rogue-servers-steal-funds-when-users-tried-to-speed-up-payments"
-        }
-      ],
-      "take": "This one breaks a comforting assumption: that the danger is always someone stealing your keys. Here, the wallet simply believed a lying server, and an everyday action — speeding up a stuck payment — did the rest. The fix exists, so the lesson is boring and practical: update the wallet, check the full receiving address and amount before you sign anything, and never rush a transaction that suddenly looks different from the one you sent."
-    },
-    {
-      "id": "rcn-20261024-x100",
-      "date": "Oct 24, 2026",
-      "category": "exploit",
-      "title": "X100 governance hijacked in a single transaction — about $4.85M drained",
-      "what": "On Oct. 24 at 10:11 AM ET, an attacker used a flash loan to buy two of the three seats on X100's governing \"Senate\" on Ethereum, then used that majority to force the treasury to sell 400,000 X tokens for roughly $36. Security firm Blockaid puts the total loss at about $4.85M in USDT, and the X token fell about 96% within a day. The exploit worked because Senate seats could be bought instantly with no minimum holding period, voting power was not snapshotted in advance, and proposals could be created, voted on, and executed in the same transaction with no timelock. As of Oct. 25, no statement, fund freeze, or bounty offer from the X100 team had been reported.",
-      "sources": [
-        {
-          "name": "CoinLab",
-          "url": "https://coinlab.info/en/articles/x100-hack-explained/"
-        },
-        {
-          "name": "Crypto Times",
-          "url": "https://www.cryptotimes.io/2026/10/24/x100-hack-attackers-hijack-governance-drain-4-85m-as-x-token-crashes-96/"
-        }
-      ],
-      "take": "This was not a mystery bug — it was governance with no speed bumps. When voting power can be rented for a few seconds and a vote takes effect instantly, a stranger can legally \"win\" the vote and empty the treasury in one move. The lesson for normal people: before trusting any project, ask whether its big decisions have a delay and a real holding requirement — if not, your money is one borrowed vote away from gone."
-    },
-    {
-      "id": "rcn-20261023-initia",
-      "date": "Oct 23, 2026",
-      "category": "dispute",
-      "title": "Initia exploit: about $2.7M taken, but what was actually minted is disputed",
-      "what": "The Initia blockchain halted its Layer 1 and rollups on Oct. 23, 2026, after an attack that Initia co-founder Ezaan Mangalji described as a previously unknown bug in the link between Initia's MoveVM and its Cosmos SDK network, allowing the attacker to mint tokens and bridge out about $2.7M worth of AUSD, ETH, and USDC. Stablecoin issuer Agora disputed part of the story, saying its AUSD contract is not deployed on Initia and no AUSD was minted there; Ethereum records show 1.4 million existing AUSD moved from a bridge adapter to an attacker's address and were swapped for about 581.56 ETH. Agora pledged to freeze AUSD at hacker-related addresses, though the swap had already happened.",
-      "sources": [
-        {
-          "name": "ForkLog",
-          "url": "https://forklog.com/en/hacker-steals-2-7-million-from-initia-blockchain/"
-        },
-        {
-          "name": "The Cryptonomist",
-          "url": "https://en.cryptonomist.ch/2026/10/24/initia-exploit-ausd-stablecoin/"
-        }
-      ],
-      "take": "Two sides are telling different versions of the same event, and that disagreement itself is the warning. When even the project and the token issuer cannot agree on where the money came from, nobody holding the token can judge the risk honestly. Wait for the on-chain facts and a full post-mortem before believing either side's first version — and never treat a paused chain as proof your funds are safe."
-    },
-    {
-      "id": "rcn-20261023-zheng-zhao",
-      "date": "Oct 23, 2026",
-      "category": "arrest",
-      "title": "$36.9M pig-butchering scam suspect extradited to the U.S.",
-      "what": "Zheng Zhao, a 44-year-old Chinese national, was extradited from the Netherlands and arraigned in Los Angeles federal court on Oct. 23, 2026, on a charge of conspiracy to commit money laundering carrying up to 20 years in prison. Prosecutors allege he was part of a Cambodia-based scam network that used social media and dating apps to steer at least 174 identified American victims to fake crypto trading sites showing fabricated gains, taking a combined $36.9M. The funds were allegedly routed through U.S. shell companies to a Deltec Bank account in the Bahamas, converted to Tether (USDT), and sent to wallets in Cambodia. Eight co-conspirators have already pleaded guilty, with sentences including 46 and 51 months.",
-      "sources": [
-        {
-          "name": "Crypto Briefing",
-          "url": "https://cryptobriefing.com/chinese-national-extradited-cambodian-crypto-scam/"
-        },
-        {
-          "name": "Security Online",
-          "url": "https://securityonline.info/cambodia-crypto-scam-extradition-doj/"
-        }
-      ],
-      "take": "This is real progress, and it took more than a year of cross-border work to get one man into a courtroom. But notice the pattern that caught 174 people: a stranger online, a slow-building friendship, then a trading site you have never heard of showing profits that look too good. If a new friend steers you to an unknown platform, that is the scam — walk away before the first deposit, not after."
-    },
-    {
-      "id": "rcn-20261023-michigan-arrest",
-      "date": "Oct 23, 2026",
-      "category": "justice",
-      "title": "Michigan police arrest man in alleged $665K Bitcoin scam",
-      "what": "Michigan police arrested a man accused of stealing $665,000 in a fake Bitcoin scheme. The victim handed him over $500,000 in cash at one meeting, then mailed $165,000 more. He faces up to 10 years.",
-      "sources": [
-        {
-          "name": "CryptoNews",
-          "url": "https://cryptonews.net/news/security/33632548/"
-        }
-      ],
-      "take": "Never hand cash to a stranger — no matter how convincing the story. Real Bitcoin deals don't happen in parking lots."
-    },
-    {
-      "id": "rcn-20261023-ngrave-hijack",
-      "date": "Oct 23, 2026",
-      "category": "scam",
-      "title": "Hackers hijack Ngrave's own alert system to steal $2.56M",
-      "what": "Hackers hijacked hardware wallet maker Ngrave's own alert system, sending fake 'Moscow login' warnings to users. Panicked customers typed their 24-word recovery phrases into a phishing site — about $2.56M drained from 70 wallets in minutes. The CEO admitted the company 'utterly failed.'",
-      "sources": [
-        {
-          "name": "TheBitGazette",
-          "url": "https://thebitgazette.com/hackers-hijacked-ngraves-own-alert-system-to-steal-2-56-million-from-70-wallets-and-the-ceo-says-the-company-utterly-failed/"
-        }
-      ],
-      "take": "No legitimate alert EVER asks for your seed phrase. Not from your wallet maker, not from anyone. Panic is the phisher's best tool."
-    },
-    {
-      "id": "rcn-20261022-kimchi",
-      "date": "Oct 22, 2026",
-      "category": "rug-pull",
-      "title": "Copycat 'kimchi' memecoin crashes $15M to $150K within an hour",
-      "what": "A new token linked to influencer Kimchi surged to a ~$15M market cap overnight, then crashed to ~$150K within minutes. Kimchi deleted his promo post (it had a QR code) and Pump.fun founder alon pulled his retweet. Kimchi's own token fell 49% in 24h.",
-      "sources": [
-        {
-          "name": "KuCoin News",
-          "url": "https://www.kucoin.com/news/flash/kimchi-token-plummets-49-amid-rug-pull-of-new-clone-project"
-        }
-      ],
-      "take": "If the promoter deletes the post, that IS the signal. When the hype man goes quiet, the exit already happened."
-    },
-    {
-      "id": "rcn-20261022-liquid",
-      "date": "Oct 22, 2026",
-      "category": "victory",
-      "title": "Liquid Network back online — recovery from $320M hack enters final phase",
-      "what": "Liquid Network says its recovery from September's ~$320M exploit is in its final stages — the network is running again and LBTC-to-bitcoin swaps are fully restored. ~600 BTC (~$50M) remains with the attackers, who kept a 10% bounty; whether holders face a haircut is unresolved.",
-      "sources": [
-        {
-          "name": "CryptoWatchDaily",
-          "url": "https://cryptowatchdaily.com/news/liquid-network-hack-recovery-final-stages/"
-        }
-      ],
-      "take": "Progress, not perfection. A network that rebuilds in public earns more trust than one that pretends nothing happened."
-    },
-    {
-      "id": "rcn-20261022-hnut",
-      "date": "Oct 22, 2026",
-      "category": "rug-pull",
-      "title": "Solana memecoin HNUT loses 99%+ after hitting $71M market cap",
-      "what": "HNUT was briefly the third most traded token on Solana after a 700% surge to a $70.94M market cap. Then the price fell from $0.07 to below $0.0003 — over 99% gone. On-chain trackers flagged abnormal liquidity movements as it happened.",
-      "sources": [
-        {
-          "name": "BitRSS",
-          "url": "https://bitrss.com/beware-major-rug-pull-scam-alert-on-an-altcoin-price-plummets-to-nearly-zero-167809"
-        }
-      ],
-      "take": "Volume hype is the product being sold. Reality check first, wallet later."
-    },
-    {
-      "id": "rcn-20261022-france-wrench",
-      "date": "Oct 22, 2026",
-      "category": "warning",
-      "title": "Masked men tie up French couple in 3am crypto home invasion",
-      "what": "Three masked men broke into a home in Mont-de-Marsan, France, at 3am on Oct 22, tied up a couple in their 60s, and demanded crypto — targeting the family through their son's crypto job. It is unclear if any coins moved. France logged 77 crypto-related kidnapping/unlawful-detention cases in the first half of 2026.",
-      "sources": [
-        {
-          "name": "Crypto-Economy",
-          "url": "https://crypto-economy.com/french-authorities-search-for-three-suspects-after-couple-tied-up-in-crypto-robbery/"
-        }
-      ],
-      "take": "Your privacy IS your security. Nobody should know you hold crypto — not neighbors, not social media, not strangers. Wrench attacks don't hack your wallet; they come for you."
-    },
-    {
-      "id": "rcn-20261022-chenzhi",
-      "date": "Oct 22, 2026",
-      "category": "justice",
-      "title": "Cambodia extradites alleged $15B scam kingpin Chen Zhi to China",
-      "what": "Cambodia extradited Chen Zhi, the alleged head of the Prince Group scam syndicate that lured trafficked workers into forced-labor camps to run crypto fraud, to China. The FBI seized ~$15B in Bitcoin linked to him last year. China says arrest warrants for key syndicate members are coming. Prince Group has consistently denied involvement.",
-      "sources": [
-        {
-          "name": "Gamblerss",
-          "url": "https://gamblerss.com/cambodia-extradites-crypto-scam-kingpin-to-china-53591"
-        }
-      ],
-      "take": "The biggest scam networks in crypto are built on human trafficking — real people forced to steal from you. When the money looks too easy, ask who is being hurt to make it."
-    },
-    {
-      "id": "rcn-20261022-qubic-restart",
-      "date": "Oct 22, 2026",
-      "category": "exploit",
-      "title": "Qubic restarts blockchain, opens recovery claims after $1.4M wallet drain",
-      "what": "Qubic restarted its blockchain after a seed-generation flaw let an attacker drain ~$1.4M from 1,404 wallets. Claims are open until May 1, 2027; 87% of stolen funds were frozen and MEXC froze the rest. Wallets predating v4.26.4 should be treated as compromised.",
-      "sources": [
-        {
-          "name": "CoinTelegraph",
-          "url": "https://cointelegraph.com/news/qubic-restarts-blockchain-opens-recovery-claims-after-14m-hack"
-        }
-      ],
-      "take": "This is the honesty pattern: freezes and claims beat promises. But the real lesson — if your wallet version is old, don't wait for someone to tell you it's compromised. Make a new one, move funds, never reuse the old."
-    },
-    {
-      "id": "rcn-20261022-xrp-scam",
-      "date": "Oct 22, 2026",
-      "category": "scam",
-      "title": "Fake XRP staking site takes 3.4M XRP — Seoul police freeze assets in 3 days",
-      "what": "71 people sent 3.4 million XRP to a fake \"FXRP Network\" staking site promising 1.5%–1.8% monthly returns. The site borrowed a real token's name to look legitimate, operated for one week, then vanished. Overseas exchanges tipped off Seoul police, who froze ~17.3B won within 3 days. Three suspects arrested; Interpol red notice issued for the ringleader.",
-      "sources": [
-        {
-          "name": "BitRSS",
-          "url": "https://bitrss.com/xrp-staking-scam-hits-71-investors-as-losses-near-19-million-236865"
-        }
-      ],
-      "take": "Good news with a lesson inside it. The scam worked because it borrowed a real name — always verify you're on the real site, not a lookalike. And credit where due: fast police work saved millions here."
-    },
-    {
-      "id": "rcn-20261022-conviction",
-      "date": "Oct 22, 2026",
-      "category": "justice",
-      "title": "Man pleads guilty after taking $1.16M from crypto investors — lost it gambling",
-      "what": "Elmin Redzepagic, 25, pleaded guilty to fraud and money-laundering charges. He posed as a crypto investor, told 10+ victims their money was growing, then demanded fake \"gas fees\" to release it — and sent their funds to an offshore gambling site where he lost everything. Net losses: $1,159,945.34. Sentencing set for January 11, 2027. Each count carries up to 20 years.",
-      "sources": [
-        {
-          "name": "TokenPost",
-          "url": "https://www.tokenpost.com/news/regulation/36313"
-        }
-      ],
-      "take": "The oldest trick in the book — \"your money is growing, just pay a small fee to unlock it.\" If anyone ever asks you for gas fees to release YOUR money, walk away. Justice caught up here, but prevention beats prosecution."
-    },
-    {
-      "id": "rcn-20261022-cysic",
-      "date": "Oct 22, 2026",
-      "category": "exploit",
-      "title": "Cysic offers attacker a 10% white-hat bounty — return the ETH in 72 hours",
-      "what": "An attacker minted 10 million CYS tokens without authorization and converted part of the proceeds into ETH. The Cysic Foundation issued an on-chain settlement proposal: return 275.872 ETH (about 90% of confirmed proceeds) within 72 hours and keep the remaining ~30.652 ETH as a bug bounty. Cysic says it has reconstructed the attack and preserved on-chain evidence, and will escalate to a full criminal investigation if the deadline is missed.",
-      "sources": [
-        {
-          "name": "PANews",
-          "url": "https://www.panews.io/articles/01a1631c-8ef8-722a-a0e0-dc40f9591a78"
-        },
-        {
-          "name": "Phemex News",
-          "url": "https://phemex.com/news/article/cysic-offers-attacker-10-whitehat-bounty-demands-return-of-stolen-eth-within-72-hours-100563"
-        }
-      ],
-      "take": "This is how the exploit game usually plays out now — steal, then get an ultimatum: keep a cut and walk, or face detectives. The bounty offer is practical, not kind: recovered funds beat empty promises. The lesson for normal people: unaudited mint functions are where money printing goes wrong. If a token lets someone mint supply out of thin air, your holdings can be diluted overnight — check the contract's mint controls before you buy, not after."
-    },
-    {
-      "id": "rcn-20261022-michigan",
-      "date": "Oct 22, 2026",
-      "category": "arrest",
-      "title": "Michigan police arrest man in alleged $665,000 Bitcoin scam",
-      "what": "Michigan State Police arrested Zhong Jiang, 34, of Orland Hills, Illinois, on a felony larceny-by-conversion charge (up to 10 years if convicted). An Escanaba resident who believed he was investing in Bitcoin handed over more than $500,000 in cash at an in-person meeting and shipped another $165,000 in cash via FedEx. Jiang was extradited from Wisconsin, booked Oct 15, and held on $400,000 bond with a GPS tether. He returns to court Oct 29.",
-      "sources": [
-        {
-          "name": "Crypto News",
-          "url": "https://cryptonews.net/news/security/33632548/"
-        }
-      ],
-      "take": "The classic trust scam, no fancy tech involved — a smooth talker, a handshake, and cash in a FedEx box. If someone you're investing through wants physical cash or couriered money, that's the red flag waving itself. Real brokers don't take duffel bags of bills. Police even said it plainly: if you're unsure, call local law enforcement before you send money."
-    },
-    {
-      "id": "rcn-20261021-coldcard",
-      "date": "Oct 21, 2026",
-      "category": "victory",
-      "title": "White hats recover 52 BTC from Coldcard exploit — public portal lets victims check",
-      "what": "White-hat researchers and recovery firm DART secured roughly 52.37 BTC drained via a Coldcard seed-generation entropy flaw that let attackers reconstruct older wallet private keys. The funds were moved to the Crypto Recovery Trust, traced publicly by Galaxy researcher Alex Thorn. Coldcard owners can now check their public Bitcoin addresses on the trust's portal to begin an ownership claim. DART warns affected users to migrate to newly generated wallets, since old seeds stay exposed even after a firmware update.",
-      "sources": [
-        {
-          "name": "CryptoSlate",
-          "url": "https://bitrss.com/white-hats-recover-52-bitcoin-from-coldcard-exploit-and-a-new-public-portal-lets-victims-check-eligi-254158"
-        }
-      ],
-      "take": "Good news with a warning inside it. White hats pulled stolen coins back and built a public trail so real owners can claim them — that's the crypto community protecting its own. But the flaw was in how the wallet generated its seed, and updating firmware doesn't save an old wallet. If you own a hardware wallet, follow the maker's migration guidance. And never, ever enter your seed phrase on any website."
-    },
-    {
-      "category": "hack",
-      "date": "Oct 22, 2026",
-      "id": "rcn-20261022-railway",
-      "sources": [
-        {
-          "name": "crypto.news",
-          "url": "https://crypto.news/railway-security-breach-linked-to-371000-crypto-theft-across-19-chains/"
-        },
-        {
-          "name": "Daily Star",
-          "url": "https://dailystar.co.za/2026/10/22/railway-security-breach-associated-with-371000-cryptocurrency-theft-across-19-blockchains/"
-        }
-      ],
-      "take": "Your code can be perfect and you can still get robbed — because the thief didn't break your lock, they stole the key from the locksmith. The pattern: the attack surface is never just your smart contract. It's everything around it — the host, the dashboard, the env vars. If you keep private keys or API secrets in ANY cloud dashboard, rotate them today, not after the announcement. Secrets are like toothbrushes: replace them regularly, never share them.",
-      "title": "Railway breach leaks customer secrets — ~$371K in crypto drained across 19 chains",
-      "what": "Cloud host Railway disclosed that an unauthorized party may have accessed customer environment variables — the secret settings where projects keep API keys, database passwords, and even private keys. Blockchain researcher Taylor Monahan traced roughly $371,000 in crypto theft across 19 EVM chains to the breach: 500+ transactions from 200+ addresses, drained with a standard wallet-sweeper script. The first theft transaction landed at 19:36 UTC on Oct 21 — hours before Railway's public announcement. Railway paused builds and told customers to rotate credentials. Railway has not independently confirmed the $371K figure."
-    },
-    {
-      "category": "dispute",
-      "date": "Oct 22, 2026",
-      "id": "rcn-20261022-coindcx",
-      "sources": [
-        {
-          "name": "crypto.news",
-          "url": "https://crypto.news/coindcx-denies-second-hack-claims-as-zachxbt-questions-wallet-activity/"
-        },
-        {
-          "name": "CryptoNews",
-          "url": "https://cryptonews.net/news/security/33633156/"
-        }
-      ],
-      "take": "An exchange says 'funds are safe.' The chain's best detective says your old hacked wallets are still shaking hands with your hot wallets. Who do you believe — the press release or the blockchain? The blockchain doesn't do PR. The pattern: after a hack, 'we fixed it' means nothing until the compromised addresses are dead and buried. Don't listen to what they SAY. Watch what the wallets DO.",
-      "title": "CoinDCX denies new $16M hack as ZachXBT challenges their story",
-      "what": "India's largest exchange CoinDCX denied claims of a fresh breach after ~$16M in USDT and 5,783 TRX moved from wallets linked to the exchange. CoinDCX says the addresses were compromised in their July 2025 hack and are no longer part of active infrastructure — 'users' funds are safe.' Blockchain investigator ZachXBT disputed that, showing at least one of the addresses kept handling deposits and touching CoinDCX's current hot wallets months after the supposed cleanup. No new customer losses are independently confirmed."
-    },
-    {
-      "category": "victory",
-      "date": "Oct 22, 2026",
-      "id": "rcn-20261022-gmx",
-      "sources": [
-        {
-          "name": "Daily Hodl via OKX",
-          "url": "https://tr.okx.com/en/orbit/news/crypto-hacker-who-drained-42000000-from-gmx-goes-white-hat-returns-funds-in-exchange-for-5000000-bounty-49457090602016"
-        }
-      ],
-      "take": "This is the good news nobody shares — and we share the good too. Sometimes the system works: a clear bounty, no games, the hacker walks away rich and legal, users get their money back. The pattern worth copying: every protocol should publish its bounty number BEFORE the hack, not negotiate it after. A $5M bounty is expensive. Losing $42M is worse.",
-      "title": "$42M GMX hacker goes white-hat — returns everything for a $5M bounty",
-      "what": "The hacker behind the $42M GMX exploit (a re-entrancy attack on GMX V1) has returned the funds in exchange for a $5,000,000 bounty, going white-hat. GMX confirmed the exploit was contained to V1 — V2 markets, liquidity pools, and the ecosystem were unaffected. GMX's token jumped ~18% on the news."
-    },
-    {
-      "category": "scam",
-      "date": "Oct 22, 2026",
-      "id": "rcn-20261022-ngrave",
-      "sources": [
-        {
-          "name": "AMBCrypto",
-          "url": "https://ambcrypto.com/fake-ngrave-security-alerts-lead-to-2-56m-crypto-theft-in-six-hours/"
-        }
-      ],
-      "take": "The hardware wallet was never broken. Their TRUST was. A push notification, a fake site, a countdown timer to create panic — $2.56M in six hours. The pattern: urgency is the weapon. Any message that makes you act FAST is trying to make you think SLOW. Tattoo this on your brain: no real security alert will ever ask for your recovery phrase. Not ever. Not once.",
-      "title": "Fake 'security alerts' drain $2.56M from hardware wallet users in 6 hours",
-      "what": "Attackers compromised a third-party notification service used by NGRAVE's LIQUID phone app (companion to its ZERO hardware wallet) and pushed fake security alerts on Oct 17 claiming users' portfolios had synced with a new device. Victims who tapped through landed on a cloned NGRAVE site with a countdown timer; 'denying' the sync led to a page harvesting recovery phrases. ~$2.56M was stolen across 70 wallets on four networks in about six hours — mostly BTC and ETH, later routed toward Monero. NGRAVE disabled notifications during the investigation."
-    },
-    {
-      "category": "exploit",
-      "date": "Oct 22, 2026",
-      "id": "rcn-20261022-uncx",
-      "sources": [
-        {
-          "name": "Bitcoin.com",
-          "url": "https://news.bitcoin.com/security/an-86000-exploit-rocks-a-crypto-pool-built-to-lock-tokens/"
-        },
-        {
-          "name": "Mitrade",
-          "url": "https://www.mitrade.com/au/insights/news/live-news/article-3-2163342-20261015"
-        }
-      ],
-      "take": "The company that sells 'we lock your tokens so nobody can steal them' just got its locks picked. The irony writes itself — but the lesson is serious: 'audited' is a moment in time, not a permanent state. Even the lock-makers get robbed. The pattern: shared pools are shared risk. When many projects' locked tokens sit in one contract, one clever bug becomes everybody's problem. Ask where your locked tokens actually sit — and who else is in the pool with you.",
-      "title": "The token-LOCKING platform gets drained: $86K exploit hits UNCX vesting pool",
-      "what": "UNCX Network (formerly UniCrypt) — whose entire business is locking tokens so insiders can't sell early — lost ~$86,000 from its shared vesting pool on Ethereum. Per security firm Blockaid, the attacker opened several vesting positions, released one large position, topped up the pool, then cancelled a position in a way that left a tiny leftover slot able to withdraw OTHER users' tokens. Ten tokens across four chains were affected. UNCX paused new positions, raised fees, and says its liquidity lockers are unaffected. Funds remain missing."
+     "name": "Crypto Briefing",
+     "url": "https://cryptobriefing.com/former-fbi-agent-pleads-guilty-crypto-theft/"
     }
-  ]
+   ],
+   "date": "Nov 5, 2026",
+   "category": "victory",
+   "what": "Patrick Steven Yaroch, a 37-year-old former FBI supervisory special agent from Ashburn, Virginia, pleaded guilty on November 5 to wire fraud and money laundering after stealing about $2,474,380.66 in cryptocurrency. Starting no later than December 2024, he used wallet credentials he could access on FBI systems to make roughly 100 unauthorized transfers out of wallets tied to 35 separate FBI investigations. The stolen funds included money belonging to at least 10 crime victims, as well as wallets linked to suspected criminals, adversarial nation-state actors, and at least one wallet the FBI itself had created for an undercover operation. He converted the crypto through other tokens, moved about $93,082 into his own accounts to pay personal debts, and had been planning a move to Portugal. He was fired and arrested on July 31, 2026, after turning himself in, and faces up to 20 years in prison at sentencing on March 4, 2027.",
+   "take": "This one stings because the thief was the person supposed to protect the victims — he stole from crime victims a second time, using the trust his badge gave him. The pattern is the same one Reality Check keeps naming: whoever holds the keys holds the money, and no institution is immune when one person has quiet access to the seed phrases. The good news is real, though — he turned himself in, the plea covers more than twice what he first admitted, and some funds were recovered. If even the FBI's own wallets can be drained by an insider, the rest of us should assume no custodian is safe by default and keep our own keys under our own control.",
+   "id": "rcn-20261105-former-fbi-agent-pleads-guilty"
+  },
+  {
+   "title": "$4.06 million drained from 365 TRON wallets — and the iPhone hacking-kit link is still unproven",
+   "sources": [
+    {
+     "name": "Crypto Media Zone",
+     "url": "https://cryptomediazone.com/hack-database/iphone-darksword-crypto-drains/"
+    }
+   ],
+   "date": "Nov 6, 2026",
+   "category": "dispute",
+   "what": "Blockchain analytics firm Bitquery counted at least $4.06 million in USDT drained from at least 365 wallets on the TRON network between October 5 and November 4, 2026, with the thief sending a small amount of TRX to each wallet first and then emptying it. The victims were individual people, not an exchange or a protocol. On November 6, security firms CertiK and SlowMist warned that an iPhone exploit kit called DarkSword — a toolbox chaining six iOS flaws that Google's Threat Intelligence Group described in March 2026 — is being used against crypto wallets, and Trust Wallet urged users to update their phones. But Bitquery itself says its on-chain data cannot show whether DarkSword had anything to do with most of the losses, and no source has proved the link. Apple is not accused of anything: the flaws were reported in late 2025 and patched by iOS 26.3, with most fixed earlier. No arrest or attribution has been reported.",
+   "take": "Two facts are getting tangled into one scary story, and they need separating: the thefts are real, but the iPhone explanation is not proven — the same firm that counted the losses says it cannot confirm the cause. That matters, because the wrong lesson would be \"my phone is safe if I update it\" or \"my phone is doomed either way,\" when the one proven fact is that someone got hold of victims' private keys. Update your phone — the patches are real and free — and never keep your recovery phrase in Photos, Notes, or a screenshot, because that is exactly what these kits are built to hunt for.",
+   "id": "rcn-20261106-tron-wallets-drained-darksword-link-unproven"
+  },
+  {
+   "title": "Puffpaw accused of rigging its token launch to win prediction-market bets, then dumping 98% in a day",
+   "sources": [
+    {
+     "name": "KuCoin (Odaily Planet Daily)",
+     "url": "https://www.kucoin.com/news/flash/depin-project-puffpaw-accused-of-token-manipulation-via-prediction-market"
+    }
+   ],
+   "date": "Nov 9, 2026",
+   "category": "dispute",
+   "what": "Puffpaw, a DePIN project that raised $6 million in 2024 for a \"vape-to-earn\" concept on Berachain, went silent for over six months and then suddenly launched its VAPE token last week with only a tiny on-chain liquidity pool and an airdrop that gave early supporters — who had spent $200–$300 on devices and NFTs — tokens worth only tens of dollars, locked over three years. On-chain data shows team-associated addresses control 97% to 99.88% of the circulating supply. Community analysts say the real target was Polymarket, which had listed a market on whether Puffpaw's fully diluted valuation would exceed $50 million, $100 million, $200 million, $300 million, or $400 million one day after listing: the team could buy YES shares cheaply while the project looked dead, then use its near-total control of supply to hold the price in a staircase pattern just below $400 million. The token's valuation then crashed from nearly $400 million to about $7 million. Analysts found that 1,259 of the 1,285 wallets betting on the market — nearly 98% — had never traded any other Polymarket market. The market's settlement has been disputed twice, and UMA token holders are set to vote on the outcome by November 11.",
+   "take": "If the accusation holds, this is a new kind of rug pull — the team didn't need to sell the token to anyone, because the real money was in a bet on the token's own price, placed somewhere else entirely. The warning signs were all there before the launch: a project that went dark for months, a token with almost no liquidity, and a team holding nearly all of the supply. A token's price means nothing when one party controls the supply and the market is paper-thin — and now the people who bet against the manipulation are fighting over whether the rules of the betting market should reward it. Watch the November 11 vote: it will say a lot about whether prediction markets protect honest bettors or just pay whoever games them best.",
+   "id": "rcn-20261109-puffpaw-accused-of-rigging-token-launch"
+  },
+  {
+   "title": "Gnosis Pay breach exposes card numbers, home addresses, and linked crypto wallets",
+   "sources": [
+    {
+     "name": "CoinDesk",
+     "url": "https://www.coindesk.com/business/2026/11/07/gnosis-pay-breach-exposes-card-numbers-home-addresses-and-linked-crypto-wallets"
+    },
+    {
+     "name": "CryptoCorax",
+     "url": "https://cryptocorax.com/gnosis-pay-data-breach-card-numbers-home-addresses-wallets/"
+    }
+   ],
+   "date": "Nov 6, 2026",
+   "category": "hack",
+   "what": "Gnosis Pay, which lets customers spend stablecoins through Visa debit cards linked to their crypto wallets, disclosed on November 6 that unauthorized access to the system behind its branded consumer cards exposed customer data. The company detected the intrusion on November 3 and began containing it within two hours, replacing compromised credentials and fixing the flaw. Breach notifications reviewed by Cointelegraph listed full card numbers, expiry dates, and CVV codes, along with customer names, home addresses, email addresses, phone numbers, nationalities, and the crypto wallet addresses linked to each account — in some cases also IBAN and BIC bank details. Customer funds were not affected, and the company's separate enterprise platform was untouched. Gnosis Pay has not said how many customers were affected, has cancelled affected cards, and has made 3D Secure verification mandatory for online card payments. The affected consumer card system was already scheduled to shut down on December 20, 2026.",
+   "take": "No money was taken, but this may be the more dangerous kind of breach: the attackers now hold a map connecting real people — names, home addresses, card numbers — to their crypto wallets. That is exactly the information a scammer needs to make a fake support message or a fake recovery offer sound like it comes from someone who already knows you. If you hold a Gnosis Pay card, treat any message about your account as suspicious until you verify it through the company's own channels, and never share a seed phrase, private key, or PIN with anyone who contacts you first.",
+   "id": "rcn-20261106-gnosis-pay-breach-exposes-cards-wallets"
+  },
+  {
+   "title": "Keplr social-login wallets drained in Web3Auth breach — and part of the $6 million may be rescue, not theft",
+   "sources": [
+    {
+     "name": "Crypto.news",
+     "url": "https://crypto.news/keplr-wallet-hack-web3auth-google-apple-login/"
+    },
+    {
+     "name": "Crypto Briefing",
+     "url": "https://cryptobriefing.com/web3auth-disputes-keplr-theft-estimate/"
+    }
+   ],
+   "date": "Nov 8, 2026",
+   "category": "dispute",
+   "what": "Keplr confirmed on November 7 that some wallets created with a Google or Apple login had unauthorized transactions, traced to a security flaw at Web3Auth, the login provider owned by Consensys. Blockchain firm Bitquery counted about $6.01 million moved out of roughly 44,700 wallets across Cosmos networks between November 6 and 7, including 1.96 million staked ATOM moved without the usual 21-day unbonding wait. Keplr co-founder Josh Lee said roughly 20% of the platform's social-login accounts could be affected, though only a fraction had been exploited. Web3Auth confirmed the flaw on November 6 and paused its embedded wallet service. Then on November 8, Web3Auth said some of the transfers Bitquery counted were its own whitehat recoveries — funds moved to verified recovery wallets to protect them before the attacker could take them — and published a list of those addresses covering eleven Cosmos networks and eight EVM chains. Neither company has said how much the attacker actually took, or whether affected users will be reimbursed. Wallets backed by a written-down recovery phrase or a hardware device were not affected.",
+   "take": "Two things are true at once here, and the confusion is the point. A real breach exposed real people's wallets — that part is confirmed — but the $6 million figure mixes stolen money with rescue money, and nobody has yet said how much is which. The lesson is one Reality Check keeps repeating: a login that feels easy — sign in with Google, no seed phrase to write down — means someone else holds the keys to your money. If you use a social-login wallet, move your funds to a wallet where you hold the recovery phrase, and never trust a stranger offering to \"recover\" your assets for you.",
+   "id": "rcn-20261108-keplr-social-login-wallets-drained"
+  },
+  {
+   "title": "Former Holograph employee sentenced to five years over $14 million token mint",
+   "sources": [
+    {
+     "name": "CryptoNews",
+     "url": "https://cryptonews.net/news/legal/33720010/"
+    },
+    {
+     "name": "PANews",
+     "url": "https://www.panews.io/articles/01a1b893-5cc2-725c-b9e2-e0068200443b"
+    }
+   ],
+   "date": "Nov 6, 2026",
+   "category": "victory",
+   "what": "A Paris criminal court sentenced a former Holograph Foundation employee, identified as Vitaliy K., to five years in prison — two of them to be served — plus a €600,000 fine, for illegally changing the minting rules for HLG tokens between May and August 2024 and creating and stealing 1 billion tokens worth about $14 million at the time. He was found guilty of unauthorized access to an automated data processing system, organized fraud, money laundering, and membership in a criminal association. Two accomplices were also convicted and received lighter sentences. The court dismissed the foundation's claim for compensation over the fall in HLG's price, finding the token had already dropped sharply before the fraud took place. The case began with arrests in Italy in September 2024. The foundation has stalled its business operations and is preparing for liquidation.",
+   "take": "Justice in crypto is slow — this crime happened in 2024 and the sentence landed more than two years later — but it does arrive, and it reaches insiders, not just outside hackers. The uncomfortable part of this case is that no audit would have stopped it: the thief already had legitimate access and quietly rewrote the rules. For anyone holding a token, that is the question worth asking — who can mint more of it, and who watches them? A project where one employee can print a billion tokens is a project with a single point of failure wearing a name badge.",
+   "id": "rcn-20261106-former-holograph-employee-sentenced-to"
+  },
+  {
+   "title": "French bank theft: $126 million traced, $37 million still sitting on Ethereum",
+   "sources": [
+    {
+     "name": "Bitquery",
+     "url": "https://www.bitquery.io/investigations/eu-106m-crypto-theft"
+    },
+    {
+     "name": "CoinDesk",
+     "url": "https://www.coindesk.com/business/2026/11/04/zachxbt-names-french-bank-credit-mutuel-arkea-as-suspected-victim-of-usd133-million-crypto-theft"
+    }
+   ],
+   "date": "Nov 5, 2026",
+   "category": "hack",
+   "what": "Blockchain analytics firm Bitquery traced $126.04 million in USDC withdrawn from Kraken, Crypto.com and OKX accounts on November 1–2, in a theft first flagged by investigator ZachXBT. The victim, French banking group Crédit Mutuel Arkéa, has confirmed a cyberattack, saying intruders got in through a supplier's platform and used the bank's own account to wire money to other banks before it was turned into crypto; the bank says no customer lost money and put its first estimate at about €100 million. As of 08:47 UTC on November 5, $37.26 million still sat in Ethereum addresses tied to the thief, mostly as ETH, after the thief swapped about $63 million of stablecoins into ETH within hours — a move that matters because ETH cannot be frozen by an issuer. Tether has frozen $1.14 million of the thief's USDT; Circle has frozen none of the $1.71 million USDC the thief still holds. The Paris prosecutor's office has opened an inquiry. The totals still disagree — ZachXBT counts more than $133 million, Bitquery $126 million, the bank about €100 million — and Bitquery says it cannot yet explain either gap.",
+   "take": "This is the follow-up to the theft we covered on November 4, and the new numbers tell a sharper story than the first reports did. Twelve of the seventeen wallets had been receiving payouts from the same exchanges since May, which means this was patient setup, not a smash-and-grab — the thieves built the plumbing months before they turned the tap on. The other lesson is about the freeze button: after the Binance hack, Tether and Circle froze more than $2 billion within hours, but here the thief swapped into ETH for four hours with no freeze at all, and Circle still has not frozen a dollar. A safety switch only protects you if someone presses it in time, so never treat \"it can be frozen\" as \"it will be frozen.\"",
+   "id": "rcn-20261105-french-bank-theft-126-million"
+  },
+  {
+   "title": "Fake Trust Wallet site trastwallet.cam is a wallet drainer in waiting",
+   "sources": [
+    {
+     "name": "Crypto Briefing",
+     "url": "https://cryptobriefing.com/trust-wallet-phishing-site-trastwallet-cam/"
+    },
+    {
+     "name": "CoinStats",
+     "url": "https://coinstats.app/news/a6908487aa33eae14a1e1c2994715ed423ce5f6c8c3bf5edda6c84b1dc3ad9b5_Trust-Wallet-Phishing-Fake-cam-Site-Also-Targets-Phantom-and-OKX-Wallet/"
+    }
+   ],
+   "date": "Nov 5, 2026",
+   "category": "warning",
+   "what": "Researchers identified a fake Trust Wallet website at trastwallet.cam on November 4, 2026, and Binance co-founder Changpeng Zhao publicly warned about it on November 5. The site asks visitors to connect their wallet to \"review transfers,\" then scans the connected wallet's balances and prepares transfers to addresses the scammers control; it supports Trust Wallet, Phantom and OKX Wallet connections. The real Trust Wallet domain is trustwallet.com — the impostor swaps the \"u\" in trust for an \"a\" and \".com\" for \".cam.\" At the time of the report, transaction signing was switched off on the site, so the prepared transfers could not go through, and no confirmed losses tied directly to trastwallet.cam have been reported. Security platform Phishunt.io has documented at least nine active suspicious sites associated with Trust Wallet as of early November, and Zürich police warned about Trust Wallet phishing emails on October 30.",
+   "take": "Two letters is the whole scam — trustwallet.com versus trastwallet.cam — and that is how thin the safety margin is when you click a link instead of typing an address. The important part is that nobody has lost money to this site yet, and that is exactly the moment to learn from it: connecting your wallet is not harmless, because it lets a site see everything you hold and stage the transfers, and the only thing standing between \"staged\" and \"gone\" is a signing switch the scammers can flip whenever they like. Bookmark the real site, never connect a wallet to \"review\" anything, and read every signing request as if it were a stranger asking for your keys — because it is.",
+   "id": "rcn-20261105-fake-trust-wallet-site-trastwallet"
+  },
+  {
+   "title": "Binance explains how a fake recruiter and poisoned installer led to the $6.34 billion theft",
+   "sources": [
+    {
+     "name": "CybrSec Media",
+     "url": "https://www.cybrsecmedia.com/lessons-learned-fake-recruiters-poisoned-pyenv-and-a-634b-binance-loss/"
+    }
+   ],
+   "date": "Nov 5, 2026",
+   "category": "hack",
+   "what": "Binance detailed this week how the October 29 theft of $6.34 billion in cryptocurrency unfolded. In June, a wallet DevOps engineer searching for an AI coding tool clicked a search-engine ad and installed a tampered copy of Homebrew, a Mac package manager; Binance caught that intrusion, replaced the device and rotated credentials, but the attackers had learned who worked on wallet infrastructure. In September, a second engineer was contacted on a job-hunting platform by someone posing as a recruiter, and was told to download an interview assignment that replaced a component of pyenv, a Python version tool, with malware that evaded endpoint protection. The attackers then used that machine and an internal AI tool as a springboard to reach two more engineers, one of whose computer held a container-deployment token. On October 29, between 17:15 and 19:56 UTC, they used that token to reach Binance's internal wallet-signing service and drain hot wallets; the last unauthorized transfer completed at 23:56 UTC. Binance says about $2.85 billion has been frozen or intercepted and 98% of affected token assets had been replenished by October 31, and relays the FBI's finding that North Korea was responsible.",
+   "take": "The biggest crypto theft in history did not start with a broken blockchain — it started with a Google ad and a fake job interview, four months apart. Binance caught the first intrusion and did everything the playbook says, and it still was not enough, because the attackers kept their map of the organisation and came back through a different door. That is the pattern worth remembering: catching one break-in does not mean the burglar is gone. The encouraging half of this story is the recovery — $2.85 billion frozen or intercepted and nearly all affected assets replenished within two days — which shows that even at this scale, fast tracing and fast freezing can claw most of it back.",
+   "id": "rcn-20261105-binance-explains-how-a-fake"
+  },
+  {
+   "id": "rcn-20261102-madagascar-scam-farms",
+   "date": "Nov 2, 2026",
+   "category": "victory",
+   "title": "Madagascar dismantles 13 scam farms and freezes nearly $52 million",
+   "what": "Malagasy law enforcement and the U.S. Department of Justice dismantled 13 online scam complexes in Madagascar after two months of joint operations, according to Agence France-Presse reporting. Investigators blocked nearly $52 million in cryptocurrencies in a single day and seized over 3,200 electronic devices, and 148 Chinese nationals convicted of online fraud have been transferred to China to serve their sentences. The complexes ran romance scams, fake investments and crypto fraud — the \"pig butchering\" model, in which victims are groomed for weeks through a trusting relationship before being directed to a fake platform and drained.",
+   "sources": [
+    {
+     "name": "WEEX",
+     "url": "https://www.weex.com/news/detail/crypto-52-million-dollars-seized-in-madagascar-13-scam-farms-dismantled-munnnu1sjzosheyw4bd4pgqv"
+    },
+    {
+     "name": "KuCoin",
+     "url": "https://www.kucoin.com/news/flash/madagascar-repatriates-148-chinese-citizens-involved-in-crypto-fraud"
+    }
+   ],
+   "take": "This is genuine good news, and it shows the other side of crypto's transparency: the same public ledgers scammers use to move money are what let investigators freeze $52 million in a day. It is also a reminder that these operations are moving — from Southeast Asia into Africa — so a scam can come from anywhere, not just the places in last year's headlines. If a new online friend or \"mentor\" steers you toward an investment platform, that warmth is the setup, not a reason to trust it."
+  },
+  {
+   "id": "rcn-20261102-sec-bg-wealth",
+   "date": "Nov 2, 2026",
+   "category": "scam",
+   "title": "SEC charges two entities over alleged $130 million crypto fraud",
+   "what": "The U.S. Securities and Exchange Commission charged BG Wealth Sharing Ltd and DSJ Exchange Pty Ltd over an alleged $130 million investment fraud, saying the scheme targeted tens of thousands of retail investors across more than 40 U.S. states between October 2025 and June 2026. The complaint alleges the entities promised risk-free returns from AI-generated crypto trading signals, submitted false Form ADV and Form D filings, and displayed fake certificates bearing the SEC's seal to present themselves as registered or approved. The SEC is seeking permanent injunctions, repayment of allegedly misappropriated funds and civil penalties; the charges are allegations, not a court finding.",
+   "sources": [
+    {
+     "name": "Grafa",
+     "url": "https://grafa.com/en/news/crypto/sec-charges-two-entities-over-130-million-crypto-fraud"
+    }
+   ],
+   "take": "A regulator's seal on a website is not proof of anything — in this case, the SEC says the seal itself was faked and the filings were used as props. \"Risk-free returns\" should end the conversation on its own: no real trading signal can promise that, AI or not. Before trusting any platform, check the regulator's own records yourself, not a certificate the platform shows you."
+  },
+  {
+   "id": "rcn-20261101-btcpay-hot-wallet",
+   "date": "Nov 1, 2026",
+   "category": "hack",
+   "title": "BTCPay Server urges shutdown after hot wallets drained on older versions",
+   "what": "Late on Nov 1, 2026, BTCPay Server warned operators that hot wallets on self-hosted payment servers were being swept by unauthorized attackers, and urged them to shut down their servers while it investigated. Founder Nicolas Dorier said an attacker logged in as an administrator on affected servers, and the team identified version 2.4.1, released July 23, 2026, and older versions as in scope. In a Nov 2, 2026 update, the team said it had no credible reports of hot wallet drains from version 2.4.7, the latest release, but it has not disclosed total losses or how attackers obtained administrator access.",
+   "sources": [
+    {
+     "name": "The Bit Journal",
+     "url": "https://thebitjournal.com/btcpay-server-hack-investigation/"
+    },
+    {
+     "name": "CryptoPulseDaily",
+     "url": "https://cryptopulsedaily.com/bitcoin-payment-processor-btcpay-hit-by-hot-wallet-theft-reports/"
+    }
+   ],
+   "take": "Self-hosting is supposed to remove the middleman, but it also makes you the security team — and a hot wallet means the keys sit on the very server an attacker just logged into. The honest part of this story is what is still unknown: no loss total, no entry method, only a version range to act on. If you run a payment server, that is enough to act now: update, keep only spending money in a hot wallet, and treat \"we will explain later\" as a reason to be cautious, not to wait."
+  },
+  {
+   "id": "rcn-20261101-zachxbt-106m",
+   "date": "Nov 1, 2026",
+   "category": "dispute",
+   "title": "ZachXBT flags suspected $106 million theft from a European entity",
+   "what": "On-chain investigator ZachXBT issued a community alert based on his personal assessment, suggesting that a European entity was attacked on Nov 1, 2026, with funds stolen from multiple centralized exchange accounts and losses exceeding $106 million. He said the attacker withdrew the funds as USDC and USDT, then swapped USDC for ETH over the past 24 hours and moved funds through instant exchange platforms and cross-chain bridges into Monero (XMR). ZachXBT disclosed 11 involved addresses and urged monitoring of the fund movements, but no victim has been publicly named or confirmed the theft in the reporting so far.",
+   "sources": [
+    {
+     "name": "KuCoin",
+     "url": "https://www.kucoin.com/news/flash/eu-entity-suspected-of-106m-theft-attackers-using-cross-chain-and-privacy-coins"
+    }
+   ],
+   "take": "Treat this one as an allegation with a paper trail, not a confirmed theft — the on-chain movements are visible, but the victim and the break-in itself are not yet confirmed. That gap matters, because the laundering pattern it describes is real and familiar: stablecoins to ETH, then bridges and a privacy coin to break the trail. The lesson holds either way: once stolen funds reach Monero, tracing mostly ends, which is why freezing has to happen in the first hours, not after the story breaks."
+  },
+  {
+   "id": "rcn-20261101-fbi-tradertraitor",
+   "date": "Nov 1, 2026",
+   "category": "hack",
+   "title": "FBI names North Korea's TraderTraitor in the Binance theft as withdrawals start to reopen",
+   "what": "On Oct 31, 2026, the FBI attributed the theft of more than $6 billion in virtual assets from Binance, which took place on or about Oct 29, 2026, to North Korean actors it labels TraderTraitor, saying the stolen assets were being converted primarily into Ethereum and asking exchanges, DeFi services, node operators and analytics firms to block associated addresses. Binance's own Oct 31 update said roughly 90 percent of the affected assets had been replenished, up from about 80 percent the day before, with more than $6.34 billion in company funds set aside to cover losses. On Nov 1, 2026, Binance began reopening Bitcoin withdrawals, with reports putting replenishment at roughly 95 percent of impacted assets and the remainder in less-liquid tokens still being secured.",
+   "sources": [
+    {
+     "name": "CoinCourier",
+     "url": "https://coincourier.io/fbi-attributes-binance-theft-north-korea-tradertraitor/"
+    },
+    {
+     "name": "Basis Desk",
+     "url": "https://basisdesk.news/news/binance-reopens-bitcoin-withdrawals-after-exploit"
+    }
+   ],
+   "take": "Attribution is progress, not recovery — naming the group helps exchanges block the money, but it does not put a single coin back in a user's wallet. The part that actually helps ordinary people is the reopening of withdrawals, and even that is phased, not finished. Keep the two ideas separate: a government statement tells you who is blamed, while only your own successful withdrawal tells you your funds are truly accessible again."
+  },
+  {
+   "id": "rcn-20261101-canadian-scammer",
+   "date": "Nov 1, 2026",
+   "category": "victory",
+   "title": "Canadian scammer sentenced to 25 months over $13 million Bitcoin theft",
+   "what": "A 20-year-old Canadian, Johnston, was sentenced to 25 months in prison after pleading guilty to one count of conspiracy to commit money laundering, less than the 51 to 63 months prosecutors had recommended, with a separate wire fraud conspiracy charge dropped. Prosecutors attributed at least $13.04 million in stolen funds to him, including about 185 BTC worth close to $13 million taken on March 13 from a California victim who was tricked by people posing as Google employees and Trezor representatives; Johnston surrendered about $3.8 million in Bitcoin and Ether after his arrest. The court also noted his substantial assistance in investigating and prosecuting other suspects, and he is expected to be handed to U.S. Immigration and Customs Enforcement for deportation to Canada.",
+   "sources": [
+    {
+     "name": "CryptoPulseDaily",
+     "url": "https://cryptopulsedaily.com/canadian-crypto-scammer-gets-25-months-for-13m-bitcoin-theft/"
+    }
+   ],
+   "take": "A conviction is worth marking, even when the sentence feels light and most of the money is still gone — only about $3.8 million of the $13 million was surrendered, and nothing has been recovered from the 185 BTC theft itself. The real warning is in how it started: no company, and no real support team, will ever ask you to move your life savings because your email or wallet \"is compromised.\" That phone call or message is the crime, and the moment you pause and verify through a channel you trust, the whole trick falls apart."
+  },
+  {
+   "id": "rcn-20261101-certik-record",
+   "date": "Nov 1, 2026",
+   "category": "warning",
+   "title": "CertiK puts 2026 crypto losses at a record $9.2 billion",
+   "what": "Crypto security firm CertiK reported about $6.5 billion lost to exploits and phishing in October 2026, pushing its 2026 tally to roughly $9.2 billion, which it called the highest losses on record. The headline figure is gross losses: CertiK's dashboard, updated Oct 31, lists 89 October incidents and $3.03 billion in frozen or returned funds, leaving $3.47 billion in adjusted October losses. Binance's roughly $6.3 billion breach was the main driver of the October total, and October's gross losses alone exceed CertiK's roughly $3.35 billion total for all of 2025.",
+   "sources": [
+    {
+     "name": "CryptoNews",
+     "url": "https://cryptonews.net/news/security/33681955/"
+    }
+   ],
+   "take": "A record year is not a reason to panic, and it is not a reason to shrug either — it is a measure of how much trust is still being placed in systems that have not earned it. Notice the second number hiding inside the headline: $3.03 billion frozen or returned in a single month shows that tracing and freezing stolen funds is working far better than it used to. The takeaway for a normal person stays the same: keep most of your crypto somewhere only you control, connect only what you need, and treat any platform promising easy returns as a risk to check before you trust it."
+  },
+  {
+   "id": "rcn-20261031-stepdrainer",
+   "date": "Oct 31, 2026",
+   "category": "exploit",
+   "title": "StepDrainer malware hits at least 12 crypto sites in a coordinated frontend attack",
+   "what": "A coordinated wave of frontend attacks hit at least 12 cryptocurrency websites on Oct 31, 2026, with malicious code steering visitors toward wallet-draining pages after attackers seized control of domain infrastructure, according to blockchain security firm Blockaid. Blockaid tied the incidents to StepDrainer, a malware toolkit sold as a service that tricks visitors into fraudulent wallet connections and transaction approvals — frequently an unlimited token allowance or an off-chain Permit2-style signature — which can let an attacker move assets without a seed phrase or private key. The affected sites include Flap (flap.sh, which moved to flap.cool), Kintsu (kintsu.xyz), StonkFun (stonkfun.xyz), and nine others: pickle.finance, echelon.market, origami.finance, fluxbeam.xyz, stakepoint.app, supswap.xyz, longbow.cash, shprd.finance and apexdefi.xyz. StonkFun said only its website was affected, that its smart contracts were not broken and no private keys were stolen, and that it knew of no affected users at the time; Kintsu said its domain was compromised at the registrar level and advised anyone who connected a wallet or signed after 00:00 UTC on Oct 31 to revoke suspicious approvals and move exposed assets. Investigators have not confirmed a total financial loss or identified the attackers, and Blockaid's investigation is ongoing.",
+   "sources": [
+    {
+     "name": "BigGo Finance",
+     "url": "https://finance.biggo.com/news/1ac397c0-7010-4cf5-a1f6-0483d68edc74"
+    }
+   ],
+   "take": "This is the attack that breaks the usual safety advice, and that is exactly why it matters: nobody's password or seed phrase was stolen, and typing a familiar web address correctly still led to a trap. A hijacked website can ask your wallet for an \"unlimited approval\" that looks routine and quietly hands over the keys to your tokens. The defence is boring but real: never approve an unlimited allowance you do not need, check what a signature actually permits before you sign it, and if you touched any of these sites during the window, revoke the approvals and move your funds — do not wait to see whether anything goes missing first."
+  },
+  {
+   "id": "rcn-20261031-dubai-arrest",
+   "date": "Oct 31, 2026",
+   "category": "arrest",
+   "title": "Dubai Police arrest six over alleged fake crypto deal and recover AED 2.6 million",
+   "what": "Dubai Police have arrested six people suspected of defrauding a victim out of AED 2.6 million through a fake cryptocurrency trading deal, recovering both the stolen cash and digital assets. The scheme centred on an unlicensed currency exchange: the victim, seeking to buy digital currencies with a large sum of cash, agreed to a deal with members of the ring, transferred his virtual assets into decentralised wallets designed to obscure ownership, and the suspects then took the cash and fled. Dubai Police said investigators ran field operations alongside blockchain analysis tracing how the assets moved between wallets, and traced and secured the stolen virtual assets before they could be transferred further or liquidated. Police warned the public against cash-based deals with unverified intermediaries and against services promising outsized returns quickly, and urged residents to deal only with officially licensed virtual asset service providers. The suspects are accused, not convicted, and the case is under investigation.",
+   "sources": [
+    {
+     "name": "Lana Time",
+     "url": "https://en.lanatime.com/news/dubai-police-bust-crypto-fraud-ring-recover-aed-2-6mn-2026-10-31/"
+    }
+   ],
+   "take": "The gang bet that wallet-hopping would hide them, and it did not — that is the good news, and it is worth celebrating plainly. But the deeper lesson is about the deal itself, not the chase: a big cash handover to an unlicensed \"exchange\" is exactly the moment a victim has the most leverage and uses it least. No legitimate trade needs you to meet strangers with cash and send crypto into wallets built to obscure ownership. If a deal cannot happen through a licensed provider, in the open, with a paper trail, that is not an opportunity — it is the setup."
+  },
+  {
+   "id": "rcn-20261031-b14g",
+   "date": "Oct 31, 2026",
+   "category": "exploit",
+   "title": "One transaction drains about 97 million CORE from Bitcoin staking app b14g",
+   "what": "At 09:29 UTC on Oct 31, 2026, a single transaction to b14g, a staking service on the Core blockchain, withdrew about 97 million CORE staked through the service and sent it to attacker-controlled addresses, covering 99 staking positions in one instruction. At CORE's price of about $0.0151 just before the drain, that is worth about $1.47 million — an estimate, since neither b14g nor Core DAO has given a dollar value, and headlines calling it \"$97M\" are counting tokens, not dollars. b14g said it paused the affected contracts, that exchanges had frozen about 9 million CORE, and that users' bitcoin, which remains time-locked on Bitcoin, was not affected; by the morning of Nov 1, about 63.6 million CORE still sat in the attacker's second wallet. b14g has not yet said whether the cause was a missing permission check, a stolen key or something else, and has promised a detailed post-mortem.",
+   "sources": [
+    {
+     "name": "CryptoMediaZone",
+     "url": "https://cryptomediazone.com/hack-database/b14g-core-staking-exploit/"
+    }
+   ],
+   "take": "This is the quiet danger of chasing a higher yield: b14g paired CORE stakers with bitcoin stakers for a boosted rate, and the extra layer is exactly where the money sat when one instruction emptied 99 positions at once. A big token number can mislead in both directions — $1.47 million is still real people's savings, even if it is not $97 million. Until the post-mortem lands, the honest lesson is simple: if you cannot explain where your coins actually sit and who can move them, the advertised return is not worth the risk."
+  },
+  {
+   "id": "rcn-20261030-binance-fake-recovery",
+   "date": "Oct 30, 2026",
+   "category": "warning",
+   "title": "Fake \"recovery\" scams surfaced within an hour of the Binance hack",
+   "what": "An analysis by Brandefense of 668 Telegram posts and 2,255 X posts from the evening of Oct 29 to the morning of Oct 30, 2026 found that scam offers appeared almost immediately after the Binance hack. About an hour after the main sweep, Telegram channels offered \"stolen Binance funds\" for a fraction of their face value — terms matching a common advance-fee scam — and three X accounts presented themselves as fund recovery services. One post with 77,000 views told users a \"Grok bot\" could act for them if they connected an exchange API key with withdrawal rights, and seven token contracts were promoted under a $TRADERTRAITOR ticker that neither Binance nor the analytics firms have linked to the attackers. CoinMarketCap, which Binance owns, warned users it \"will never DM you asking for wallet details.\"",
+   "sources": [
+    {
+     "name": "Brandefense",
+     "url": "https://brandefense.io/blog/binance-hack-telegram-x-analysis/"
+    }
+   ],
+   "take": "Every big hack breeds a second crime, and this one took about an hour. The scammers do not need to break anything — they just need you frightened, in a hurry, and willing to trust a stranger who arrived first with \"help.\" No real recovery service will ever ask you to connect an API key with withdrawal rights, hand over a seed phrase, or pay a fee to release \"your\" funds. When the news is loudest, that is exactly when to slow down, check only the official app or a web address you typed yourself, and ignore every refund offer that finds you first."
+  },
+  {
+   "id": "rcn-20261030-binance-cover",
+   "date": "Oct 30, 2026",
+   "category": "hack",
+   "title": "Binance sets aside $6.34 billion to cover the hack and targets a phased withdrawal restart",
+   "what": "In its second security update on the record $6.3 billion hack of Oct 29, 2026, Binance said it has set aside more than $6.34 billion in company funds — drawn from its Secure Asset Fund for Users (SAFU) and corporate treasury — to absorb the losses, with about $5 billion already held in the exact tokens that were stolen and the rest being bought through market and over-the-counter channels. The exchange said about $3 billion of the stolen assets has been frozen with the help of partners, and that it plans to begin resuming withdrawals in phases within approximately 34 hours of the update, subject to security checks, with an updated proof-of-reserves result due by Monday, Nov 2. Binance's preliminary investigation suggested a company software engineer's laptop may have been compromised, but the second update says investigators have since uncovered additional points of breach; the exchange says it has found no evidence that wallet private keys were leaked, and it has not named an attacker, though TRM Labs and Chainalysis have linked the theft to North Korea's TraderTraitor group with high confidence.",
+   "sources": [
+    {
+     "name": "Forbes Africa",
+     "url": "https://www.forbesafrica.com/current-affairs/2026/10/31/binance-says-it-plans-to-resume-withdrawals-this-weekend-after-6-3-billion-hack"
+    },
+    {
+     "name": "CryptoNews",
+     "url": "https://cryptonews.net/news/market/33680437/"
+    }
+   ],
+   "take": "This is the follow-up that matters more than the first apology: real numbers, a real timetable, and a promise users can check against the clock. Setting aside more than was stolen is a strong signal, but notice what it does not prove — the proof-of-reserves snapshot shows assets, not that the security hole is closed, and the post-mortem is still to come. The lesson for a normal person is the same one this week keeps teaching: an exchange that covers its losses is good news, but it is not a reason to treat any exchange as a vault — keep only what you need to trade on one, and hold the rest yourself."
+  },
+  {
+   "id": "rcn-20261030-polymarket-refunds",
+   "date": "Oct 30, 2026",
+   "category": "exploit",
+   "title": "Polymarket refunds most hacked wallets after third-party breach drained about $2.7 million",
+   "what": "Prediction market Polymarket said hundreds of accounts on its international exchange were compromised on Oct 29, 2026, after one of its third-party providers was breached, forcing the platform to halt trading for about an hour. Reporting linked the compromised provider to DebugBear, a UK-based website performance-monitoring service whose code was embedded in the platform, and to malicious JavaScript that hijacked authenticated user sessions; Polymarket itself has not publicly named the provider. Bloomberg reported about $2.7 million was lost, and Polymarket said 726 wallets were affected, that 689 of them had been refunded in full, that the remaining 37 were being paid as each is verified, and that a further $1.19 million would go to 5,500 wallets belonging to traders who lost money during the trading pause or whose positions were taken. Polymarket referred the matter to law enforcement and said affected traders would be made whole; its US platform was not reported to be affected.",
+   "sources": [
+    {
+     "name": "PokerStrategy",
+     "url": "https://www.pokerstrategy.com/news/world-of-poker/this-week-in-prediction-markets-polymarket-hacked-lawsuits-fly-utah/"
+    },
+    {
+     "name": "SC Media",
+     "url": "https://www.scworld.com/brief/polymarket-trading-suspended-following-third-party-supply-chain-attack"
+    }
+   ],
+   "take": "Here is the same lesson as the StepDrainer wave, one level up: the weakest link was not Polymarket's own code but a vendor's script running inside it, and hundreds of ordinary traders paid for that trust. The encouraging part is the response — a fast halt, refunds already landing for most affected wallets, and cover for traders hurt by the pause itself, not just the theft. But refunds are a promise until they arrive in your wallet, so if you were affected, follow the platform's own status updates only, and treat any \"refund helper\" that contacts you first as a scam."
+  },
+  {
+   "id": "rcn-20261029-binance-hack",
+   "date": "Oct 29, 2026",
+   "category": "hack",
+   "title": "Binance hit in record $6.3 billion hack — most of it drained in about 20 minutes",
+   "what": "Hackers stole an estimated $6.3 billion from Binance, the world's largest cryptocurrency exchange, in what is described as the biggest crypto theft on record — far above the $1.5 billion Bybit theft of February 2025. According to Reuters, most of the theft happened in about 20 minutes starting late on Oct 29, 2026, draining Binance hot wallets across 10 blockchains, including about $3.74 billion on Ethereum and 18,270.2 BTC worth about $1.47 billion. Binance said a hacked laptop belonging to a DevOps engineer may have been the entry point, and said it found no evidence that hot or cold wallet private keys were directly leaked. The exchange halted withdrawals and expects to restart them within 48 hours, says it has located about $3 billion of the stolen funds with industry partners — Tether froze nearly $1.57 billion and Circle more than $800 million — and co-CEO Richard Teng said the company will cover every loss. TRM Labs and Chainalysis said they are highly confident North Korea's TraderTraitor group was responsible; Binance has not named an attacker and no government confirmation of that attribution was reported.",
+   "sources": [
+    {
+     "name": "PYMNTS",
+     "url": "https://www.pymnts.com/cybersecurity/2026/hackers-steal-6-3-billion-from-binance-in-record-crypto-heist/"
+    },
+    {
+     "name": "AMBCrypto",
+     "url": "https://ambcrypto.com/binance-to-resume-withdrawals-within-48-hours-after-6-3b-hack/"
+    }
+   ],
+   "take": "This is the pattern at its largest scale: one compromised endpoint inside a giant company, and wallets emptied in minutes before anyone could react. Your password was never the weak point here — the exchange's own internal security was. The lesson for a normal person is simple and unglamorous: an exchange account is not a vault, so do not leave more on one than you need to trade with, and keep the rest somewhere you control. At the same time, notice what worked: issuers froze roughly half the haul within hours, and Binance has pledged to cover the losses — coordination and accountability matter, and they are worth demanding from every platform that holds your money."
+  },
+  {
+   "id": "rcn-20261028-zklink-nova",
+   "date": "Oct 28, 2026",
+   "category": "exploit",
+   "title": "zkLink Nova bridge drained of about $780,000 in forged batch-root exploit",
+   "what": "Attackers drained about $780,000 from zkLink Nova's Ethereum-side bridge contracts in a single transaction late on Oct 28, 2026, according to blockchain security firm Blockaid, with estimates from Blockaid and SlowMist ranging from roughly $779,000 to $786,000 depending on valuation timing. The attacker used a publicly accessible relayer to inject a forged batch root — the cryptographic summary the bridge uses to verify withdrawals — so the contracts treated unauthorized withdrawals as valid. The transaction moved 22.43 ETH and 11 types of ERC-20 tokens, mostly 245.74 pufETH worth about $615,000, to a single attacker-controlled address. Blockaid described the attack as ongoing and said the main escrow contract had not been paused, and zkLink had not published a statement, confirmed a pause, or announced a recovery plan at the time of reporting.",
+   "sources": [
+    {
+     "name": "The Crypto Times",
+     "url": "https://www.cryptotimes.io/2026/10/29/zklink-nova-bridge-exploited-for-786k-as-forged-batch-root-drains-ethereum-escrow/"
+    },
+    {
+     "name": "Hokanews",
+     "url": "https://www.hokanews.com/2026/10/zklink-nova-bridge-exploit-drains.html"
+    }
+   ],
+   "take": "Bridges keep failing at the same place: the check that is supposed to prove a withdrawal is real. Here the attacker did not break the lock — they wrote their own permission slip and the system accepted it. For a normal person, the lesson is not technical at all: every bridge is a pile of other people's money guarded by one verification step, and when that step is fooled, everything in the pile can leave in one transaction. If you must bridge, move only what you need, and never treat a bridge as a place to park funds."
+  },
+  {
+   "id": "rcn-20261028-singapore-ledger",
+   "date": "Oct 28, 2026",
+   "category": "warning",
+   "title": "Singapore police warn of tampered Ledger wallets sold locally, about $2.7M stolen",
+   "what": "Singapore police warned on Oct 28, 2026 that some Ledger hardware wallets sold through local retailers contained malicious hardware implants capable of stealing users' recovery phrases or private keys. At least two cases reported since Sept 10, 2026 have resulted in combined losses of about S$3.5 million (about $2.7 million). Police have not publicly established how the devices were modified or how they entered the retail supply chain, and Ledger is reviewing the incidents while investigations continue. The warning concerns certain devices bought through local retailers, not a finding that all Ledger devices are compromised.",
+   "sources": [
+    {
+     "name": "KuCoin",
+     "url": "https://www.kucoin.com/news/flash/singapore-police-warn-of-malicious-ledger-wallets-sold-locally-2-7m-stolen"
+    }
+   ],
+   "take": "A hardware wallet is only as safe as the hands it passed through before it reached yours — and this is the second time in a week that lesson has arrived with a price tag. The device itself can be perfect and still be the trap, if someone tampered with it on the way to the shelf. Buy only from the maker or an authorized seller, check the seal and the setup carefully, and if anything about the device looks even slightly off, stop before you put a single coin on it. A bargain or a convenient shop is never worth your recovery phrase."
+  },
+  {
+   "id": "rcn-20261028-coinbase-vendor",
+   "date": "Oct 28, 2026",
+   "category": "dispute",
+   "title": "Coinbase vendor incident exposes some customer contact data — scale disputed",
+   "what": "Coinbase said on Oct 28, 2026 that a security incident at its third-party analytics provider, Amplitude, exposed contact data belonging to a small subset of its customers. Coinbase said it found no evidence of unauthorized access to its own systems, that customer funds were not affected, and that affected customers and regulators were being notified. A claim circulating online that more than 70,000 users were affected has not been confirmed by Coinbase, which has reportedly disputed the figure, and the company has not initially published a definitive number of affected users or a complete list of exposed fields.",
+   "sources": [
+    {
+     "name": "Bitrue",
+     "url": "https://www.bitrue.com/blog/coinbase-data-breach-2026"
+    },
+    {
+     "name": "CoinDesk",
+     "url": "https://www.coindesk.com/tech/2026/10/28/coinbase-says-customer-funds-are-safe-after-third-party-vendor-exposes-customer-contact-info"
+    }
+   ],
+   "take": "This is the dispute to hold carefully: a real vendor incident, and an unproven number running ahead of it. Do not repeat the 70,000 figure as fact, and do not dismiss the incident either — because contact details alone are enough for the next attack. A scammer who knows you use Coinbase and can name a real incident can write a message that feels official, then ask for the one thing that finishes the job: your password, your code, or a transfer. No real support team will ever ask for those, no matter how real the incident they mention sounds."
+  },
+  {
+   "id": "rcn-20261028-catfi",
+   "date": "Oct 28, 2026",
+   "category": "arrest",
+   "title": "South Korea charges five over alleged CatFi rug pull — a first under its investor-protection law",
+   "what": "South Korea's Seoul Southern District Prosecutors' Office charged five people over the Solana-based meme coin CatFi, launched in early 2025 through Pump.fun, in what is reported as the first prosecution of a rug pull under the country's Virtual Asset User Protection Act and the first known prosecution of a crypto crime carried out through a decentralized exchange. Prosecutors allege the group built a misleading promotional ecosystem: one suspect posed online as an independent crypto influencer, follower numbers were artificially inflated, announcements claimed fake token lock-up arrangements, and wash trading disguised the group's control of supply. CatFi's price reportedly surged roughly 1,001 times within 26 hours of launch, drawing about 6,000 buyers; 256 investors later reported combined losses of around 900 million won (roughly $600,000), while the suspects allegedly secured profits exceeding 400 million won. Two main suspects are in custody and three others were indicted without detention. The charges are allegations and have not been proven in court.",
+   "sources": [
+    {
+     "name": "BitRss",
+     "url": "https://bitrss.com/south-korea-cracks-down-on-catfi-rugpull-first-ever-crypto-fraud-case-under-new-investor-protection-216063"
+    }
+   ],
+   "take": "Read the CatFi playbook and you have read half the meme-coin scams in crypto: a friendly influencer who is not independent at all, follower counts pumped up to look like a crowd, \"locked\" tokens that were never locked, and wash trading to fake demand. A price jumping a thousand times in a day is not an opportunity you almost missed — it is the trap working as designed. The hopeful part is real too: prosecutors reached a decentralized-exchange scheme that once sat outside the law's reach. Charges are not convictions and the victims' money is not back yet, but the days when a rug pull could hide behind \"it's just a DEX\" are getting shorter."
+  },
+  {
+   "id": "rcn-20261027-madagascar-scam",
+   "date": "Oct 27, 2026",
+   "category": "arrest",
+   "title": "Six charged over alleged Madagascar romance scam targeting about 800 Americans",
+   "what": "The U.S. Department of Justice announced on Oct 27, 2026 that six individuals have been charged over an alleged cryptocurrency romance scam run from Madagascar, with alleged links to criminal groups in China and Malaysia. Prosecutors say the group posed as women on dating websites, built romantic relationships with victims, then persuaded them to connect their wallets to fraudulent NFT investment platforms and deposit funds, which were allegedly withdrawn without the victims' knowledge. Investigators identified about 74 cryptocurrency wallets associated with around 800 victims across the United States who reported losses. The charges are allegations and have not been proven in court, and the DOJ has called on Madagascar to cooperate with extradition.",
+   "sources": [
+    {
+     "name": "The Crypto Times",
+     "url": "https://www.cryptotimes.io/2026/10/28/doj-charges-six-in-alleged-nft-fraud-as-crypto-scam-crackdown-widens/"
+    },
+    {
+     "name": "The Eastleigh Voice",
+     "url": "https://eastleighvoice.co.ke/news/417137/kenyan-among-six-charged-over-nft-investment-scam-targeting-800-americans"
+    }
+   ],
+   "take": "This is the good-news side of the cruellest scam in crypto: it starts with loneliness, not greed, and the people running it reportedly kept scripts calling it an \"emotional scam.\" Charges are not convictions, and the victims' money is not yet back — but an operation that moved countries to stay out of reach is now named in a U.S. courtroom. If a new romance online ever steers you toward an investment platform or asks you to connect your wallet, that is the moment to stop. Real love never needs your wallet connected."
+  },
+  {
+   "id": "rcn-20261028-apestr",
+   "date": "Oct 28, 2026",
+   "category": "exploit",
+   "title": "ApeSTR flaw exploited: 21 Bored Apes swapped for packs, about $14,000 taken — and the 21 Apes are now stuck in the contract",
+   "what": "A known flaw in the ApeSTR contract was exploited. Someone swapped 21 Bored Apes into the contract to claim the Mudwater packs tied to them — about $14,000 in value — and the 21 Apes they used are now stuck inside the contract. A Yuga Labs VP flagged the exploit publicly, and the project's founder says six other original Strategy coins carry the same flaw. The original contracts cannot be upgraded, so there is no patch coming for the design itself.",
+   "sources": [
+    {
+     "name": "KuCoin",
+     "url": "https://www.kucoin.com/news/flash/yuga-labs-vp-reveals-apestr-exploit-leads-to-14-000-profit"
+    },
+    {
+     "name": "The Bored Ape Gazette",
+     "url": "https://www.theboredapegazette.com/post/trick-or-trapped-a-tokenworks-exploit-leaves-21-bayc-nfts-stuck-inside-the-apestr-contract"
+    }
+   ],
+   "take": "The dollar amount is small. The pattern is not. The flaw was known, the contract cannot be changed, and now real assets sit trapped inside it. Code that can never be fixed turns one bad day into a permanent loss. Reality: before you park anything valuable in a contract, ask one question — if something goes wrong, can anyone fix it? If the answer is no, the risk never expires."
+  },
+  {
+   "id": "rcn-20261027-tranche-vault",
+   "date": "Oct 27, 2026",
+   "category": "exploit",
+   "title": "Tranche Vault on Avalanche drained of about $1.01M USDC in a flash-loan attack",
+   "what": "Blockaid flagged an attack in progress on a Tranche Vault on Avalanche tied to Fence Finance and Valinor Digital. The attacker used flash loans to mint inflated tranche shares, then redeemed the vault's remaining USDC — about $1.01 million gone in roughly two transactions. A balance check found no USDC left in the identified contract. No pause, patch, or recovery has been announced.",
+   "sources": [
+    {
+     "name": "PANews",
+     "url": "https://www.panews.io/articles/01a1800f-8f09-75f5-aed7-7620b7c00c96"
+    },
+    {
+     "name": "KuCoin",
+     "url": "https://www.kucoin.com/news/flash/hackers-steal-1-01m-from-tranche-vault-on-avalanche"
+    }
+   ],
+   "take": "Nobody picked a lock here. The vault's own share math was the door: borrow big for one moment, mint shares at a fake price, hand them back for real money. Reality: when one trade can move a vault's share price, one trade can empty the vault. Before you deposit, ask how the shares are priced — that answer is the whole security model."
+  },
+  {
+   "id": "rcn-20261026-near-intents",
+   "date": "Oct 26, 2026",
+   "category": "exploit",
+   "title": "NEAR Intents hit by $3.8M exploit — team says it identified the attacker and gave a 48-hour return window",
+   "what": "NEAR Intents said a bug in how its Omni deposit and withdrawal infrastructure interacts with its smart contract was exploited for approximately $3.8 million, isolated to USDT on BNB Smart Chain. NEAR co-founder Illia Polosukhin said the platform's SHIELD security layer flagged the outlier behaviour and triggered a pause, the contract vulnerability was patched within an hour of detection, and services were largely restored. Intents general manager Alex Shevchenko said the attacker has been identified and gave a 48-hour window to return the funds, and the platform says affected users will be compensated in full and the incident has been reported to law enforcement.",
+   "sources": [
+    {
+     "name": "BitRss (via CryptoPotato)",
+     "url": "https://bitrss.com/near-intents-identifies-3-8m-hacker-gives-them-48-hours-to-return-funds-257077"
+    }
+   ],
+   "take": "The fast patch and the full-compensation promise are the good parts — but notice what the story really rests on: a single bug where two systems meet. Bridges and cross-chain plumbing are where the money moves, so they are where the breaks happen. And a public \"we know who you are\" is a negotiation tactic, not a recovery — until funds actually come back, treat it as an open loss, not a solved one."
+  },
+  {
+   "id": "rcn-20261026-bloom-trading",
+   "date": "Oct 26, 2026",
+   "category": "exploit",
+   "title": "Bloom Trading bot drained of about $954,000 in SOL — nine users affected, full reimbursement promised",
+   "what": "On Oct. 26, 2026, an attacker drained 9,408 SOL, worth approximately $954,000, from 49 wallet addresses belonging to nine users of Bloom Trading, a Telegram-based trading bot for Solana and EVM networks. The largest single wallet loss was 1,636 SOL, about $166,000. Bloom attributed the breach to an exploited third-party module vulnerability enabling remote code execution, said no private keys were compromised and unaffected wallets are safe, and promised to fully reimburse all affected users to new secure wallets of their choosing — though it has not said when reimbursements will be completed.",
+   "sources": [
+    {
+     "name": "AMBCrypto",
+     "url": "https://ambcrypto.com/bloom-trading-hit-by-947k-breach-due-to-third-party-module-promises-100-reimbursement/"
+    },
+    {
+     "name": "CoinFomania",
+     "url": "https://coinfomania.com/hackers-exploit-vulnerability-to-steal-9408-sol-from-users/"
+    }
+   ],
+   "take": "This is the quiet risk of trading bots: you hand a tool permission to move your money, and its weakest borrowed part becomes your weakest part. No private keys were stolen, yet the money still left — because access, not just keys, is the prize. If a bot or app can move funds for you, keep only what you can afford to lose in it, and treat a reimbursement promise as a promise, not a refund in hand."
+  },
+  {
+   "id": "rcn-20261026-foundation-passport",
+   "date": "Oct 26, 2026",
+   "category": "warning",
+   "title": "Fake \"Passport recall\" phishing emails reached Foundation customers from the company's own domains",
+   "what": "On Sunday, Oct. 25, 2026, phishing emails posing as an urgent recall of Foundation's Passport Bitcoin hardware wallet reached customers, claiming a supplier had modified a display module and attackers were draining affected devices. The emails linked to foundation.support, a fake site mimicking Foundation's Envoy companion app, showing an empty wallet with a deposit button apparently designed to lure victims into sending Bitcoin. Foundation responded on Oct. 26, 2026, saying attackers abused compromised Cloudflare API keys, that it has revoked every key and taken down the malicious domain, and that Passport devices and funds are safe. The company has not said whether its customer database was breached, while recipients reported the messages included their full names and home addresses, including for a wallet bought two years ago.",
+   "sources": [
+    {
+     "name": "BeInCrypto",
+     "url": "https://beincrypto.com/bitcoin-wallet-phishing-foundation-home-addresses/"
+    },
+    {
+     "name": "Coinotag",
+     "url": "https://en.coinotag.com/foundation-revokes-cloudflare-api-keys-passport-phishing"
+    }
+   ],
+   "take": "The scariest line here is not the fake website — it is that the email came from the real domain and knew real names and addresses. A sender address you recognise is no longer proof of anything, and personal details in a message are no longer proof either. Judge every urgent message by what it asks you to do: if it wants you to click, download, or move coins somewhere \"safe,\" stop, go to the company's site yourself, and check there. And if your home address is tied to a crypto purchase, take the physical-security side seriously too."
+  },
+  {
+   "id": "rcn-20261026-electrum",
+   "date": "Oct 26, 2026",
+   "category": "exploit",
+   "title": "Electrum wallet bug let rogue servers swap in fake payments — patch 4.8.3 released Oct. 24",
+   "what": "Electrum, one of Bitcoin's oldest software wallets, disclosed a flaw in which malicious servers could substitute a fake pending transaction for a user's real one, because the wallet trusted servers to report unconfirmed transactions without verifying their signatures. If the user then used Replace-by-Fee to speed up the payment, Electrum could sign a valid replacement sending the coins to an attacker-controlled address. Developers received two reports in October: an Oct. 11 report involving a multisignature wallet where no funds were reported lost, and an Oct. 18 report from a user who lost funds after raising the fee on a substituted transaction; the amount stolen has not been disclosed. Electrum released version 4.8.3 on Oct. 24, 2026, adding signature checks for unconfirmed transactions, and says users connected only to trusted servers, including their own, were not exposed.",
+   "sources": [
+    {
+     "name": "CoinDesk",
+     "url": "https://www.coindesk.com/tech/2026/10/26/bitcoin-wallet-bug-let-rogue-servers-steal-funds-when-users-tried-to-speed-up-payments"
+    }
+   ],
+   "take": "This one breaks a comforting assumption: that the danger is always someone stealing your keys. Here, the wallet simply believed a lying server, and an everyday action — speeding up a stuck payment — did the rest. The fix exists, so the lesson is boring and practical: update the wallet, check the full receiving address and amount before you sign anything, and never rush a transaction that suddenly looks different from the one you sent."
+  },
+  {
+   "id": "rcn-20261024-x100",
+   "date": "Oct 24, 2026",
+   "category": "exploit",
+   "title": "X100 governance hijacked in a single transaction — about $4.85M drained",
+   "what": "On Oct. 24 at 10:11 AM ET, an attacker used a flash loan to buy two of the three seats on X100's governing \"Senate\" on Ethereum, then used that majority to force the treasury to sell 400,000 X tokens for roughly $36. Security firm Blockaid puts the total loss at about $4.85M in USDT, and the X token fell about 96% within a day. The exploit worked because Senate seats could be bought instantly with no minimum holding period, voting power was not snapshotted in advance, and proposals could be created, voted on, and executed in the same transaction with no timelock. As of Oct. 25, no statement, fund freeze, or bounty offer from the X100 team had been reported.",
+   "sources": [
+    {
+     "name": "CoinLab",
+     "url": "https://coinlab.info/en/articles/x100-hack-explained/"
+    },
+    {
+     "name": "Crypto Times",
+     "url": "https://www.cryptotimes.io/2026/10/24/x100-hack-attackers-hijack-governance-drain-4-85m-as-x-token-crashes-96/"
+    }
+   ],
+   "take": "This was not a mystery bug — it was governance with no speed bumps. When voting power can be rented for a few seconds and a vote takes effect instantly, a stranger can legally \"win\" the vote and empty the treasury in one move. The lesson for normal people: before trusting any project, ask whether its big decisions have a delay and a real holding requirement — if not, your money is one borrowed vote away from gone."
+  },
+  {
+   "id": "rcn-20261023-initia",
+   "date": "Oct 23, 2026",
+   "category": "dispute",
+   "title": "Initia exploit: about $2.7M taken, but what was actually minted is disputed",
+   "what": "The Initia blockchain halted its Layer 1 and rollups on Oct. 23, 2026, after an attack that Initia co-founder Ezaan Mangalji described as a previously unknown bug in the link between Initia's MoveVM and its Cosmos SDK network, allowing the attacker to mint tokens and bridge out about $2.7M worth of AUSD, ETH, and USDC. Stablecoin issuer Agora disputed part of the story, saying its AUSD contract is not deployed on Initia and no AUSD was minted there; Ethereum records show 1.4 million existing AUSD moved from a bridge adapter to an attacker's address and were swapped for about 581.56 ETH. Agora pledged to freeze AUSD at hacker-related addresses, though the swap had already happened.",
+   "sources": [
+    {
+     "name": "ForkLog",
+     "url": "https://forklog.com/en/hacker-steals-2-7-million-from-initia-blockchain/"
+    },
+    {
+     "name": "The Cryptonomist",
+     "url": "https://en.cryptonomist.ch/2026/10/24/initia-exploit-ausd-stablecoin/"
+    }
+   ],
+   "take": "Two sides are telling different versions of the same event, and that disagreement itself is the warning. When even the project and the token issuer cannot agree on where the money came from, nobody holding the token can judge the risk honestly. Wait for the on-chain facts and a full post-mortem before believing either side's first version — and never treat a paused chain as proof your funds are safe."
+  },
+  {
+   "id": "rcn-20261023-zheng-zhao",
+   "date": "Oct 23, 2026",
+   "category": "arrest",
+   "title": "$36.9M pig-butchering scam suspect extradited to the U.S.",
+   "what": "Zheng Zhao, a 44-year-old Chinese national, was extradited from the Netherlands and arraigned in Los Angeles federal court on Oct. 23, 2026, on a charge of conspiracy to commit money laundering carrying up to 20 years in prison. Prosecutors allege he was part of a Cambodia-based scam network that used social media and dating apps to steer at least 174 identified American victims to fake crypto trading sites showing fabricated gains, taking a combined $36.9M. The funds were allegedly routed through U.S. shell companies to a Deltec Bank account in the Bahamas, converted to Tether (USDT), and sent to wallets in Cambodia. Eight co-conspirators have already pleaded guilty, with sentences including 46 and 51 months.",
+   "sources": [
+    {
+     "name": "Crypto Briefing",
+     "url": "https://cryptobriefing.com/chinese-national-extradited-cambodian-crypto-scam/"
+    },
+    {
+     "name": "Security Online",
+     "url": "https://securityonline.info/cambodia-crypto-scam-extradition-doj/"
+    }
+   ],
+   "take": "This is real progress, and it took more than a year of cross-border work to get one man into a courtroom. But notice the pattern that caught 174 people: a stranger online, a slow-building friendship, then a trading site you have never heard of showing profits that look too good. If a new friend steers you to an unknown platform, that is the scam — walk away before the first deposit, not after."
+  },
+  {
+   "id": "rcn-20261023-michigan-arrest",
+   "date": "Oct 23, 2026",
+   "category": "justice",
+   "title": "Michigan police arrest man in alleged $665K Bitcoin scam",
+   "what": "Michigan police arrested a man accused of stealing $665,000 in a fake Bitcoin scheme. The victim handed him over $500,000 in cash at one meeting, then mailed $165,000 more. He faces up to 10 years.",
+   "sources": [
+    {
+     "name": "CryptoNews",
+     "url": "https://cryptonews.net/news/security/33632548/"
+    }
+   ],
+   "take": "Never hand cash to a stranger — no matter how convincing the story. Real Bitcoin deals don't happen in parking lots."
+  },
+  {
+   "id": "rcn-20261023-ngrave-hijack",
+   "date": "Oct 23, 2026",
+   "category": "scam",
+   "title": "Hackers hijack Ngrave's own alert system to steal $2.56M",
+   "what": "Hackers hijacked hardware wallet maker Ngrave's own alert system, sending fake 'Moscow login' warnings to users. Panicked customers typed their 24-word recovery phrases into a phishing site — about $2.56M drained from 70 wallets in minutes. The CEO admitted the company 'utterly failed.'",
+   "sources": [
+    {
+     "name": "TheBitGazette",
+     "url": "https://thebitgazette.com/hackers-hijacked-ngraves-own-alert-system-to-steal-2-56-million-from-70-wallets-and-the-ceo-says-the-company-utterly-failed/"
+    }
+   ],
+   "take": "No legitimate alert EVER asks for your seed phrase. Not from your wallet maker, not from anyone. Panic is the phisher's best tool."
+  },
+  {
+   "id": "rcn-20261022-kimchi",
+   "date": "Oct 22, 2026",
+   "category": "rug-pull",
+   "title": "Copycat 'kimchi' memecoin crashes $15M to $150K within an hour",
+   "what": "A new token linked to influencer Kimchi surged to a ~$15M market cap overnight, then crashed to ~$150K within minutes. Kimchi deleted his promo post (it had a QR code) and Pump.fun founder alon pulled his retweet. Kimchi's own token fell 49% in 24h.",
+   "sources": [
+    {
+     "name": "KuCoin News",
+     "url": "https://www.kucoin.com/news/flash/kimchi-token-plummets-49-amid-rug-pull-of-new-clone-project"
+    }
+   ],
+   "take": "If the promoter deletes the post, that IS the signal. When the hype man goes quiet, the exit already happened."
+  },
+  {
+   "id": "rcn-20261022-liquid",
+   "date": "Oct 22, 2026",
+   "category": "victory",
+   "title": "Liquid Network back online — recovery from $320M hack enters final phase",
+   "what": "Liquid Network says its recovery from September's ~$320M exploit is in its final stages — the network is running again and LBTC-to-bitcoin swaps are fully restored. ~600 BTC (~$50M) remains with the attackers, who kept a 10% bounty; whether holders face a haircut is unresolved.",
+   "sources": [
+    {
+     "name": "CryptoWatchDaily",
+     "url": "https://cryptowatchdaily.com/news/liquid-network-hack-recovery-final-stages/"
+    }
+   ],
+   "take": "Progress, not perfection. A network that rebuilds in public earns more trust than one that pretends nothing happened."
+  },
+  {
+   "id": "rcn-20261022-hnut",
+   "date": "Oct 22, 2026",
+   "category": "rug-pull",
+   "title": "Solana memecoin HNUT loses 99%+ after hitting $71M market cap",
+   "what": "HNUT was briefly the third most traded token on Solana after a 700% surge to a $70.94M market cap. Then the price fell from $0.07 to below $0.0003 — over 99% gone. On-chain trackers flagged abnormal liquidity movements as it happened.",
+   "sources": [
+    {
+     "name": "BitRSS",
+     "url": "https://bitrss.com/beware-major-rug-pull-scam-alert-on-an-altcoin-price-plummets-to-nearly-zero-167809"
+    }
+   ],
+   "take": "Volume hype is the product being sold. Reality check first, wallet later."
+  },
+  {
+   "id": "rcn-20261022-france-wrench",
+   "date": "Oct 22, 2026",
+   "category": "warning",
+   "title": "Masked men tie up French couple in 3am crypto home invasion",
+   "what": "Three masked men broke into a home in Mont-de-Marsan, France, at 3am on Oct 22, tied up a couple in their 60s, and demanded crypto — targeting the family through their son's crypto job. It is unclear if any coins moved. France logged 77 crypto-related kidnapping/unlawful-detention cases in the first half of 2026.",
+   "sources": [
+    {
+     "name": "Crypto-Economy",
+     "url": "https://crypto-economy.com/french-authorities-search-for-three-suspects-after-couple-tied-up-in-crypto-robbery/"
+    }
+   ],
+   "take": "Your privacy IS your security. Nobody should know you hold crypto — not neighbors, not social media, not strangers. Wrench attacks don't hack your wallet; they come for you."
+  },
+  {
+   "id": "rcn-20261022-chenzhi",
+   "date": "Oct 22, 2026",
+   "category": "justice",
+   "title": "Cambodia extradites alleged $15B scam kingpin Chen Zhi to China",
+   "what": "Cambodia extradited Chen Zhi, the alleged head of the Prince Group scam syndicate that lured trafficked workers into forced-labor camps to run crypto fraud, to China. The FBI seized ~$15B in Bitcoin linked to him last year. China says arrest warrants for key syndicate members are coming. Prince Group has consistently denied involvement.",
+   "sources": [
+    {
+     "name": "Gamblerss",
+     "url": "https://gamblerss.com/cambodia-extradites-crypto-scam-kingpin-to-china-53591"
+    }
+   ],
+   "take": "The biggest scam networks in crypto are built on human trafficking — real people forced to steal from you. When the money looks too easy, ask who is being hurt to make it."
+  },
+  {
+   "id": "rcn-20261022-qubic-restart",
+   "date": "Oct 22, 2026",
+   "category": "exploit",
+   "title": "Qubic restarts blockchain, opens recovery claims after $1.4M wallet drain",
+   "what": "Qubic restarted its blockchain after a seed-generation flaw let an attacker drain ~$1.4M from 1,404 wallets. Claims are open until May 1, 2027; 87% of stolen funds were frozen and MEXC froze the rest. Wallets predating v4.26.4 should be treated as compromised.",
+   "sources": [
+    {
+     "name": "CoinTelegraph",
+     "url": "https://cointelegraph.com/news/qubic-restarts-blockchain-opens-recovery-claims-after-14m-hack"
+    }
+   ],
+   "take": "This is the honesty pattern: freezes and claims beat promises. But the real lesson — if your wallet version is old, don't wait for someone to tell you it's compromised. Make a new one, move funds, never reuse the old."
+  },
+  {
+   "id": "rcn-20261022-xrp-scam",
+   "date": "Oct 22, 2026",
+   "category": "scam",
+   "title": "Fake XRP staking site takes 3.4M XRP — Seoul police freeze assets in 3 days",
+   "what": "71 people sent 3.4 million XRP to a fake \"FXRP Network\" staking site promising 1.5%–1.8% monthly returns. The site borrowed a real token's name to look legitimate, operated for one week, then vanished. Overseas exchanges tipped off Seoul police, who froze ~17.3B won within 3 days. Three suspects arrested; Interpol red notice issued for the ringleader.",
+   "sources": [
+    {
+     "name": "BitRSS",
+     "url": "https://bitrss.com/xrp-staking-scam-hits-71-investors-as-losses-near-19-million-236865"
+    }
+   ],
+   "take": "Good news with a lesson inside it. The scam worked because it borrowed a real name — always verify you're on the real site, not a lookalike. And credit where due: fast police work saved millions here."
+  },
+  {
+   "id": "rcn-20261022-conviction",
+   "date": "Oct 22, 2026",
+   "category": "justice",
+   "title": "Man pleads guilty after taking $1.16M from crypto investors — lost it gambling",
+   "what": "Elmin Redzepagic, 25, pleaded guilty to fraud and money-laundering charges. He posed as a crypto investor, told 10+ victims their money was growing, then demanded fake \"gas fees\" to release it — and sent their funds to an offshore gambling site where he lost everything. Net losses: $1,159,945.34. Sentencing set for January 11, 2027. Each count carries up to 20 years.",
+   "sources": [
+    {
+     "name": "TokenPost",
+     "url": "https://www.tokenpost.com/news/regulation/36313"
+    }
+   ],
+   "take": "The oldest trick in the book — \"your money is growing, just pay a small fee to unlock it.\" If anyone ever asks you for gas fees to release YOUR money, walk away. Justice caught up here, but prevention beats prosecution."
+  },
+  {
+   "id": "rcn-20261022-cysic",
+   "date": "Oct 22, 2026",
+   "category": "exploit",
+   "title": "Cysic offers attacker a 10% white-hat bounty — return the ETH in 72 hours",
+   "what": "An attacker minted 10 million CYS tokens without authorization and converted part of the proceeds into ETH. The Cysic Foundation issued an on-chain settlement proposal: return 275.872 ETH (about 90% of confirmed proceeds) within 72 hours and keep the remaining ~30.652 ETH as a bug bounty. Cysic says it has reconstructed the attack and preserved on-chain evidence, and will escalate to a full criminal investigation if the deadline is missed.",
+   "sources": [
+    {
+     "name": "PANews",
+     "url": "https://www.panews.io/articles/01a1631c-8ef8-722a-a0e0-dc40f9591a78"
+    },
+    {
+     "name": "Phemex News",
+     "url": "https://phemex.com/news/article/cysic-offers-attacker-10-whitehat-bounty-demands-return-of-stolen-eth-within-72-hours-100563"
+    }
+   ],
+   "take": "This is how the exploit game usually plays out now — steal, then get an ultimatum: keep a cut and walk, or face detectives. The bounty offer is practical, not kind: recovered funds beat empty promises. The lesson for normal people: unaudited mint functions are where money printing goes wrong. If a token lets someone mint supply out of thin air, your holdings can be diluted overnight — check the contract's mint controls before you buy, not after."
+  },
+  {
+   "id": "rcn-20261022-michigan",
+   "date": "Oct 22, 2026",
+   "category": "arrest",
+   "title": "Michigan police arrest man in alleged $665,000 Bitcoin scam",
+   "what": "Michigan State Police arrested Zhong Jiang, 34, of Orland Hills, Illinois, on a felony larceny-by-conversion charge (up to 10 years if convicted). An Escanaba resident who believed he was investing in Bitcoin handed over more than $500,000 in cash at an in-person meeting and shipped another $165,000 in cash via FedEx. Jiang was extradited from Wisconsin, booked Oct 15, and held on $400,000 bond with a GPS tether. He returns to court Oct 29.",
+   "sources": [
+    {
+     "name": "Crypto News",
+     "url": "https://cryptonews.net/news/security/33632548/"
+    }
+   ],
+   "take": "The classic trust scam, no fancy tech involved — a smooth talker, a handshake, and cash in a FedEx box. If someone you're investing through wants physical cash or couriered money, that's the red flag waving itself. Real brokers don't take duffel bags of bills. Police even said it plainly: if you're unsure, call local law enforcement before you send money."
+  },
+  {
+   "id": "rcn-20261021-coldcard",
+   "date": "Oct 21, 2026",
+   "category": "victory",
+   "title": "White hats recover 52 BTC from Coldcard exploit — public portal lets victims check",
+   "what": "White-hat researchers and recovery firm DART secured roughly 52.37 BTC drained via a Coldcard seed-generation entropy flaw that let attackers reconstruct older wallet private keys. The funds were moved to the Crypto Recovery Trust, traced publicly by Galaxy researcher Alex Thorn. Coldcard owners can now check their public Bitcoin addresses on the trust's portal to begin an ownership claim. DART warns affected users to migrate to newly generated wallets, since old seeds stay exposed even after a firmware update.",
+   "sources": [
+    {
+     "name": "CryptoSlate",
+     "url": "https://bitrss.com/white-hats-recover-52-bitcoin-from-coldcard-exploit-and-a-new-public-portal-lets-victims-check-eligi-254158"
+    }
+   ],
+   "take": "Good news with a warning inside it. White hats pulled stolen coins back and built a public trail so real owners can claim them — that's the crypto community protecting its own. But the flaw was in how the wallet generated its seed, and updating firmware doesn't save an old wallet. If you own a hardware wallet, follow the maker's migration guidance. And never, ever enter your seed phrase on any website."
+  },
+  {
+   "category": "hack",
+   "date": "Oct 22, 2026",
+   "id": "rcn-20261022-railway",
+   "sources": [
+    {
+     "name": "crypto.news",
+     "url": "https://crypto.news/railway-security-breach-linked-to-371000-crypto-theft-across-19-chains/"
+    },
+    {
+     "name": "Daily Star",
+     "url": "https://dailystar.co.za/2026/10/22/railway-security-breach-associated-with-371000-cryptocurrency-theft-across-19-blockchains/"
+    }
+   ],
+   "take": "Your code can be perfect and you can still get robbed — because the thief didn't break your lock, they stole the key from the locksmith. The pattern: the attack surface is never just your smart contract. It's everything around it — the host, the dashboard, the env vars. If you keep private keys or API secrets in ANY cloud dashboard, rotate them today, not after the announcement. Secrets are like toothbrushes: replace them regularly, never share them.",
+   "title": "Railway breach leaks customer secrets — ~$371K in crypto drained across 19 chains",
+   "what": "Cloud host Railway disclosed that an unauthorized party may have accessed customer environment variables — the secret settings where projects keep API keys, database passwords, and even private keys. Blockchain researcher Taylor Monahan traced roughly $371,000 in crypto theft across 19 EVM chains to the breach: 500+ transactions from 200+ addresses, drained with a standard wallet-sweeper script. The first theft transaction landed at 19:36 UTC on Oct 21 — hours before Railway's public announcement. Railway paused builds and told customers to rotate credentials. Railway has not independently confirmed the $371K figure."
+  },
+  {
+   "category": "dispute",
+   "date": "Oct 22, 2026",
+   "id": "rcn-20261022-coindcx",
+   "sources": [
+    {
+     "name": "crypto.news",
+     "url": "https://crypto.news/coindcx-denies-second-hack-claims-as-zachxbt-questions-wallet-activity/"
+    },
+    {
+     "name": "CryptoNews",
+     "url": "https://cryptonews.net/news/security/33633156/"
+    }
+   ],
+   "take": "An exchange says 'funds are safe.' The chain's best detective says your old hacked wallets are still shaking hands with your hot wallets. Who do you believe — the press release or the blockchain? The blockchain doesn't do PR. The pattern: after a hack, 'we fixed it' means nothing until the compromised addresses are dead and buried. Don't listen to what they SAY. Watch what the wallets DO.",
+   "title": "CoinDCX denies new $16M hack as ZachXBT challenges their story",
+   "what": "India's largest exchange CoinDCX denied claims of a fresh breach after ~$16M in USDT and 5,783 TRX moved from wallets linked to the exchange. CoinDCX says the addresses were compromised in their July 2025 hack and are no longer part of active infrastructure — 'users' funds are safe.' Blockchain investigator ZachXBT disputed that, showing at least one of the addresses kept handling deposits and touching CoinDCX's current hot wallets months after the supposed cleanup. No new customer losses are independently confirmed."
+  },
+  {
+   "category": "victory",
+   "date": "Oct 22, 2026",
+   "id": "rcn-20261022-gmx",
+   "sources": [
+    {
+     "name": "Daily Hodl via OKX",
+     "url": "https://tr.okx.com/en/orbit/news/crypto-hacker-who-drained-42000000-from-gmx-goes-white-hat-returns-funds-in-exchange-for-5000000-bounty-49457090602016"
+    }
+   ],
+   "take": "This is the good news nobody shares — and we share the good too. Sometimes the system works: a clear bounty, no games, the hacker walks away rich and legal, users get their money back. The pattern worth copying: every protocol should publish its bounty number BEFORE the hack, not negotiate it after. A $5M bounty is expensive. Losing $42M is worse.",
+   "title": "$42M GMX hacker goes white-hat — returns everything for a $5M bounty",
+   "what": "The hacker behind the $42M GMX exploit (a re-entrancy attack on GMX V1) has returned the funds in exchange for a $5,000,000 bounty, going white-hat. GMX confirmed the exploit was contained to V1 — V2 markets, liquidity pools, and the ecosystem were unaffected. GMX's token jumped ~18% on the news."
+  },
+  {
+   "category": "scam",
+   "date": "Oct 22, 2026",
+   "id": "rcn-20261022-ngrave",
+   "sources": [
+    {
+     "name": "AMBCrypto",
+     "url": "https://ambcrypto.com/fake-ngrave-security-alerts-lead-to-2-56m-crypto-theft-in-six-hours/"
+    }
+   ],
+   "take": "The hardware wallet was never broken. Their TRUST was. A push notification, a fake site, a countdown timer to create panic — $2.56M in six hours. The pattern: urgency is the weapon. Any message that makes you act FAST is trying to make you think SLOW. Tattoo this on your brain: no real security alert will ever ask for your recovery phrase. Not ever. Not once.",
+   "title": "Fake 'security alerts' drain $2.56M from hardware wallet users in 6 hours",
+   "what": "Attackers compromised a third-party notification service used by NGRAVE's LIQUID phone app (companion to its ZERO hardware wallet) and pushed fake security alerts on Oct 17 claiming users' portfolios had synced with a new device. Victims who tapped through landed on a cloned NGRAVE site with a countdown timer; 'denying' the sync led to a page harvesting recovery phrases. ~$2.56M was stolen across 70 wallets on four networks in about six hours — mostly BTC and ETH, later routed toward Monero. NGRAVE disabled notifications during the investigation."
+  },
+  {
+   "category": "exploit",
+   "date": "Oct 22, 2026",
+   "id": "rcn-20261022-uncx",
+   "sources": [
+    {
+     "name": "Bitcoin.com",
+     "url": "https://news.bitcoin.com/security/an-86000-exploit-rocks-a-crypto-pool-built-to-lock-tokens/"
+    },
+    {
+     "name": "Mitrade",
+     "url": "https://www.mitrade.com/au/insights/news/live-news/article-3-2163342-20261015"
+    }
+   ],
+   "take": "The company that sells 'we lock your tokens so nobody can steal them' just got its locks picked. The irony writes itself — but the lesson is serious: 'audited' is a moment in time, not a permanent state. Even the lock-makers get robbed. The pattern: shared pools are shared risk. When many projects' locked tokens sit in one contract, one clever bug becomes everybody's problem. Ask where your locked tokens actually sit — and who else is in the pool with you.",
+   "title": "The token-LOCKING platform gets drained: $86K exploit hits UNCX vesting pool",
+   "what": "UNCX Network (formerly UniCrypt) — whose entire business is locking tokens so insiders can't sell early — lost ~$86,000 from its shared vesting pool on Ethereum. Per security firm Blockaid, the attacker opened several vesting positions, released one large position, topped up the pool, then cancelled a position in a way that left a tiny leftover slot able to withdraw OTHER users' tokens. Ten tokens across four chains were affected. UNCX paused new positions, raised fees, and says its liquidity lockers are unaffected. Funds remain missing."
+  }
+ ]
 }
