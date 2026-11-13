@@ -1,6 +1,70 @@
 {
  "items": [
   {
+   "title": "LNbits tells every operator to shut down its Bitcoin Lightning servers amid a wave of attacks",
+   "sources": [
+    {
+     "name": "The Hacker News",
+     "url": "https://thehackernews.com/2026/11/lnbits-urges-all-operators-to-shut-down.html"
+    },
+    {
+     "name": "Crypto With Block",
+     "url": "https://www.cryptowithblock.com/daily-2026-11-10-what-to-do-right-now/"
+    }
+   ],
+   "date": "Nov 8, 2026",
+   "category": "exploit",
+   "what": "LNbits, a free open-source system for running Bitcoin Lightning wallet servers, told every operator on Sunday, November 8 to shut their servers down immediately because of a wave of attacks, with several security fixes still to release. One operator, Kevin Ravensberg, reported that new accounts used an extension exploit to withdraw 2,285,545 satoshis — about 0.023 bitcoin, roughly $1,700 — from his server before he could stop it. The attack on his server ran from 09:22 to 14:00 UTC, starting more than three hours before the project's first warning at 12:33 UTC, which had only asked operators to disable the Paywall add-on. The project also switched off its own hosted service at my.lnbits.com, and as of Monday morning no fixed version had been released, with a developer estimating 24 to 48 hours. The shutdown covers LNbits servers only, not Lightning nodes in general, and the project has not said how many servers were hit or how much was taken in total.",
+   "take": "The warning itself is the story — when a project tells everyone to turn the whole thing off, listen, because it means there is no patch yet and the hole is live. The money taken from one server was small, but the pattern is the one Reality Check keeps naming: a wallet server is a custodian, and one bug in one add-on became an open withdrawal tap. If you run LNbits, keep it off until the fix comes from the project's own official channels — and if you keep funds on someone else's LNbits server, ask them what they have done about it.",
+   "id": "rcn-20261108-lnbits-urges-operators-to-shut-down"
+  },
+  {
+   "title": "ACryptoS loses about $665,000 across 77 vaults — and the six-year-old platform is closing",
+   "sources": [
+    {
+     "name": "Crypto.news",
+     "url": "https://crypto.news/how-small-deposits-drained-77-acryptos-vaults-and-what-users-can-still-withdraw/"
+    },
+    {
+     "name": "NullTX",
+     "url": "https://nulltx.com/acryptos-loses-665k-across-77-vaults-on-five-chains-after-a-missing-input-check"
+    }
+   ],
+   "date": "Nov 8, 2026",
+   "category": "exploit",
+   "what": "ACryptoS, a DeFi yield aggregator running since 2020, said on November 9 that an attacker drained about $665,000 from 77 vaults across five blockchains — Arbitrum, BNB Chain, Polygon, Base and Optimism — on November 8. Security firm SlowMist traced the flaw to the depositMulti function, where the code never checked that the list of deposit amounts matched the number of tokens in the vault, so a tiny deposit of one token could mint up to 90% of a vault's shares and redeem them against both assets. ACryptoS disabled deposits, left withdrawals open, offered the attacker a 10% bounty for returning the funds, and said it can no longer maintain the protocol — the platform is shutting down. The team says the stolen funds have since moved through several cross-chain protocols, and no recovery or reimbursement timetable has been given.",
+   "take": "One missing check — the code never verified that the token list matched the vault — and a tiny deposit bought most of a vault's shares. The loss is modest by crypto standards, but the ending is the real lesson: a six-year-old platform is closing, and \"withdrawals still open\" does not mean your money is all still there. Before putting funds into any yield vault, the question is who audited the share math — and what happens to your money if the team walks away.",
+   "id": "rcn-20261108-acryptos-loses-665k-across-77-vaults"
+  },
+  {
+   "title": "Swarm's official software releases carried wallet-stealing malware — delete, don't just update",
+   "sources": [
+    {
+     "name": "The Cryptonomist",
+     "url": "https://en.cryptonomist.ch/2026/11/10/ethereum-security-alert/"
+    }
+   ],
+   "date": "Nov 9, 2026",
+   "category": "hack",
+   "what": "On November 9, attackers compromised Ethersphere's automated release process and pushed wallet-stealing malware through Swarm's official channels — the malicious @ethersphere/bee-js 13.3.0 package on npm appeared around 00:09 UTC, followed by Swarm Desktop 0.56.2 about 27 minutes later. Security firm SlowMist, which raised the alert on November 10, said the attackers broke into GitHub accounts and abused legitimate release procedures, possibly through the bee-worker bot or stolen CI credentials. The tampered packages ran scripts automatically on install, downloaded further payloads, and stole Swarm wallet files — including an encrypted keystore whose unlocking password sat nearby in plaintext — while installing persistent remote-access tools. The attackers even used an Ethereum smart contract as a command-and-control address book, letting them change their server addresses without shipping another bad release. SlowMist urged users to delete the tainted package, revert to bee-js 13.2.0 or Swarm Desktop 0.56.3, and replace exposed wallet keys entirely.",
+   "take": "The malware came through the official release channel — the very place users are told to trust. That is why updating alone is not enough here: keys the attackers already captured stay captured, and backdoors planted on the machine do not vanish with a new version. If you installed bee-js 13.3.0 or Swarm Desktop 0.56.2, treat the machine as fully compromised, remove the software, and replace the wallet keys. The lesson is uncomfortable but simple — even the download button you trust can be the attack.",
+   "id": "rcn-20261109-swarm-official-releases-carried-malware"
+  },
+  {
+   "title": "Man arrested for turning $1.7 million in fake checks and business-email fraud into Bitcoin",
+   "sources": [
+    {
+     "name": "The Daily Hodl via OKX",
+     "url": "https://tr.okx.com/en/orbit/news/man-allegedly-converts-1700000-worth-of-fake-checks-and-fraudulent-wire-transfers-into-bitcoin-after-multiple-scams-48468915609635"
+    }
+   ],
+   "date": "Nov 4, 2026",
+   "category": "arrest",
+   "what": "Tushal Rathod, a man from central New York, was arrested and arraigned on Wednesday, November 4, and is in custody awaiting a detention hearing, charged with wire fraud, money laundering and conspiracy to commit money laundering. According to court documents in the District of Rhode Island and an affidavit by FBI special agent Samuel Morgan, Rathod collected nearly $2 million in fraudulent checks and business email compromise fraud between 2022 and 2024, spread the money across seven accounts in six banks, and converted most of it into Bitcoin. In a business email compromise, scammers steal a business email login — usually through a spearphishing campaign — then watch the inbox and step in with fake messages about upcoming payments. Rathod allegedly worked with several co-conspirators and used different names to impersonate different people.",
+   "take": "This is the classic business-email-compromise playbook — steal a login, watch the inbox, redirect a payment — with Bitcoin as the exit ramp. The arrest is the good news: the trail through banks and exchanges is exactly what investigators follow, and it led them here. For any business, the defence is boring and free — never change payment details on the strength of an email alone; verify the change through a second channel you already trust.",
+   "id": "rcn-20261104-man-arrested-fake-checks-bitcoin"
+  },
+  {
    "title": "Former FBI agent pleads guilty to stealing $2.47 million in crypto from cases he was investigating",
    "sources": [
     {
